@@ -38,7 +38,7 @@ void TaskInit_Sharp(void * p)
 	if(semSharp != NULL)
 	{
 		xSemaphoreGive(semSharp);
-		BSP_Sharp_ADC_Init();
+		//BSP_Sharp_ADC_Init();
 	}
 
 	xTaskCreate(Task_Sharp,
@@ -57,6 +57,14 @@ void Task_Sharp(void * p)
 	{
 		sds_ADC_Conversion();
 		sharp_distance = sds_GetDistance();
+		if(sharp_distance > 40)
+		{
+			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+		}
 		vTaskDelay(DELAY_40_MS);
 	}
 }

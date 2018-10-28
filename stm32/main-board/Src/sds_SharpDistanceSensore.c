@@ -28,8 +28,9 @@
  * @brief 	Implements the inverse characteristics of the sensor and returns a
  * 			distance from an adc value.
  * @param	ADC converted value from a voltage.
+ * @retval	Calculated distance.
  */
-void sds_CalculateDistance (uint32_t adcValue);
+uint16_t sds_CalculateDistance (uint32_t adcValue);
 
 /**
  * @brief	This function is called after the adc conversion and IT handling.
@@ -73,7 +74,7 @@ void sds_ADC_Conversion ()
 	HAL_ADC_Start_IT(&BSP_SHARP_HADC);
 }
 
-void sds_CalculateDistance (uint32_t adcValue)
+uint16_t sds_CalculateDistance (uint32_t adcValue)
 {
 	float measured_voltage = 0.0;
 	float calculated_distance = 0.0;
@@ -91,16 +92,20 @@ void sds_CalculateDistance (uint32_t adcValue)
 		calculated_distance = 1.0 / (measured_voltage * M_2 + B_2);
 	}
 
-	// Store the distance
-	sds_SetDistance((uint16_t)calculated_distance);
+	return (uint16_t)calculated_distance;
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 {
 	if (hadc->Instance == ADC1)
 	{
+		BaseType_t *taskWoken = pdFALSE;
 		uint32_t adcValue = HAL_ADC_GetValue(&BSP_SHARP_HADC);
-		sds_CalculateDistance(adcValue);
+		uint16_t distance = sds_CalculateDistance(adcValue);
+
+		xSemaphoreTakeFromISR(semSharp, taskWoken);
+		sds_distance = distance;
+		xSemaphoreGiveFromISR(semSharp, taskWoken);
 	}
 }
 
