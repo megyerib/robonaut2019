@@ -5,34 +5,50 @@
  *      Author: Joci
  */
 
-// --------------------- Includes ----------------------- //
+// ------------------------------- Includes -------------------------------- //
 
 #include "sds_SharpDistanceSensore.h"
 #include "bsp.h"
 
-// -------------------------------------------------------//
+// --------------------------------------------------------------------------//
 
-// ---------------------- Defines ------------------------//
+// -------------------------------- Defines ---------------------------------//
 
-#define 	ADC_12_BIT 			4096;
-#define 	MAX_PIN_VOLTAGE		3.3;
+#define 	M_1			1.0/33.0		// [(1/cm)/V]
+#define 	B_1			-0.0242424		// [1/cm]
+#define 	M_2			4.0/225.0		// [(1/cm)/V]
+#define 	B_2			-0.000444444	// [1/cm]
+#define		VERTEX		1.9 			// [V]
 
-// -------------------------------------------------------//
+// --------------------------------------------------------------------------//
 
-// --------------------- Declarations --------------------//
+// ------------------------------ Declarations ------------------------------//
 
-void sds_CalculateDistance ();
+/**
+ * @brief 	Implements the inverse characteristics of the sensor and returns a
+ * 			distance from an adc value.
+ * @param	ADC converted value from a voltage.
+ */
+void sds_CalculateDistance (uint32_t adcValue);
 
-// -------------------------------------------------------//
+/**
+ * @brief	This function is called after the adc conversion and IT handling.
+ * 			Here the result of the conversion is ready to be used/saved.
+ * 			Equation used: d = 1/y, where y = x * m + b
+ * @param	Pointer to the handler of the ADC.
+ */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc);
 
-// ---------------------- Variables ----------------------//
+// --------------------------------------------------------------------------//
 
-static uint16_t sds_adcValue = 0;
+// ------------------------------- Variables --------------------------------//
+
+// Common resource that stores the actual measured distance.
 static uint16_t sds_distance = 0;
 
-// -------------------------------------------------------//
+// --------------------------------------------------------------------------//
 
-// ---------------------- Functions ----------------------//
+// ------------------------------- Functions --------------------------------//
 
 const uint16_t sds_GetDistance ()
 {
@@ -57,32 +73,35 @@ void sds_ADC_Conversion ()
 	HAL_ADC_Start_IT(&BSP_SHARP_HADC);
 }
 
-
-void sds_CalculateDistance ()
+void sds_CalculateDistance (uint32_t adcValue)
 {
-	float voltage = 0.0;
-	float distance = 0.0;
+	float measured_voltage = 0.0;
+	float calculated_distance = 0.0;
 
-	voltage  = sds_adcValue * 3.3 / ADC_12_BIT;
+	// Converts the adc value to a voltage
+	measured_voltage  = adcValue * BSP_3V3 / BSP_SHARP_ADC_RESOLUTION;
 
-	if(voltage > 1.9)
+	// Approximation of the characteristic of the sensor with polygon chain.
+	if(measured_voltage > VERTEX)
 	{
-		distance = 1.0 / ( voltage * 1.0/33.0 - 0.0242424 );
+		calculated_distance = 1.0 / (measured_voltage * M_1 + B_1);
 	}
 	else
 	{
-		distance = 1.0 / ( voltage * 4.0/225.0 - 0.000444444 );
+		calculated_distance = 1.0 / (measured_voltage * M_2 + B_2);
 	}
 
-	sds_SetDistance(distance);
+	// Store the distance
+	sds_SetDistance((uint16_t)calculated_distance);
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 {
 	if (hadc->Instance == ADC1)
 	{
-		//ADCHandler();
+		uint32_t adcValue = HAL_ADC_GetValue(&BSP_SHARP_HADC);
+		sds_CalculateDistance(adcValue);
 	}
 }
 
-// -------------------------------------------------------//
+// --------------------------------------------------------------------------//
