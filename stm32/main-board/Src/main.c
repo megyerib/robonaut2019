@@ -56,7 +56,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "FreeRTOS.h"
-#include "tasks.h"
+#include "task_sharp.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -79,6 +79,8 @@ void InitTasks();
 void InitTasks()
 {
 	TaskInit_Sharp();
+
+	vTaskStartScheduler();
 }
 /* USER CODE END 0 */
 

@@ -16,6 +16,10 @@
 
 // -------------------------------- Defines ---------------------------------//
 
+#define 	DEFAULT_STACK_SIZE 				128
+#define 	TASK_SHARP_PRIO						tskIDLE_PRIORITY+1
+#define 	TASK2_PRIO						tskIDLE_PRIORITY+2
+
 #define 	BSP_3V3							3.3
 
 #define  	BSP_SHARP_HADC					hadc1
