@@ -16,8 +16,10 @@ Arc;
 
 typedef enum
 {
-	DoubleLine = 0,
+	Nothing = 0,
+	DoubleLine,
 	TripleLine,
+	// ...
 
 	RoadSignalNum
 }

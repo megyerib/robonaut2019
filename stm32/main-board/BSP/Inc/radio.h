@@ -2,13 +2,15 @@
 
 typedef enum
 {
-	s0 = 0,
-	s1,
-	s2,
-	s3,
-	s4,
-	s5,
-	sNothing
+	rs0 = 0,
+	rs1,
+	rs2,
+	rs3,
+	rs4,
+	rs5,
+	rsNothing,
+
+	rsNum
 }
 RadioSignal;
 

@@ -1,6 +1,6 @@
 #include "stm32f4xx_hal.h"
 
-typedef enum
+typedef enum // Távolságszenzor irányok
 {
 	Front = 0,
 	Right,
