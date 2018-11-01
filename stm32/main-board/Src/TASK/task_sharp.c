@@ -8,16 +8,13 @@
 // ------------------------------- Includes -------------------------------- //
 
 #include "BSP/bsp.h"
-#include "task_sharp.h"
-#include "sds_SharpDistanceSensore.h"
+#include "TASK/task_sharp.h"
+#include "HANDLER/sds_SharpDistanceSensore.h"
 #include "task.h"
 
 // --------------------------------------------------------------------------//
 
 // -------------------------------- Defines ---------------------------------//
-
-#define		DELAY_40_MS			40		// Depends on the Tick
-#define		DELAY_40_MS			40		// Depends on the Tick
 
 // --------------------------------------------------------------------------//
 
@@ -65,7 +62,7 @@ void Task_Sharp(void * p)
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 		}
-		vTaskDelay(DELAY_40_MS);
+		vTaskDelay(BSP_DELAY_40_MS);
 	}
 }
 
