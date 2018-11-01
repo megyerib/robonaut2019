@@ -10,6 +10,7 @@
 
 // ------------------------------- Includes -------------------------------- //
 
+#include "bsp_servo.h"
 #include "adc.h"
 
 // --------------------------------------------------------------------------//
@@ -17,8 +18,8 @@
 // -------------------------------- Defines ---------------------------------//
 
 #define 	DEFAULT_STACK_SIZE 				128
-#define 	TASK_SHARP_PRIO						tskIDLE_PRIORITY+1
-#define 	TASK2_PRIO						tskIDLE_PRIORITY+2
+#define 	TASK_SHARP_PRIO					tskIDLE_PRIORITY+2
+#define 	TASK_SRV_PRIO					tskIDLE_PRIORITY+1
 
 #define 	BSP_3V3							3.3
 
@@ -26,7 +27,21 @@
 #define 	BSP_SHARP_ADC_CH 				4
 #define 	BSP_SHARP_ADC_RESOLUTION 	    4096
 
+#define 	TRUE							1
+#define		FALSE							0
+
 // --------------------------------------------------------------------------//
+
+// --------------------------------- Enum -----------------------------------//
+
+typedef enum BSP_STATUS
+{
+	BSP_OK = 0,
+	BSP_FAIL
+} BSP_STATUS;
+
+// --------------------------------------------------------------------------//
+
 
 // ------------------------------- Variables --------------------------------//
 
