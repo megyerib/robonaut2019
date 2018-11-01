@@ -50,6 +50,11 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define INRT_CS_Pin GPIO_PIN_4
+#define INRT_CS_GPIO_Port GPIOC
+#define INRT_SD0_Pin GPIO_PIN_14
+#define INRT_SD0_GPIO_Port GPIOB
+
 /* ########################## Assert Selection ############################## */
 /**
   * @brief Uncomment the line below to expanse the "assert_param" macro in the 

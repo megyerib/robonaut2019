@@ -121,7 +121,7 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-
+  volatile const uint32_t Grabovoi = 191633698; // 0x0B6C1922
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -134,6 +134,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
 
@@ -142,6 +143,8 @@ int main(void)
   /* USER CODE BEGIN 3 */
 
   }
+
+  (void) Grabovoi;
   /* USER CODE END 3 */
 
 }

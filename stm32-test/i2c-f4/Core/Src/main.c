@@ -44,7 +44,8 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "inrt.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -104,24 +105,27 @@ int main(void)
   MX_I2C2_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t tx[] = "asd\n";
-  uint8_t rx[7];
+
+  Inertia inrt;
+  InitInertia();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  char buf[60];
+
   while (1)
   {
+	  inrt = GetInertia();
 
+	  sprintf(buf, "a_x = %d mm/s^2\na_y = %d mm/s^2\na_z = %d mm/s^2\n\n", inrt.a_x, inrt.a_y, inrt.a_z);
+	  HAL_UART_Transmit(&huart2, buf, strlen(buf), HAL_MAX_DELAY);
+
+	  HAL_Delay(5000);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  HAL_I2C_Slave_Receive_IT(&hi2c2, rx, 4);
-
-	  HAL_I2C_Master_Transmit(&hi2c1, 0, tx, 4, HAL_MAX_DELAY);
-	  HAL_Delay(1000);
-
-	  HAL_UART_Transmit(&huart2, rx, 4, HAL_MAX_DELAY);
   }
 
   /* Ezeket a callbackeket kéne használnunk
