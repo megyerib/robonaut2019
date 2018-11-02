@@ -40,13 +40,13 @@
 #include "main.h"
 #include "stm32f0xx_hal.h"
 #include "adc.h"
-#include "i2c.h"
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "mux.h"
+#include "ldriver.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -98,19 +98,53 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_ADC_Init();
-  MX_I2C1_Init();
-  MX_I2C2_Init();
-  MX_SPI1_Init();
-  MX_SPI2_Init();
   MX_USART1_UART_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  InitMux();
+  InitLDriver();
+  EnableIr();
+  EnableLed();
+
+  uint32_t ledval = 0x0000FFFF;
+  int dir = 1;
+
+  uint32_t ldv = 1;
+
   while (1)
   {
+	  if (dir == 1)
+	  {
+		  ledval <<= 1;
+
+		  if (ledval & 0x80000000)
+			  dir = 0;
+	  }
+	  else
+	  {
+		  ledval >>= 1;
+
+		  if (ledval & 0x00000001)
+			  dir = 1;
+	  }
+
+	  WriteLed(ledval);
+
+	  /*ldv <<= 1;
+	  if (ldv == 0)
+		  ldv = 1;
+
+	  WriteLed(ldv); */
+
+
+
+	  HAL_Delay(50);
 
   /* USER CODE END WHILE */
 
@@ -140,8 +174,8 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSI14CalibrationValue = 16;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-  RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV2;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
+  RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV1;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -160,9 +194,8 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_SYSCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
