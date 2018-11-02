@@ -1,5 +1,5 @@
 /*
- * sds_SharpDistanceSensore.c
+ * sds_SharpDistanceSensor.c
  *
  *  Created on: 2018. okt. 27.
  *      Author: Joci
@@ -7,7 +7,7 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "HANDLER/sds_SharpDistanceSensore.h"
+#include <HANDLER/sds_SharpDistanceSensor.h>
 #include "BSP/bsp.h"
 
 // --------------------------------------------------------------------------//
