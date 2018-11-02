@@ -32,9 +32,9 @@ typedef enum SCH_ServoModel
 // ------------------------------ Declarations ------------------------------//
 
 /*
- * @brief	Determines if the BSP_ACTUAL_SERVO value is a valid SRV_MODEL
+ * @brief	Determines if the SCH_ACTUAL_SERVO value is a valid SCH_ServoModel
  * 			enum variable and if it is, then it loads a valid servo config into
- * 			the servo module variable.
+ * 			the hsrv module variable.
 
  *
  * @retval	Signals if the initialization of the servo was successful because

@@ -1,16 +1,18 @@
 /*
- * task_sharp.c
+ * task_servo.c
  *
- *  Created on: 2018. okt. 27.
+ *  Created on: 2018. nov. 1.
  *      Author: Joci
  */
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "HANDLER/sds_SharpDistanceSensor.h"
+#include "HANDLER/sch_ServoControlHandler.h"
 #include "BSP/bsp.h"
-#include "TASK/task_sharp.h"
+#include "TASK/task_servo.h"
+#include "FreeRTOS.h"
 #include "task.h"
+#include "event_groups.h"
 
 // --------------------------------------------------------------------------//
 
@@ -24,55 +26,53 @@
 
 // ------------------------------- Variables --------------------------------//
 
-EventGroupHandle_t event_sharp;
+extern EventGroupHandle_t event_sharp;
 
 // --------------------------------------------------------------------------//
 
 // ------------------------------- Functions --------------------------------//
 
-void TaskInit_Sharp(void * p)
+void TaskInit_Servo(void* p)
 {
 	(void)p;
 
-	semSharp = xSemaphoreCreateBinary();
-	event_sharp = xEventGroupCreate();
+	sch_Servo_Init();
 
-	if(semSharp != NULL)
-	{
-		xSemaphoreGive(semSharp);
-		//BSP_Sharp_ADC_Init();
-	}
-
-	xTaskCreate(Task_Sharp,
-				"TASK_SHARP",
+	xTaskCreate(Task_Servo,
+				"TASK_SERVO",
 				DEFAULT_STACK_SIZE,
 				NULL,
-				TASK_SHARP_PRIO,
+				TASK_SRV_PRIO,
 				NULL);
 }
 
-void Task_Sharp(void* p)
+void Task_Servo(void* p)
 {
 	(void)p;
 
-	uint16_t sharp_distance = 0;
+	EventBits_t bits;
+	double degree;
 
 	while(1)
 	{
-		sds_ADC_Conversion();
-		sharp_distance = sds_GetDistance();
-		if(sharp_distance > 40)
+		bits = xEventGroupGetBits(event_sharp);
+
+		if(bits == 1)
 		{
-			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-			xEventGroupClearBits(event_sharp, 1);
+			sch_Set_Servo_Angle(2*PI/3);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-			xEventGroupSetBits(event_sharp, 1);
+			sch_Set_Servo_Angle(PI/3);
 		}
-		vTaskDelay(BSP_DELAY_40_MS);
+
+		// Angle in degree
+		degree = sch_Get_Servo_Angle() * 180 /PI;
+
+		vTaskDelay(BSP_DELAY_20_MS);
 	}
 }
 
 // --------------------------------------------------------------------------//
+
+

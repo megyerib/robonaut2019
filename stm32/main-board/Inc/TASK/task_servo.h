@@ -22,6 +22,16 @@
 
 // ------------------------------ Declarations ------------------------------//
 
+/*
+ * @brief	Initializes the Task_Servo task.
+ */
+void TaskInit_Servo(void* p);
+
+/*
+ * @brief	Communicates with the Task_Sharp task and moves the  servo.
+ */
+void Task_Servo(void* p);
+
 // --------------------------------------------------------------------------//
 
 #endif /* TASK_TASK_SERVO_H_ */

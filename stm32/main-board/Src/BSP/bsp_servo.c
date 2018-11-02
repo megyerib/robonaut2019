@@ -121,11 +121,11 @@ const BSP_Servo_TIM_Stat bsp_Servo_Check_PWM()
 	int ret_val = SRV_TIM_STAT_OK;
 
 	// Get the frequency of TIM2 (APB2). Equals with 2xPCLK1 accord. to CubeMX.
-	volatile uint32_t PCLK1 = HAL_RCC_GetPCLK1Freq();
-	volatile uint32_t APB1 = PCLK1 * 2;
+	uint32_t PCLK1 = HAL_RCC_GetPCLK1Freq();
+	uint32_t APB1 = PCLK1 * 2;
 
-	volatile uint16_t cntr_freq;
-	volatile uint16_t freq;
+	uint16_t cntr_freq;
+	uint16_t freq;
 
 	// Check the Instance of the timer.
 	if(BSP_SRV_HTIM2.Instance != BSP_SRV_TIM_INSATNCE)
