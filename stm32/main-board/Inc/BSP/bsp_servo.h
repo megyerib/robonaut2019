@@ -17,24 +17,15 @@
 
 // -------------------------------- Defines ---------------------------------//
 
-#define		BSP_SRV_HTIM2			 htim2
-#define		BSP_SRV_TIM_INSATNCE	 TIM2
-#define		BSP_SRV_TIM_CHANNEL		 TIM_CHANNEL_2
-
-#define 	BSP_SRV_TIM_APB1_FREQ    84000000		   // Hz
-
-#define 	BSP_ACTUAL_SERVO		 SRV_FUTABAS3003   // Choose from SRV_MODEL
-
 // --------------------------------------------------------------------------//
 
 // --------------------------------- Enums ----------------------------------//
 
-typedef enum SRV_MODEL
-{
-	SRV_FUTABAS3003 				= 0
-} SRV_MODEL;
-
-typedef enum SRV_TIM_STATUS
+/*
+ * @brief	Timer test status and error codes. The error can be the sum of the
+ * 			individual codes.
+ */
+typedef enum BSP_Servo_TIM_Stat
 {
 	SRV_TIM_STAT_OK 				= 0,
 	SRV_TIM_STAT_ERR_APB1_FREQ		= 1,
@@ -44,31 +35,38 @@ typedef enum SRV_TIM_STATUS
 	SRV_TIM_STAT_ERR_FREQ			= 16,
 	SRV_TIM_STAT_ERR_PRESCALER		= 32,
 	SRV_TIM_STAT_ERR_PERIOD			= 64
-} SRV_TIM_STATUS;
+} BSP_Servo_TIM_Stat;
 
-typedef enum SRV_INIT_STATUS
+
+/*
+ * @brief	Servo module init status. Init must check the selected type of the
+ * 			servo and the timer configuration.
+ */
+typedef enum BSP_SrvInitStat
 {
 	SRV_INIT_OK 					= 0,
 	SRV_INIT_FAIL_SRV_MODELL,
-	SRV_INITFAIL_SRV_PWM,
-} SRV_INIT_STATUS;
+	SRV_INIT_FAIL_SRV_PWM,
+} BSP_SrvInitStat;
 
 // --------------------------------------------------------------------------//
 
 // -------------------------------- Structs ---------------------------------//
 
 /*
- * Informations and configuration according to the given servo motor datasheet.
+ * @brief	Informations and configuration according to the given servo motor
+ * 			datasheet or oscilloscope measurement.
  *
- * PWM timer config example:
  *
- * 		Prescaler = ( APB1_clk    / TIM_counter_clk ) - 1
- * 			 1343 = ( 84 MHz	  / 62500  		    ) - 1
+ * @example	PWM timer config example:
  *
- * 	  	   Period = ( TIM_counter_clk / f  ) - 1
- * 	    	 1249 = ( 62500			  / 50 ) - 1
+ * 				Prescaler = ( APB1_clk    / TIM_counter_clk ) - 1
+ * 					 1343 = ( 84 MHz	  / 62500  		    ) - 1
+ *
+ * 	  	   			Period = ( TIM_counter_clk / f  ) - 1
+ * 	    			  1249 = ( 62500		   / 50 ) - 1
  */
-typedef struct SRV_MOTOR
+typedef struct BSP_SrvHandleTypeDef
 {
 	// PWM properties
 	uint16_t PWM_freq;			// Analog: ~(50-60)Hz. Digital: ~(250-333)Hz.
@@ -82,24 +80,55 @@ typedef struct SRV_MOTOR
 	uint16_t Deg_90;			// 1,5 ms ~ 90°
 	uint16_t Deg_150;
 	uint16_t Left_End;			// element of ]90°,180°] interval
-	double Delta_Deg;			// 1° = delta_deg increment
-} SRV_MOTOR;
+
+	// Characteristics: theta = position * m + b
+	double Gradient;			// m
+	double Y_intercept;			// b
+} BSP_SrvHandleTypeDef;
 
 // --------------------------------------------------------------------------//
 
 // ------------------------------- Variables --------------------------------//
 
-extern TIM_HandleTypeDef htim2;
-
-extern SRV_MOTOR FutabaS3003;
+extern BSP_SrvHandleTypeDef hsrv;
 
 // --------------------------------------------------------------------------//
 
 // ------------------------------ Declarations ------------------------------//
 
-const SRV_INIT_STATUS bsp_Servo_Init(void);
+/*
+ * @brief	Initializes the servo, checks the PWM and the servo configuration.
+ * 			On successful init the PWM can be used, on unsuccessful init TIM
+ * 			clk is disabled so no harm can be done.
+ *
+ * @retval	Init was successful or not: SRV_INIT_STATUS
+ */
+const BSP_SrvInitStat bsp_Servo_Init_PWM(void);
 
-void bsp_Servo_Rotate(uint16_t theta);
+/*
+ * @brief	Disables the servo timer clock.
+ */
+void bsp_Servo_Disable_TIM(void);
+
+/*
+ * @brief	Enables the servo timer.
+ */
+void bsp_Servo_Enable_TIM(void);
+
+/*
+ * @brief	Sets the timer compare to a given value and changes the duty cycle
+ * 			of the PWM. Servo will rotate to this position.
+ *
+ * @param	_pos_ : The desired compare value.
+ */
+void bsp_Servo_Set_Compare(const uint32_t pos);
+
+/*
+ * @brief	Gets the servo timer compare value.
+ *
+ * @retval	The compare value.
+ */
+const uint32_t bsp_Servo_Get_Compare();
 
 // --------------------------------------------------------------------------//
 
