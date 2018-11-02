@@ -1,47 +1,51 @@
 /*
- * bsp.h
+ * sch_ServoControlHandler.h
  *
- *  Created on: 2018. okt. 27.
+ *  Created on: 2018. nov. 1.
  *      Author: Joci
  */
 
-#ifndef BSP_H_
-#define BSP_H_
+#ifndef HANDLER_SCH_SERVOCONTROLHANDLER_H_
+#define HANDLER_SCH_SERVOCONTROLHANDLER_H_
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "adc.h"
+#include "BSP/bsp_servo.h"
 
 // --------------------------------------------------------------------------//
 
 // -------------------------------- Defines ---------------------------------//
 
-#define 	DEFAULT_STACK_SIZE 				128
-#define 	TASK_SHARP_PRIO						tskIDLE_PRIORITY+1
-#define 	TASK2_PRIO						tskIDLE_PRIORITY+2
-
-#define 	BSP_3V3							3.3
-
-#define  	BSP_SHARP_HADC					hadc1
-#define 	BSP_SHARP_ADC_CH 				4
-#define 	BSP_SHARP_ADC_RESOLUTION 	    4096
-
 // --------------------------------------------------------------------------//
 
 // ------------------------------- Variables --------------------------------//
-
-extern ADC_HandleTypeDef hadc1;
 
 // --------------------------------------------------------------------------//
 
 // ------------------------------ Declarations ------------------------------//
 
-/**
-  * @brief  Initializes the ADC associated with the SHARP sensor.
-  */
-void BSP_Sharp_ADC_Init();
+/*
+ * @brief	Initializes the module and the servo.
+ *
+ * @retval	Result of the initialization (OK, FAIL).
+ */
+const BSP_SrvInitStat sch_Servo_Init(void);
+
+/*
+ * @brief	Gets the servo position in radian.
+ *
+ * @retval	Servo angle.
+ */
+const double sch_Get_Servo_Angle(void);
+
+/*
+ * @brief	Rotates the servo to a given angle.
+ *
+ * @param	_theta_ : The desired servo angle.
+ */
+void sch_Set_Servo_Angle(const double theta);
 
 // --------------------------------------------------------------------------//
 
+#endif /* HANDLER_SCH_SERVOCONTROLHANDLER_H_ */
 
-#endif /* BSP_H_ */

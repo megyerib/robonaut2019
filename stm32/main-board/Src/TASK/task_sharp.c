@@ -7,17 +7,14 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "bsp.h"
-#include "task_sharp.h"
-#include "sds_SharpDistanceSensore.h"
+#include "HANDLER/sds_SharpDistanceSensor.h"
+#include "BSP/bsp.h"
+#include "TASK/task_sharp.h"
 #include "task.h"
 
 // --------------------------------------------------------------------------//
 
 // -------------------------------- Defines ---------------------------------//
-
-#define		DELAY_40_MS			40		// Depends on the Tick
-#define		DELAY_40_MS			40		// Depends on the Tick
 
 // --------------------------------------------------------------------------//
 
@@ -27,6 +24,8 @@
 
 // ------------------------------- Variables --------------------------------//
 
+EventGroupHandle_t event_sharp;
+
 // --------------------------------------------------------------------------//
 
 // ------------------------------- Functions --------------------------------//
@@ -34,7 +33,10 @@
 void TaskInit_Sharp(void * p)
 {
 	(void)p;
+
 	semSharp = xSemaphoreCreateBinary();
+	event_sharp = xEventGroupCreate();
+
 	if(semSharp != NULL)
 	{
 		xSemaphoreGive(semSharp);
@@ -49,10 +51,12 @@ void TaskInit_Sharp(void * p)
 				NULL);
 }
 
-void Task_Sharp(void * p)
+void Task_Sharp(void* p)
 {
 	(void)p;
+
 	uint16_t sharp_distance = 0;
+
 	while(1)
 	{
 		sds_ADC_Conversion();
@@ -60,12 +64,14 @@ void Task_Sharp(void * p)
 		if(sharp_distance > 40)
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+			xEventGroupClearBits(event_sharp, 1);
 		}
 		else
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+			xEventGroupSetBits(event_sharp, 1);
 		}
-		vTaskDelay(DELAY_40_MS);
+		vTaskDelay(BSP_DELAY_40_MS);
 	}
 }
 
