@@ -45,7 +45,8 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "mux.h"
+#include "test.h"
+#include "measure.h"
 #include "ldriver.h"
 /* USER CODE END Includes */
 
@@ -106,49 +107,23 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
-  InitMux();
   InitLDriver();
   EnableIr();
-  EnableLed();
 
-  uint32_t ledval = 0x0000FFFF;
-  int dir = 1;
-
-  uint32_t ldv = 1;
+  uint32_t irval = 1;
 
   while (1)
   {
-	  if (dir == 1)
-	  {
-		  ledval <<= 1;
-
-		  if (ledval & 0x80000000)
-			  dir = 0;
-	  }
-	  else
-	  {
-		  ledval >>= 1;
-
-		  if (ledval & 0x00000001)
-			  dir = 1;
-	  }
-
-	  WriteLed(ledval);
-
-	  /*ldv <<= 1;
-	  if (ldv == 0)
-		  ldv = 1;
-
-	  WriteLed(ldv); */
-
-
-
-	  HAL_Delay(50);
-
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+	  WriteIr(irval);
+	  HAL_Delay(1);
+	  measure();
+
+	  irval <<= 1;
+	  if (irval == 0)
+		  irval = 1;
 
   }
   /* USER CODE END 3 */
