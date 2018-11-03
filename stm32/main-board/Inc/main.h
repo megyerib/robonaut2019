@@ -52,6 +52,7 @@
 #define __MAIN_H__
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -61,6 +62,10 @@
 
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
+#define SPI2_SS3_Pin GPIO_PIN_0
+#define SPI2_SS3_GPIO_Port GPIOC
+#define SPI2_SS2_Pin GPIO_PIN_3
+#define SPI2_SS2_GPIO_Port GPIOC
 #define USART_TX_Pin GPIO_PIN_2
 #define USART_TX_GPIO_Port GPIOA
 #define USART_RX_Pin GPIO_PIN_3
@@ -69,14 +74,40 @@
 #define SHRP_SENS_AD14_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
+#define ENC_A_TIM31_Pin GPIO_PIN_6
+#define ENC_A_TIM31_GPIO_Port GPIOA
+#define ENC_B_TIM32_Pin GPIO_PIN_7
+#define ENC_B_TIM32_GPIO_Port GPIOA
+#define INRT_CS_Pin GPIO_PIN_4
+#define INRT_CS_GPIO_Port GPIOC
+#define INRT_SDO_Pin GPIO_PIN_14
+#define INRT_SDO_GPIO_Port GPIOB
+#define RADIO_UA6_TX_Pin GPIO_PIN_6
+#define RADIO_UA6_TX_GPIO_Port GPIOC
+#define RADIO_UA6_RX_Pin GPIO_PIN_7
+#define RADIO_UA6_RX_GPIO_Port GPIOC
+#define BT_UA5_RTS_Pin GPIO_PIN_8
+#define BT_UA5_RTS_GPIO_Port GPIOC
+#define BT_UA5_CTS_Pin GPIO_PIN_9
+#define BT_UA5_CTS_GPIO_Port GPIOC
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
 #define SRV_TIM21_Pin GPIO_PIN_15
 #define SRV_TIM21_GPIO_Port GPIOA
+#define BT_RST_Pin GPIO_PIN_10
+#define BT_RST_GPIO_Port GPIOC
+#define SPI2_SS1_Pin GPIO_PIN_11
+#define SPI2_SS1_GPIO_Port GPIOC
+#define BT_UA5_TX_Pin GPIO_PIN_12
+#define BT_UA5_TX_GPIO_Port GPIOC
+#define BT_UA5_RX_Pin GPIO_PIN_2
+#define BT_UA5_RX_GPIO_Port GPIOD
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+#define BT_CONN_Pin GPIO_PIN_8
+#define BT_CONN_GPIO_Port GPIOB
 
 /* ########################## Assert Selection ############################## */
 /**
