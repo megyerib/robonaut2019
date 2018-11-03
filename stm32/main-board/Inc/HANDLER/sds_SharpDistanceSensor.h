@@ -12,7 +12,7 @@
 
 #include "FreeRTOS.h"
 #include "semphr.h"
-#include "BSP/bsp.h"
+#include "bsp.h"
 
 // --------------------------------------------------------------------------//
 

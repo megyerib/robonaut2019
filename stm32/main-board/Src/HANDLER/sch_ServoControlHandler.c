@@ -7,7 +7,7 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include  "HANDLER/sch_ServoControlHandler.h"
+#include  "sch_ServoControlHandler.h"
 
 // --------------------------------------------------------------------------//
 

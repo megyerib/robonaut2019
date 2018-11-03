@@ -10,7 +10,7 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_cortex.h"
-#include "BSP/bsp.h"
+#include "bsp.h"
 
 // --------------------------------------------------------------------------//
 

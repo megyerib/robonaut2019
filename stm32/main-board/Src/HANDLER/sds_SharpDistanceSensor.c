@@ -7,8 +7,8 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include <HANDLER/sds_SharpDistanceSensor.h>
-#include "BSP/bsp.h"
+#include "sds_SharpDistanceSensor.h"
+#include "bsp.h"
 
 // --------------------------------------------------------------------------//
 

@@ -7,9 +7,9 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "HANDLER/sch_ServoControlHandler.h"
-#include "BSP/bsp.h"
-#include "TASK/task_servo.h"
+#include "sch_ServoControlHandler.h"
+#include "bsp.h"
+#include "task_servo.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "event_groups.h"

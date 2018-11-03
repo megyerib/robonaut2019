@@ -57,8 +57,8 @@
 
 /* USER CODE BEGIN Includes */
 #include "FreeRTOS.h"
-#include "TASK/task_sharp.h"
-#include "TASK/task_servo.h"
+#include "task_sharp.h"
+#include "task_servo.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
