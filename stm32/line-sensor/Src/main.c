@@ -107,23 +107,13 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  InitLDriver();
-  EnableIr();
-
-  uint32_t irval = 1;
 
   while (1)
   {
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  WriteIr(irval);
-	  HAL_Delay(1);
 	  measure();
-
-	  irval <<= 1;
-	  if (irval == 0)
-		  irval = 1;
 
   }
   /* USER CODE END 3 */
