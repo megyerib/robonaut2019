@@ -7,8 +7,8 @@ void LedTest()
 	uint32_t val = 0x0000000B;
 	uint32_t dir = 1;
 
-	InitLDriver();
-	EnableLed();
+	initLDriver();
+	enableLed();
 
 	while(1)
 	{
@@ -27,7 +27,7 @@ void LedTest()
 				dir = 1;
 		}
 
-		WriteLed(val);
+		writeLed(val);
 
 		HAL_Delay(30);
 	}
@@ -38,8 +38,8 @@ void IrTest()
 	uint32_t val = 0x0000000B;
 	uint32_t dir = 1;
 
-	InitLDriver();
-	EnableIr();
+	initLDriver();
+	enableIr();
 
 	while(1)
 	{
@@ -58,7 +58,7 @@ void IrTest()
 				dir = 1;
 		}
 
-		WriteIr(val);
+		writeIr(val);
 
 		HAL_Delay(30);
 	}
@@ -66,18 +66,18 @@ void IrTest()
 
 void LedTest_Sweep()
 {
-	static uint32_t LedSweepLeds = 1;
+	static uint32_t ledSweepLeds = 1;
 
-	InitLDriver();
-	EnableLed();
+	initLDriver();
+	enableLed();
 
 	while (1)
 	{
-		WriteLed(LedSweepLeds);
+		writeLed(ledSweepLeds);
 
-		LedSweepLeds <<= 1;
-		if (LedSweepLeds == 0)
-			LedSweepLeds = 1;
+		ledSweepLeds <<= 1;
+		if (ledSweepLeds == 0)
+			ledSweepLeds = 1;
 
 		HAL_Delay(30);
 	}
@@ -85,18 +85,18 @@ void LedTest_Sweep()
 
 void IrTest_Sweep()
 {
-	static uint32_t IrSweepLeds = 1;
+	static uint32_t irSweepLeds = 1;
 
-	InitLDriver();
-	EnableIr();
+	initLDriver();
+	enableIr();
 
 	while (1)
 	{
-		WriteIr(IrSweepLeds);
+		writeIr(irSweepLeds);
 
-		IrSweepLeds <<= 1;
-		if (IrSweepLeds == 0)
-			IrSweepLeds = 1;
+		irSweepLeds <<= 1;
+		if (irSweepLeds == 0)
+			irSweepLeds = 1;
 
 		HAL_Delay(30);
 	}
@@ -107,8 +107,8 @@ void LedTest_KnightRider()
 	uint32_t LED_KnightRiderLed = 0x0000FFFF;
 	int LED_KnightRiderDir = 1;
 
-	InitLDriver();
-	EnableLed();
+	initLDriver();
+	enableLed();
 
 	while(1)
 	{
@@ -127,7 +127,7 @@ void LedTest_KnightRider()
 				LED_KnightRiderDir = 1;
 		}
 
-		WriteLed(LED_KnightRiderLed);
+		writeLed(LED_KnightRiderLed);
 
 		HAL_Delay(30);
 	}
@@ -138,8 +138,8 @@ void IrTest_KnightRider()
 	uint32_t IR_KnightRiderLed = 0x000000FF;
 	int IR_KnightRiderDir = 1;
 
-	InitLDriver();
-	EnableIr();
+	initLDriver();
+	enableIr();
 
 	while(1)
 	{
@@ -158,7 +158,7 @@ void IrTest_KnightRider()
 				IR_KnightRiderDir = 1;
 		}
 
-		WriteIr(IR_KnightRiderLed);
+		writeIr(IR_KnightRiderLed);
 
 		HAL_Delay(30);
 	}

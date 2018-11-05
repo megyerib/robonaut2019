@@ -16,23 +16,24 @@
 #define LED_LATCH_ENABLE()  HAL_GPIO_WritePin(LED_LE_GPIO_Port, LED_LE_Pin, LATCH_ENABLED)
 #define LED_LATCH_DISABLE() HAL_GPIO_WritePin(LED_LE_GPIO_Port, LED_LE_Pin, LATCH_DISABLED)
 
-// -----------------------------------------------------------------------------
+// Static prototypes -----------------------------------------------------------
 
-static uint32_t TransformLedReg(uint32_t ledval);
-static uint32_t TransformIrReg(uint32_t irval);
+static uint32_t transformLedReg(uint32_t ledval);
+static uint32_t transformIrReg(uint32_t irval);
 
-// -----------------------------------------------------------------------------
+// Global ----------------------------------------------------------------------
 
-void InitLDriver()
+void initLDriver()
 {
 	IR_DISABLE();
 	LED_DISABLE();
 
-	HAL_GPIO_WritePin(LED_LE_GPIO_Port, LED_LE_Pin, LATCH_DISABLED);
-	HAL_GPIO_WritePin(IR_LE_GPIO_Port,  IR_LE_Pin,  LATCH_DISABLED);
+	// A biztonság kedvéért, ha a az egyikbe írunk, ne latchelõdjön a másik.
+	IR_LATCH_DISABLE();
+	LED_LATCH_DISABLE();
 }
 
-void EnableIr()
+void enableIr()
 {
 	IR_ENABLE();
 }
@@ -42,57 +43,60 @@ void DisableIr()
 	IR_DISABLE();
 }
 
-void EnableLed()
+void enableLed()
 {
 	LED_ENABLE();
 }
 
-void DisableLed()
+void disableLed()
 {
 	LED_DISABLE();
 }
 
-void WriteLed(uint32_t ledval)
+void writeLed(uint32_t ledval)
 {
-	ledval = TransformLedReg(ledval);
+	ledval = transformLedReg(ledval);
 
+	// Ha átírnám nem blokkolóra, állandó helyrõl kellene küldeni!
 	HAL_SPI_Transmit(&hspi1, (uint8_t*) &ledval, 4, HAL_MAX_DELAY);
 	HAL_SPI_Transmit(&hspi1, (uint8_t*) &ledval, 4, HAL_MAX_DELAY); // Dummy
 
+	// 6 ns kell neki, több, mint 20-at kap.
 	LED_LATCH_ENABLE();
-	HAL_Delay(1);
 	LED_LATCH_DISABLE();
 }
 
-void WriteIr(uint32_t irval)
+void writeIr(uint32_t irval)
 {
-	irval = TransformIrReg(irval);
+	irval = transformIrReg(irval);
 
+	// Ha átírnám nem blokkolóra, állandó helyrõl kellene küldeni!
 	HAL_SPI_Transmit(&hspi1, (uint8_t*) &irval, 4, HAL_MAX_DELAY);
 
+	// 6 ns kell neki, több, mint 20-at kap.
 	IR_LATCH_ENABLE();
-	HAL_Delay(1);
 	IR_LATCH_DISABLE();
 }
 
-void WriteLedIr(uint32_t ledval, uint32_t irval)
+void writeLedIr(uint32_t ledval, uint32_t irval)
 {
-	ledval = TransformLedReg(ledval);
-	irval = TransformIrReg(irval);
+	ledval = transformLedReg(ledval);
+	irval = transformIrReg(irval);
 
+	// Ha átírnám nem blokkolóra, állandó helyrõl kellene küldeni!
 	HAL_SPI_Transmit(&hspi1, (uint8_t*) &ledval, 4, HAL_MAX_DELAY);
 	HAL_SPI_Transmit(&hspi1, (uint8_t*) &irval,  4, HAL_MAX_DELAY);
 
 	LED_LATCH_ENABLE();
-	IR_LATCH_ENABLE();
-	HAL_Delay(1);
 	LED_LATCH_DISABLE();
+
+	IR_LATCH_ENABLE();
 	IR_LATCH_DISABLE();
 }
 
-// -----------------------------------------------------------------------------
+// Static ----------------------------------------------------------------------
 
-static uint32_t TransformIrReg(uint32_t irval)
+static uint32_t transformIrReg(uint32_t irval)
 {
 	uint16_t tmp;
 	uint16_t* words = (uint16_t*) &irval;
@@ -105,8 +109,9 @@ static uint32_t TransformIrReg(uint32_t irval)
 	return irval;
 }
 
-static uint32_t TransformLedReg(uint32_t ledval)
+static uint32_t transformLedReg(uint32_t ledval)
 {
+	// Igény szerint kirakható, ha kell máshol is.
 	const uint8_t fbo_lut[] =
 	{0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0,
 	 0x08, 0x88, 0x48, 0xC8, 0x28, 0xA8, 0x68, 0xE8, 0x18, 0x98, 0x58, 0xD8, 0x38, 0xB8, 0x78, 0xF8,

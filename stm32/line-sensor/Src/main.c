@@ -45,9 +45,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "test.h"
-#include "measure.h"
-#include "ldriver.h"
+#include "sensor.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -108,12 +106,14 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  startSensor();
+
   while (1)
   {
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	  measure();
+
 
   }
   /* USER CODE END 3 */

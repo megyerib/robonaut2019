@@ -1,3 +1,4 @@
+#pragma once
 #include "stm32f0xx_hal.h"
 
-void SendFullMeasurment(uint32_t* meas);
+void sendFullMeasurment(uint32_t* meas);

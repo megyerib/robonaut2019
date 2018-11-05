@@ -1,5 +1,4 @@
 #include "comm.h"
-#include <string.h>
 #include "usart.h"
 
 #define ENTRY_LEN  5
@@ -7,7 +6,7 @@
 
 uint8_t buf[ENTRY_LEN*ENTRY_NUM+1];
 
-void SendFullMeasurment(uint32_t* meas)
+void sendFullMeasurment(uint32_t* meas)
 {
 	int i;
 

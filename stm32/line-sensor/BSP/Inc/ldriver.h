@@ -1,12 +1,13 @@
+#pragma once
 #include "stm32f0xx_hal.h"
 
-void InitLDriver();
+void initLDriver();
 
-void EnableIr();
-void DisableIr();
-void EnableLed();
-void DisableLed();
+void enableIr();
+void disableIr();
+void enableLed();
+void disableLed();
 
-void WriteLed(uint32_t ledval);
-void WriteIr(uint32_t irval);
-void WriteLedIr(uint32_t ledval, uint32_t irval);
+void writeLed(uint32_t ledval);
+void writeIr(uint32_t irval);
+void writeLedIr(uint32_t ledval, uint32_t irval);
