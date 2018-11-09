@@ -9,6 +9,7 @@ typedef enum
 	rs4,
 	rs5,
 	rsNothing,
+	rsError,
 
 	rsNum
 }
@@ -16,3 +17,4 @@ RadioSignal;
 
 void InitRadio();
 RadioSignal GetRadioSignal();
+void radioUartCallback();

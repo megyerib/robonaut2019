@@ -109,10 +109,10 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     /**ADC1 GPIO Configuration    
     PA4     ------> ADC1_IN4 
     */
-    GPIO_InitStruct.Pin = SHARP_Pin;
+    GPIO_InitStruct.Pin = SHARP_VIN_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(SHARP_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(SHARP_VIN_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN ADC1_MspInit 1 */
 
@@ -134,7 +134,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     /**ADC1 GPIO Configuration    
     PA4     ------> ADC1_IN4 
     */
-    HAL_GPIO_DeInit(SHARP_GPIO_Port, SHARP_Pin);
+    HAL_GPIO_DeInit(SHARP_VIN_GPIO_Port, SHARP_VIN_Pin);
 
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
