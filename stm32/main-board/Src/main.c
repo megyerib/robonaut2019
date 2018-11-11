@@ -84,6 +84,7 @@ void InitTasks()
 {
 	TaskInit_Sharp(NULL);
 	TaskInit_Servo(NULL);
+	TaskInit_Navigation();
 
 	vTaskStartScheduler();
 }

@@ -18,8 +18,9 @@
 // -------------------------------- Defines ---------------------------------//
 
 #define 	DEFAULT_STACK_SIZE 				128
-#define 	TASK_SHARP_PRIO					tskIDLE_PRIORITY+2
-#define 	TASK_SRV_PRIO					tskIDLE_PRIORITY+1
+#define 	TASK_SHARP_PRIO					tskIDLE_PRIORITY+3
+#define 	TASK_SRV_PRIO					tskIDLE_PRIORITY+2
+#define 	TASK_NAVI_PRIO					tskIDLE_PRIORITY+1
 
 #define 	BSP_3V3							3.3
 
@@ -34,6 +35,7 @@
 
 #define		BSP_DELAY_40_MS					40		// Depends on the Tick
 #define		BSP_DELAY_20_MS					20
+#define		BSP_DELAY_16_MS					16
 
 // --------------------------------------------------------------------------//
 
