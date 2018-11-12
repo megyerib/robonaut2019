@@ -1,10 +1,9 @@
 // BSP
-#include "ldriver.h"
-#include "mux.h"
-// APP
-#include "measure.h"
 #include "eval.h"
 #include "feedback.h"
+#include "../../BSP/Inc/ldriver.h"
+#include "../../BSP/Inc/measure.h"
+#include "../../BSP/Inc/mux.h"
 
 void startSensor()
 {

@@ -49,13 +49,6 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define UART_OK_Pin GPIO_PIN_0
-#define UART_OK_GPIO_Port GPIOB
-#define SPI_OK_Pin GPIO_PIN_1
-#define SPI_OK_GPIO_Port GPIOB
-#define I2C_OK_Pin GPIO_PIN_2
-#define I2C_OK_GPIO_Port GPIOB
-
 /* ########################## Assert Selection ############################## */
 /**
   * @brief Uncomment the line below to expanse the "assert_param" macro in the 

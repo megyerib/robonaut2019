@@ -1,7 +1,9 @@
-#include "measure.h"
+#include "../../BSP/Inc/measure.h"
+
 #include "adc.h"
-#include "mux.h"
-#include "ldriver.h" // Az infrához kell
+
+#include "../../BSP/Inc/ldriver.h" // Az infrához kell
+#include "../../BSP/Inc/mux.h"
 
 // Static prototypes -----------------------------------------------------------
 
