@@ -8,8 +8,8 @@
 // ------------------------------- Includes -------------------------------- //
 
 #include "sds_SharpDistanceSensor.h"
-
-#include "bsp_servo.h"
+#include "bsp_sharp.h"
+#include "bsp_common.h"
 
 // --------------------------------------------------------------------------//
 
