@@ -7,10 +7,11 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "sds_SharpDistanceSensor.h"
-#include "bsp.h"
-#include "task_sharp.h"
+#include "../Inc/task_sharp.h"
+
+#include "bsp_servo.h"
 #include "task.h"
+#include "sds_SharpDistanceSensor.h"
 
 // --------------------------------------------------------------------------//
 

@@ -72,10 +72,9 @@ extern void _Error_Handler(char *, int);
 
 void MX_TIM2_Init(void);
 void MX_TIM3_Init(void);
-                    
+                        
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-                
-
+                    
 /* USER CODE BEGIN Prototypes */
 
 /* USER CODE END Prototypes */

@@ -8,10 +8,11 @@
 // ------------------------------- Includes -------------------------------- //
 
 #include "task_navigation.h"
-#include "drn_DeadReckoningNavigation.h"
-#include "bsp.h"
+
+#include "bsp_servo.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "drn_DeadReckoningNavigation.h"
 
 // --------------------------------------------------------------------------//
 
