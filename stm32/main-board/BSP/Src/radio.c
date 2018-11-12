@@ -7,12 +7,12 @@ static uint8_t message;
 
 static uint8_t debugBuf[2] = "X\n";
 
-void InitRadio()
+void radioInit()
 {
 	HAL_UART_Receive_IT(&huart6, &message, 1);
 }
 
-RadioSignal GetRadioSignal()
+RadioSignal radioGetState()
 {
 	return state;
 }

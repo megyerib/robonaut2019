@@ -32,7 +32,7 @@ typedef enum
 }
 ArcDir;
 
-void InitLine();
-Line GetLine();
-Arc GetArc(uint16_t r, ArcDir dir);
-RoadSignal GetRoadSignal();
+void lineInit();
+Line lineGet();
+Arc lineGetArc(uint16_t r, ArcDir dir);
+RoadSignal lineGetRoadSignal();

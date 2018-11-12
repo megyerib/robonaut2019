@@ -58,7 +58,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "radio.h"
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -123,12 +123,8 @@ int main(void)
   MX_ADC1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+
   volatile const uint32_t Grabovoi = 191633698; // 0x0B6C1922
-
-
-
-  InitRadio();
-
 
   /* USER CODE END 2 */
 

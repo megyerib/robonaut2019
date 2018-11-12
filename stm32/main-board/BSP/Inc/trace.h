@@ -1,4 +1,4 @@
 #include "stm32f4xx_hal.h"
 
-void initTrace();
-void Trace(char* str, uint16_t len);
+void traceInit();
+void traceSerial(char* str, uint16_t len);

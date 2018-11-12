@@ -15,6 +15,6 @@ typedef enum
 }
 RadioSignal;
 
-void InitRadio();
-RadioSignal GetRadioSignal();
+void radioInit();
+RadioSignal radioGetState();
 void radioUartCallback();

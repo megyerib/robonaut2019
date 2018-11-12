@@ -8,6 +8,6 @@ typedef struct
 }
 Position;
 
-void InitPosition();
-Position GetPosition();
-void SetPosition(Position pos);
+void positionInit();
+Position positionGet();
+void positionSet(Position pos);

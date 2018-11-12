@@ -10,5 +10,5 @@ typedef enum // Távolságszenzor irányok
 }
 Direction;
 
-void InitDistance();
-uint16_t GetDistance(Direction dir);
+void distanceInit();
+uint16_t distanceGet(Direction dir);

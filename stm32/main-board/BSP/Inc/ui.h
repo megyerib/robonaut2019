@@ -11,7 +11,7 @@ typedef enum
 }
 LedState;
 
-void InitUi();
-void SetLedState(uint8_t led, LedState state);
-GPIO_PinState GetButtonState();
-uint8_t GetRotarySwitchVal();
+void uiInit();
+void uiSetLedState(uint8_t led, LedState state);
+GPIO_PinState uiGetButtonState();
+uint8_t uiGetRotarySwitchVal();

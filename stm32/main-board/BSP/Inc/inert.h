@@ -11,5 +11,5 @@ typedef struct
 }
 Accel;
 
-void InitAccel();
-Accel GetAccel();
+void inertialInit();
+Accel inertialGetAccel();
