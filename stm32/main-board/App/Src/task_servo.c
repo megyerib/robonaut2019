@@ -7,13 +7,13 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "../Inc/task_servo.h"
-
-#include "bsp_servo.h"
+#include "task_servo.h"
+#include "bsp_common.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "event_groups.h"
 #include "sch_ServoControlHandler.h"
+#include "app_common.h"
 
 // --------------------------------------------------------------------------//
 
@@ -70,7 +70,10 @@ void Task_Servo(void* p)
 		// Angle in degree
 		degree = sch_Get_Servo_Angle() * 180 /PI;
 
-		vTaskDelay(BSP_DELAY_20_MS);
+		// No warning
+		degree = degree + 1 - 1;
+
+		vTaskDelay(TASK_DELAY_20_MS);
 	}
 }
 

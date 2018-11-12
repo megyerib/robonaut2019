@@ -7,11 +7,11 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "../Inc/task_sharp.h"
-
+#include "task_sharp.h"
 #include "bsp_servo.h"
 #include "task.h"
 #include "sds_SharpDistanceSensor.h"
+#include "app_common.h"
 
 // --------------------------------------------------------------------------//
 
@@ -41,7 +41,6 @@ void TaskInit_Sharp(void * p)
 	if(semSharp != NULL)
 	{
 		xSemaphoreGive(semSharp);
-		//BSP_Sharp_ADC_Init();
 	}
 
 	xTaskCreate(Task_Sharp,
@@ -72,7 +71,7 @@ void Task_Sharp(void* p)
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			xEventGroupSetBits(event_sharp, 1);
 		}
-		vTaskDelay(BSP_DELAY_40_MS);
+		vTaskDelay(TASK_DELAY_40_MS);
 	}
 }
 

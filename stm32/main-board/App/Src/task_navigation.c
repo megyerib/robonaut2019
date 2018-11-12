@@ -8,11 +8,11 @@
 // ------------------------------- Includes -------------------------------- //
 
 #include "task_navigation.h"
-
 #include "bsp_servo.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "drn_DeadReckoningNavigation.h"
+#include "app_common.h"
 
 // --------------------------------------------------------------------------//
 
@@ -58,15 +58,17 @@ void Task_Navigation(void* p)
 	(void)p;
 
 	NED_Parameters carCoordinates;
-	uint32_t i = 1;
 
 	carCoordinates.n = 0;
 	carCoordinates.e = 0;
 
 	while(1)
 	{
+		//drn_ReckonNavigation(v, w, dt)
 
-		vTaskDelay(BSP_DELAY_16_MS);
+		carCoordinates = drn_GetNedCoordinates();
+
+		vTaskDelay(TASK_DELAY_16_MS);
 	}
 }
 

@@ -23,6 +23,7 @@ typedef struct
 	double y;
 } VelocityVector;
 
+//TODO _Joci_ needs update
 typedef struct
 {
 	double omega;
