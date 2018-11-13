@@ -10,8 +10,6 @@
 #include "usart.h"
 #include "bsp_uart.h"
 
-// --------------------------------------------------------------------------//
-
 // -------------------------------- Defines ---------------------------------//
 
 #define		BSP_UART_1_HANDLER			huart1
@@ -29,28 +27,44 @@
 #define		BSP_UART_RADIO_HANDLER		huart6
 #define		BSP_UART_RADIO_INSTANCE		USART6
 
-// --------------------------------------------------------------------------//
-
 // ------------------------------ Declarations ------------------------------//
 
+/*
+ * @brief	Callback function that is call upon an UART RX interrupt.
+ */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 
+/*
+ * @brief	Initializes the UART 1 periphery.
+ * @retval	Returns BSP_OK upon successful init.
+ */
 static const BspStatus bspUart1Init (void);
 
+/*
+ * @brief	Initializes the UART 3 periphery.
+ * @retval	Returns BSP_OK upon successful init.
+ */
 static const BspStatus bspUart3Init (void);
 
+/*
+ * @brief	Initializes the UART 4 periphery.
+ * @retval	Returns BSP_OK upon successful init.
+ */
 static const BspStatus bspUart4Init (void);
 
+/*
+ * @brief	Initializes the UART 5 periphery.
+ * @retval	Returns BSP_OK upon successful init.
+ */
 static const BspStatus bspUartBluetoothInit (void);
 
+/*
+ * @brief	Initializes the UART 6 periphery.
+ * @retval	Returns BSP_OK upon successful init.
+ */
 static const BspStatus bspUartRadioInit (void);
 
-// --------------------------------------------------------------------------//
-
 // ------------------------------- Variables --------------------------------//
-
-// --------------------------------------------------------------------------//
-
 // ------------------------------ Functions ---------------------------------//
 
 const BspStatus bspUartInitAll (void)
@@ -63,6 +77,7 @@ const BspStatus bspUartInitAll (void)
 	BspStatus statusBt = bspUartBluetoothInit();
 	BspStatus statusRd = bspUartRadioInit();
 
+	// Check if all of the Init was successful.
 	if( status1 != BSP_OK || status3 != BSP_OK || status4 != BSP_OK
 			|| statusBt != BSP_OK || statusRd != BSP_OK)
 	{
@@ -76,6 +91,7 @@ const BspStatus bspUartInitDevice (const BspUartDevice device)
 {
 	BspStatus status = BSP_ERROR;
 
+	// Initialize the given periphery.
 	switch (device)
 	{
 		case Uart_1:
@@ -119,13 +135,14 @@ const BspStatus bspUartTransmit_IT (UART_HandleTypeDef* huart, uint8_t* pData, u
 {
 	BspStatus status = BSP_ERROR;
 
-	HAL_UART_Transmit_IT(huart, pData, Size);
+	status = HAL_UART_Transmit_IT(huart, pData, Size);
 
 	return status;
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+	// Decide which periphery own the interrupt.
 	if(huart->Instance == BSP_UART_1_INSTANCE)
 	{
 		bspUart1RxCpltCallback();
