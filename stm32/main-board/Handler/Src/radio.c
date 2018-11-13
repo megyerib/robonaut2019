@@ -1,6 +1,6 @@
-#include "../../Handler/Inc/radio.h"
+#include "radio.h"
 
-#include "uart-handler.h"
+#include "bsp_uart.h"
 #include "usart.h"
 
 static RadioSignal state = rsNothing;
@@ -10,7 +10,7 @@ static uint8_t debugBuf[2] = "X\n";
 
 void radioInit()
 {
-	HAL_UART_Receive_IT(&huart6, &message, 1);
+	bspUartReceive_IT(&huart6, &message, 1);
 }
 
 RadioSignal radioGetState()
@@ -18,14 +18,14 @@ RadioSignal radioGetState()
 	return state;
 }
 
-void radioUartCallback()
+void bspRadioRxCpltCallback()
 {
 	uint8_t newState;
 
-	HAL_UART_Receive_IT(&huart6, &message, 1);
+	bspUartReceive_IT(&huart6, &message, 1);
 
 	debugBuf[0] = message;
-	HAL_UART_Transmit_IT(&huart2, debugBuf, 2);
+	bspUartTransmit_IT(&huart2, debugBuf, 2);
 
 	if (message >= '0' && message <= '5')
 	{

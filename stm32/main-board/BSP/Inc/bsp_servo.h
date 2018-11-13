@@ -49,12 +49,6 @@ typedef enum BSP_SrvInitStat
 	SRV_INIT_FAIL_SRV_PWM,
 } BSP_SrvInitStat;
 
-typedef enum BSP_STATUS
-{
-	BSP_OK = 0,
-	BSP_FAIL
-} BSP_STATUS;
-
 // --------------------------------------------------------------------------//
 
 // -------------------------------- Structs ---------------------------------//
