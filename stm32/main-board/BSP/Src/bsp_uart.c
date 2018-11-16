@@ -1,16 +1,17 @@
-/*
- * bsp_uart.c
- *
- *  Created on: 2018. nov. 13.
- *      Author: Joci
- */
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//!
+//!  \file      bsp_uart.c
+//!  \brief
+//!  \details
+//!
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// ------------------------------- Includes -------------------------------- //
+// Includes ------------------------------------------------------------------------------------------------------------
 
 #include "usart.h"
 #include "bsp_uart.h"
 
-// -------------------------------- Defines ---------------------------------//
+// Defines -------------------------------------------------------------------------------------------------------------
 
 #define		BSP_UART_1_HANDLER			huart1
 #define		BSP_UART_1_INSTANCE			USART1
@@ -27,45 +28,33 @@
 #define		BSP_UART_RADIO_HANDLER		huart6
 #define		BSP_UART_RADIO_INSTANCE		USART6
 
-// ------------------------------ Declarations ------------------------------//
+// Typedefs ------------------------------------------------------------------------------------------------------------
 
-/*
- * @brief	Callback function that is call upon an UART RX interrupt.
- */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+// Local (static) & extern variables -----------------------------------------------------------------------------------
 
-/*
- * @brief	Initializes the UART 1 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
+// Local (static) function prototypes ----------------------------------------------------------------------------------
+
+//! @brief	 Initializes the UART 1 peripheral.
+//! @retval	 Returns BSP_OK upon successful init.
 static const BspStatus bspUart1Init (void);
 
-/*
- * @brief	Initializes the UART 3 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
+//! @brief	 Initializes the UART 3 peripheral.
+//! @retval	 Returns BSP_OK upon successful init.
 static const BspStatus bspUart3Init (void);
 
-/*
- * @brief	Initializes the UART 4 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
+//! @brief	 Initializes the UART 4 peripheral.
+//! @retval	 Returns BSP_OK upon successful init.
 static const BspStatus bspUart4Init (void);
 
-/*
- * @brief	Initializes the UART 5 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
+//! @brief	 Initializes the UART 5 peripheral.
+//! @retval	 Returns BSP_OK upon successful init.
 static const BspStatus bspUartBluetoothInit (void);
 
-/*
- * @brief	Initializes the UART 6 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
+//! @brief	 Initializes the UART 6 peripheral.
+//! @retval	 Returns BSP_OK upon successful init.
 static const BspStatus bspUartRadioInit (void);
 
-// ------------------------------- Variables --------------------------------//
-// ------------------------------ Functions ---------------------------------//
+// Global function definitions -----------------------------------------------------------------------------------------
 
 const BspStatus bspUartInitAll (void)
 {
@@ -142,7 +131,7 @@ const BspStatus bspUartTransmit_IT (UART_HandleTypeDef* huart, uint8_t* pData, u
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	// Decide which periphery own the interrupt.
+	// Decide which peripheral owns the interrupt.
 	if(huart->Instance == BSP_UART_1_INSTANCE)
 	{
 		bspUart1RxCpltCallback();
@@ -164,6 +153,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		bspRadioRxCpltCallback();
 	}
 }
+
+// Local (static) function definitions ---------------------------------------------------------------------------------
 
 static const BspStatus bspUart1Init (void)
 {
@@ -264,5 +255,3 @@ static const BspStatus bspUartRadioInit (void)
 
 	return status;
 }
-
-// --------------------------------------------------------------------------//
