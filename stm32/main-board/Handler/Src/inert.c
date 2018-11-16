@@ -29,7 +29,7 @@
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static const uint8_t regSequence[REGS_TO_READ] =
+static uint8_t regSequence[REGS_TO_READ] =
 {
 	OUTX_L_XL,  OUTX_H_XL,  // Accelerometer X
 	OUTY_L_XL,  OUTY_H_XL,  // Accelerometer Y
@@ -68,12 +68,14 @@ void inertInit()
 
 Accel inertGetAccel()
 {
-	return *((Accel*) &regResult[0]);
+	Accel* ptr = (Accel*) &regResult[0];
+    return *ptr;
 }
 
 AngVel inertGetAngVel()
 {
-	return *((AngVel*) &regResult[6]);
+    AngVel* ptr = (AngVel*) &regResult[6];
+    return *ptr;
 }
 
 // Sensor reading ------------------------------------------
@@ -84,7 +86,7 @@ void inertTriggerMeasurement()
 {
 	i = 0;
 
-	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSequence[i], 1, regResult[i], 1);
+	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSequence[i], 1, &regResult[i], 1);
 }
 
 void i2cInertialSensorMemRxCallback()
@@ -93,15 +95,18 @@ void i2cInertialSensorMemRxCallback()
 
 	if (i < REGS_TO_READ)
 	{
-		HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSequence[i], 1, regResult[i], 1);
+		HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSequence[i], 1, &regResult[i], 1);
 	}
 	else // Sensor reading finished
 	{
-		__disable_irq(); // Cheap thread safety
+	    Accel*  acc_ptr =  (Accel*) &regResult[0];
+	    AngVel* ang_ptr = (AngVel*) &regResult[6];
+
+	    __disable_irq(); // Cheap thread safety
 
 		// Copy the temporary values to their final location
-		ret_accel  = *( (Accel*) &regResult[0]);
-		ret_angvel = *((AngVel*) &regResult[6]);
+		ret_accel  = *acc_ptr;
+		ret_angvel = *ang_ptr;
 
 		__enable_irq();
 	}
@@ -112,5 +117,5 @@ void i2cInertialSensorMemRxCallback()
 static void WriteRegBlocking(uint8_t regAddr, uint8_t data)
 {
 	// Assuming SD0 is pulled down
-	HAL_I2C_Mem_Write(&hi2c1, LSM6DS3_ADDR0, regAddr, 1, &data, 1, HAL_MAX_DELAY);
+	HAL_I2C_Mem_Write(INERTIAL_I2C, LSM6DS3_ADDR0, regAddr, 1, &data, 1, HAL_MAX_DELAY);
 }
