@@ -29,7 +29,7 @@ static uint8_t message;
 
 void radioInit()
 {
-    bspUartReceive_IT(&huart6, &message, 1);
+	bspUartReceive_IT(Uart_Radio, &message, 1);
 }
 
 RadioSignal radioGetState()
@@ -41,7 +41,7 @@ void bspRadioRxCpltCallback()
 {
     uint8_t newState;
 
-    bspUartReceive_IT(&huart6, &message, 1);
+	bspUartReceive_IT(Uart_Radio, &message, 1);
 
     if (message >= '0' && message <= '5')
     {
