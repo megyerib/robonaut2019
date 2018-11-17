@@ -1,17 +1,18 @@
-/*
- * bsp_uart.c
- *
- *  Created on: 2018. nov. 13.
- *      Author: Joci
- */
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//!
+//!  \file      bsp_uart.c
+//!  \brief
+//!  \details
+//!
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// ------------------------------- Includes -------------------------------- //
+// Includes ------------------------------------------------------------------------------------------------------------
 
 #include "usart.h"
 #include "gpio.h"
 #include "bsp_uart.h"
 
-// -------------------------------- Defines ---------------------------------//
+// Defines -------------------------------------------------------------------------------------------------------------
 
 #define		BSP_UART_1_HANDLER			huart1
 #define		BSP_UART_1_INSTANCE			USART1
@@ -31,50 +32,9 @@
 #define		BSP_UART_RADIO_HANDLER		huart6
 #define		BSP_UART_RADIO_INSTANCE		USART6
 
-// ------------------------------ Declarations ------------------------------//
+// Typedefs ------------------------------------------------------------------------------------------------------------
 
-/*
- * @brief	Callback function that is call upon an UART RX interrupt.
- */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
-
-/*
- * @brief	Initializes the UART 1 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
-static eBspStatus bspUart1Init (void);
-
-/*
- * @brief	Initializes the UART 2 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
-static eBspStatus bspUartUsbInit (void);
-
-/*
- * @brief	Initializes the UART 3 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
-static eBspStatus bspUart3Init (void);
-
-/*
- * @brief	Initializes the UART 4 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
-static eBspStatus bspUart4Init (void);
-
-/*
- * @brief	Initializes the UART 5 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
-static eBspStatus bspUartBluetoothInit (void);
-
-/*
- * @brief	Initializes the UART 6 periphery.
- * @retval	Returns BSP_OK upon successful init.
- */
-static eBspStatus bspUartRadioInit (void);
-
-// ------------------------------- Variables --------------------------------//
+// Local (static) & extern variables -----------------------------------------------------------------------------------
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
@@ -83,7 +43,39 @@ extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart5;
 extern UART_HandleTypeDef huart6;
 
-// ------------------------------ Functions ---------------------------------//
+// Local (static) function prototypes ----------------------------------------------------------------------------------
+
+
+//! @brief	Initializes the UART 1 periphery.
+//! @retval	Returns BSP_OK upon successful init.
+static eBspStatus bspUart1Init (void);
+
+
+//! @brief	Initializes the UART 2 periphery.
+//! @retval	Returns BSP_OK upon successful init.
+static eBspStatus bspUartUsbInit (void);
+
+
+//! @brief	Initializes the UART 3 periphery.
+//! @retval	Returns BSP_OK upon successful init.
+static eBspStatus bspUart3Init (void);
+
+
+//! @brief	Initializes the UART 4 periphery.
+//! @retval	Returns BSP_OK upon successful init.
+static eBspStatus bspUart4Init (void);
+
+
+//! @brief	Initializes the UART 5 periphery.
+//! @retval	Returns BSP_OK upon successful init.
+static eBspStatus bspUartBluetoothInit (void);
+
+
+//! @brief	Initializes the UART 6 periphery.
+//! @retval	Returns BSP_OK upon successful init.
+static eBspStatus bspUartRadioInit (void);
+
+// Global function definitions -----------------------------------------------------------------------------------------
 
 eBspStatus bspUartInitAll (void)
 {
@@ -453,5 +445,3 @@ static eBspStatus bspUartRadioInit (void)
 
 	return status;
 }
-
-// --------------------------------------------------------------------------//
