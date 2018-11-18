@@ -80,8 +80,8 @@
 #define ENC_B_TIM32_GPIO_Port GPIOA
 #define INRT_CS_Pin GPIO_PIN_4
 #define INRT_CS_GPIO_Port GPIOC
-#define INRT_SDO_Pin GPIO_PIN_14
-#define INRT_SDO_GPIO_Port GPIOB
+#define INRT_SD0_Pin GPIO_PIN_14
+#define INRT_SD0_GPIO_Port GPIOB
 #define RADIO_UA6_TX_Pin GPIO_PIN_6
 #define RADIO_UA6_TX_GPIO_Port GPIOC
 #define RADIO_UA6_RX_Pin GPIO_PIN_7

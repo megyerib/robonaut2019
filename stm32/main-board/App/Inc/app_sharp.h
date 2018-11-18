@@ -1,40 +1,30 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      inert.h
-//!  \brief     Inertial sensor functions
+//!  \file      app_servo.h
+//!  \brief
 //!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma once
+
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "stm32f4xx_hal.h"
+#include "FreeRTOS.h"
+#include "event_groups.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
-
 // Typedefs ------------------------------------------------------------------------------------------------------------
-
-typedef struct
-{
-	uint16_t a_x;
-	uint16_t a_y;
-	uint16_t a_z;
-}
-Accel;
-
-typedef struct
-{
-	uint16_t omega_x;
-	uint16_t omega_y;
-	uint16_t omega_z;
-}
-AngVel;
-
 // Variables -----------------------------------------------------------------------------------------------------------
+
+extern EventGroupHandle_t event_sharp;
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-void inertInit();
-Accel inertGetAccel();
-AngVel inertGetAngVel();
-void inertTriggerMeasurement();
+//! @brief  Initializes Task_Sharp task. It creates semaphore for the sds module and calls the BSP_Sharp_ADC_Init()
+//! 		function.
+void TaskInit_Sharp(void* p);
+
+
+//! @brief	Task function that periodically updates the the measured distance value of the sds module.
+void Task_Sharp(void* p);

@@ -60,9 +60,10 @@
 /* USER CODE BEGIN Includes */
 #include "FreeRTOS.h"
 
-#include "task_servo.h"
-#include "task_sharp.h"
-#include "task_navigation.h"
+#include "app_sharp.h"
+#include "app_servo.h"
+#include "app_navigation.h"
+#include "app_cdt.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -85,8 +86,9 @@ void InitTasks();
 void InitTasks()
 {
 	TaskInit_Sharp(NULL);
-	TaskInit_Servo(NULL);
+	TaskInit_Servo();
 	TaskInit_Navigation();
+	TaskInit_CarDiagnosticsTool();
 
 	vTaskStartScheduler();
 }

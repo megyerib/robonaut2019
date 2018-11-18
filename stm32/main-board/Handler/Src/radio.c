@@ -1,47 +1,54 @@
-#include "../../Handler/Inc/radio.h"
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//!
+//!  \file      radio.c
+//!  \brief
+//!  \details
+//!
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "uart-handler.h"
+// Includes ------------------------------------------------------------------------------------------------------------
+
+#include "radio.h"
+#include "bsp_uart.h"
 #include "usart.h"
+
+// Defines -------------------------------------------------------------------------------------------------------------
+
+// Typedefs ------------------------------------------------------------------------------------------------------------
+
+// Local (static) & extern variables -----------------------------------------------------------------------------------
 
 static RadioSignal state = rsNothing;
 static uint8_t message;
 
-static uint8_t debugBuf[2] = "X\n";
+// Local (static) function prototypes ----------------------------------------------------------------------------------
+
+// Global function definitions -----------------------------------------------------------------------------------------
+
+// Local (static) function definitions ---------------------------------------------------------------------------------
 
 void radioInit()
 {
-	HAL_UART_Receive_IT(&huart6, &message, 1);
+	bspUartReceive_IT(Uart_Radio, &message, 1);
 }
 
 RadioSignal radioGetState()
 {
-	return state;
+    return state;
 }
 
-void radioUartCallback()
+void bspRadioRxCpltCallback()
 {
-	uint8_t newState;
+    uint8_t newState;
 
-	HAL_UART_Receive_IT(&huart6, &message, 1);
+	bspUartReceive_IT(Uart_Radio, &message, 1);
 
-	debugBuf[0] = message;
-	HAL_UART_Transmit_IT(&huart2, debugBuf, 2);
-
-	if (message >= '0' && message <= '5')
-	{
-		newState = message - '0';
-
-		if (newState < state)
-		{
-			state = newState;
-		}
-		else
-		{
-			state = rsError;
-		}
-	}
-	else
-	{
-		state = rsError;
-	}
+    if (message >= '0' && message <= '5')
+    {
+        newState = message - '0';
+    }
+    else
+    {
+        state = rsError;
+    }
 }

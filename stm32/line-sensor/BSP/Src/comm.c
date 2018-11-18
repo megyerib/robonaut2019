@@ -1,4 +1,5 @@
-#include "comm.h"
+#include "../../BSP/Inc/comm.h"
+
 #include "usart.h"
 
 #define ENTRY_LEN  5

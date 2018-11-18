@@ -1,4 +1,4 @@
-#include <mux.h>
+#include "../../BSP/Inc/mux.h"
 
 #define MUX_ENABLED  0
 #define MUX_DISABLED 1
