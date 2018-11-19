@@ -49,6 +49,17 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define PWM_ON_6V_Pin GPIO_PIN_6
+#define PWM_ON_6V_GPIO_Port GPIOA
+#define PWM_ON_5V_Pin GPIO_PIN_7
+#define PWM_ON_5V_GPIO_Port GPIOA
+#define UART_LED_Pin GPIO_PIN_0
+#define UART_LED_GPIO_Port GPIOB
+#define SPI_LED_Pin GPIO_PIN_1
+#define SPI_LED_GPIO_Port GPIOB
+#define I2C_LED_Pin GPIO_PIN_2
+#define I2C_LED_GPIO_Port GPIOB
+
 /* ########################## Assert Selection ############################## */
 /**
   * @brief Uncomment the line below to expanse the "assert_param" macro in the 
