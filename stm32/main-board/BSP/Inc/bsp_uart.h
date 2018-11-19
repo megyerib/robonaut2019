@@ -10,7 +10,6 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "stm32f4xx_hal.h"
 #include "bsp_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -42,6 +41,33 @@ eBspStatus bspUartInitAll (void);
 //!
 //! @retval	Returns BSP_OK if the init was successful.
 eBspStatus bspUartInitDevice (const eBspUartDevice uartDevice);
+
+//! @brief	Receives an amount of data in blocking mode. This function encapsulates a HAL function.
+//!
+//! @param	uartDevice	Enum to the Handler of the UART periphery that will receive the message.
+//! @param	pData		Pointer to a buffer in which the message will be copied.
+//! @param	Size		Amount of data to be received.
+//!
+//! @retval	Returns BSP_OK if the receiving was successful.
+eBspStatus bspUartReceive (const eBspUartDevice uartDevice,
+								 uint8_t* const pData,
+								 const uint16_t Size,
+							     const uint32_t Timeout
+							);
+
+//!
+//! @brief	Sends an amount of data in blocking mode. This function encapsulates a HAL function.
+//!
+//! @param	uartDevice	Enum to the handler of the UART periphery that will transmit the message.
+//! @param	pData		Pointer to a buffer that will be send out.
+//! @param	Size		Amount of data to be sent.
+//!
+//! @retval	Returns BSP_OK if the sending was successful.
+eBspStatus bspUartTransmit (const eBspUartDevice uartDevice,
+								  uint8_t* const pData,
+								  const uint16_t Size,
+								  const uint32_t Timeout
+							);
 
 
 //! @brief	Receives an amount of data in non blocking mode. This function encapsulates a HAL function.

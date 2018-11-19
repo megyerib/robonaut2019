@@ -64,6 +64,9 @@ void Task_Sharp(void* p)
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			xEventGroupSetBits(event_sharp, 1);
 		}
+
+		bcmTraceSharpDistance(sharp_distance);
+
 		vTaskDelay(TASK_DELAY_40_MS);
 	}
 }

@@ -137,6 +137,90 @@ eBspStatus bspUartInitDevice (const eBspUartDevice uartDevice)
 	return status;
 }
 
+eBspStatus bspUartReceive (const eBspUartDevice uartDevice,
+								 uint8_t* const pData,
+								 const uint16_t Size,
+							     const uint32_t Timeout
+							)
+{
+	eBspStatus status = BSP_ERROR;
+
+	switch (uartDevice)
+	{
+		case Uart_1:
+			status = HAL_UART_Receive(&BSP_UART_1_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_USB:
+			status = HAL_UART_Receive(&BSP_UART_USB_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_3:
+			status = HAL_UART_Receive(&BSP_UART_3_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_4:
+			status = HAL_UART_Receive(&BSP_UART_4_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_Bluetooth:
+			status = HAL_UART_Receive(&BSP_UART_BT_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_Radio:
+			status = HAL_UART_Receive(&BSP_UART_RADIO_HANDLER, pData, Size, Timeout);
+			break;
+
+		default:
+			status = BSP_ERROR;
+			break;
+	}
+
+	return status;
+}
+
+eBspStatus bspUartTransmit (const eBspUartDevice uartDevice,
+								  uint8_t* const pData,
+								  const uint16_t Size,
+								  const uint32_t Timeout
+							)
+{
+	eBspStatus status = BSP_ERROR;
+
+	switch (uartDevice)
+	{
+		case Uart_1:
+			status = HAL_UART_Transmit(&BSP_UART_1_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_USB:
+			status = HAL_UART_Transmit(&BSP_UART_USB_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_3:
+			status = HAL_UART_Transmit(&BSP_UART_3_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_4:
+			status = HAL_UART_Transmit(&BSP_UART_4_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_Bluetooth:
+			status = HAL_UART_Transmit(&BSP_UART_BT_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_Radio:
+			status = HAL_UART_Transmit(&BSP_UART_RADIO_HANDLER, pData, Size, Timeout);
+			break;
+
+		default:
+			status = BSP_ERROR;
+			break;
+	}
+
+	return status;
+}
+
 eBspStatus bspUartReceive_IT (const eBspUartDevice uartDevice, uint8_t* const pData, const uint16_t Size)
 {
 	eBspStatus status = BSP_ERROR;
