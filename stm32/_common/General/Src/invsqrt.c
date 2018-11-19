@@ -1,16 +1,14 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      radio.c
-//!  \brief
-//!  \details
+//!  \file      invsqrt.c
+//!  \brief     
+//!  \details   
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "radio.h"
-#include "bsp_uart.h"
-#include "usart.h"
+#include <stdint.h>
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -18,35 +16,25 @@
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static RadioSignal state = rsNothing;
-static uint8_t message;
-
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
+float invSqrt( float number )
+{
+    union {
+        float f;
+        uint32_t i;
+    } conv;
+
+    float x2;
+    const float threehalfs = 1.5F;
+
+    x2 = number * 0.5F;
+    conv.f  = number;
+    conv.i  = 0x5f3759df - ( conv.i >> 1 );
+    conv.f  = conv.f * ( threehalfs - ( x2 * conv.f * conv.f ) );
+    return conv.f;
+}
+
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-void radioInit()
-{
-	bspUartReceive_IT(Uart_Radio, &message, 1);
-}
-
-RadioSignal radioGetState()
-{
-    return state;
-}
-
-void bspRadioRxCpltCallback()
-{
-	bspUartReceive_IT(Uart_Radio, &message, 1);
-
-    if (message >= '0' && message <= '5')
-    {
-        state = message - '0';
-    }
-    else
-    {
-        state = rsError;
-    }
-}

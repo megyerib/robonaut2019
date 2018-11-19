@@ -63,7 +63,6 @@
 #include "app_sharp.h"
 #include "app_servo.h"
 #include "app_navigation.h"
-#include "app_cdt.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -88,7 +87,7 @@ void InitTasks()
 	TaskInit_Sharp(NULL);
 	TaskInit_Servo();
 	TaskInit_Navigation();
-	TaskInit_CarDiagnosticsTool();
+	//TaskInit_CarDiagnosticsTool();
 
 	vTaskStartScheduler();
 }

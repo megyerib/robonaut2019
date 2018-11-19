@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>main-board</name>
+	<name>motor-controller</name>
 	<comment></comment>
 	<projects>
 		<project>_common</project>
