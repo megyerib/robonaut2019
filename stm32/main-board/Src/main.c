@@ -85,10 +85,11 @@ void InitTasks();
 /* USER CODE BEGIN 0 */
 void InitTasks()
 {
+	TaskInit_CarDiagnosticsTool();
 	TaskInit_Sharp(NULL);
 	TaskInit_Servo();
 	TaskInit_Navigation();
-	TaskInit_CarDiagnosticsTool();
+
 
 	vTaskStartScheduler();
 }
@@ -118,7 +119,8 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  // Wait for the PSU init
+  HAL_Delay(1000);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
