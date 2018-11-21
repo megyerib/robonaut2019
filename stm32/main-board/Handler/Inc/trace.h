@@ -5,12 +5,22 @@
 //!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma once
+
 // Includes ------------------------------------------------------------------------------------------------------------
+
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 
 #include "stm32f4xx_hal.h"
 
+#include "bcm_BluetoothCommunication.h"
+
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define TRACE_DECIMALS_SERVO_ANGLE				4
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -18,5 +28,8 @@
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-void traceInit();
-void traceSerial(char* str, uint16_t len);
+void traceInit (void);
+
+void traceBluetooth (const eBluetoothLogMember destination, void* const data);
+
+void traceFlushData (void);
