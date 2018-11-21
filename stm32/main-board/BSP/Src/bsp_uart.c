@@ -179,10 +179,11 @@ eBspStatus bspUartReceive (const eBspUartDevice uartDevice,
 	return status;
 }
 
-eBspStatus bspUartTransmit (const eBspUartDevice uartDevice,
-								  uint8_t* const pData,
-								  const uint16_t Size,
-								  const uint32_t Timeout
+eBspStatus bspUartTransmit (
+								 const eBspUartDevice uartDevice,
+								  uint8_t* const 	  pData,
+								  const uint16_t 	  Size,
+								  const uint32_t 	  Timeout
 							)
 {
 	eBspStatus status = BSP_ERROR;

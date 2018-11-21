@@ -64,7 +64,6 @@ void hndlPlaceIntegerToAsciiMsg (uint8_t* const array, const uint32_t value, con
 	uint32_t length;
 	uint32_t offset;
 
-	//TODO handle saturation
 	length = hndlGetNumberLength(value);
 
 	offset = frameSize - length;
