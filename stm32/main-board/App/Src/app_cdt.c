@@ -8,22 +8,21 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "FreeRTOS.h"
-#include "task.h"
-
 #include "app_common.h"
 #include "app_cdt.h"
-#include "bcm_BluetoothCommunication.h"
-#include <stdbool.h>
+
+#include "trace.h"
 
 //TODO _Joci_ delete this
-#include "usart.h"
 #include "bsp_uart.h"
-#include "gpio.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
+
+QueueHandle_t qSharpDistance_u16;
+QueueHandle_t qSharpCollWarn_x;
+QueueHandle_t qServoAngle_d;
 
 /*uint8_t	txBtMsg0[16] = "AT+AB FWVersion\r";
 uint8_t txBtMsg1[25] = "AT+AB LocalName Override\r";
@@ -59,6 +58,10 @@ void TaskInit_CarDiagnosticsTool(void)
 		bcmInit();
 	}
 
+	qSharpDistance_u16 = xQueueCreate( 1, sizeof( uint16_t ) );
+	qSharpCollWarn_x = xQueueCreate( 1, sizeof( bool ) );
+	qServoAngle_d    = xQueueCreate( 1, sizeof( double ) );
+
 	xTaskCreate(Task_CarDiagnosticsTool,
 				"TASK_CAR_DIAGNOSTICS_TOOL",
 				DEFAULT_STACK_SIZE,
@@ -92,10 +95,15 @@ void Task_CarDiagnosticsTool(void* p)
 
 	uint8_t helloMsg[18] = "Hello Override\r\n";
 
+	//TODO remove
+	//uint16_t bufferShrpDstQ;
+	//bool bufferShrColp;
+
 	while(1)
 	{
 		if(sent == 10)
 		{
+			//TODO trace wrapping
 			bcmSend(helloMsg, sizeof(helloMsg));
 
 			sent = 0;
@@ -124,7 +132,15 @@ void Task_CarDiagnosticsTool(void* p)
 			}
 		}*/
 
-		bcmBtBufferFlush();
+
+		//TODO relplace with trace funtions
+		//xQueueReceive(qSharpDistance,&bufferShrpDstQ, 0);
+		//xQueueReceive(qSharpCollWarn,&bufferShrColp, 0);
+		//TODO remove
+		//bcmTraceSharpDistance(bufferShrpDstQ);
+		//bcmTraceSharpCollisionWarning(bufferShrColp);
+
+		traceFlushData();
 
 		vTaskDelay(100);
 	}
