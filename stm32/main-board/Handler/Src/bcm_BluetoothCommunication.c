@@ -23,6 +23,9 @@ cBluetoothLog btLog;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
+//! Reads out the module structure that holds the bluetooth logs.
+//!
+//! @param log		this will get the values
 static void bcmLogGet (cBluetoothLog* const log);
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -36,6 +39,7 @@ void bcmInit (void)
 	// Reset pin to high -> enable Bluetooth module.
 	HAL_GPIO_WritePin(BT_RST_GPIO_Port, BT_RST_Pin, GPIO_PIN_SET);
 
+	//TODO DEBUG: Empty the structure
 	memset(btLog.sharpDistant, 0, BCM_LOG_LENGHT_SHARP_DISTANCE);
 	memset(btLog.sharpCollisionWarning, 0, BCM_LOG_LENGHT_SHARP_COLLISION_WARNING);
 	memset(btLog.servoAngle, 0, BCM_LOG_LENGHT_SERVO_ANGLE);
@@ -59,18 +63,22 @@ void bcmInit (void)
 	memset(btLog.mtrSrvCurr, 0, BCM_LOG_LENGHT_MTR_SRV_CURR);
 	memset(btLog.mtrCmdStopEngine, 0, BCM_LOG_LENGHT_MTR_CMD_STOP_ENGINE);
 	memset(btLog.ctrMtrCurr, 0, BCM_LOG_LENGHT_CTRL_MTR_CURR);
+	// END_DEBUG
 
 	bcmTryConnectToCar();
 }
 
 bool bcmBluetoothConnected (void)
 {
-	// Check the connection
-	return HAL_GPIO_ReadPin(BT_CONN_GPIO_Port, BT_CONN_Pin);
+	// Check the connection and update flag
+	connected = HAL_GPIO_ReadPin(BT_CONN_GPIO_Port, BT_CONN_Pin);
+
+	return connected;
 }
 
 void bcmResetBluetooth (void)
 {
+	// Bluetooth module needs a 5ms long low active pulse to reset
 	HAL_GPIO_WritePin(BT_CONN_GPIO_Port, BT_CONN_Pin, GPIO_PIN_RESET);
 	HAL_Delay(10);
 	HAL_GPIO_WritePin(BT_CONN_GPIO_Port, BT_CONN_Pin, GPIO_PIN_SET);
@@ -143,13 +151,16 @@ void bcmBtBufferFlush (void)
 	// Get the bluetooth log.
 	bcmLogGet(&log);
 
+	// Set header.
 	btBuffer[index] = 'A';
 	btBuffer[index+1] = 'A';
 	index += header;
 
+	// Store the length of the whole message.
 	hndlPlaceIntegerToAsciiMsg(btBuffer+index, bufSize, msgSize, false);
 	index += msgSize;
 
+	// Build up the message.
 	memcpy(btBuffer+index, log.sharpDistant, BCM_LOG_LENGHT_SHARP_DISTANCE);
 	index += BCM_LOG_LENGHT_SHARP_DISTANCE;
 
@@ -219,9 +230,11 @@ void bcmBtBufferFlush (void)
 	memcpy(btBuffer+index, log.ctrMtrCurr, BCM_LOG_LENGHT_CTRL_MTR_CURR);
 	index += BCM_LOG_LENGHT_CTRL_MTR_CURR;
 
+	// Set up the footer.
 	btBuffer[bufSize-2] = '\r';
 	btBuffer[bufSize-1] = '\n';
 
+	// Send out the message
 	bspUartTransmit_IT(Uart_Bluetooth, btBuffer, bufSize);
 }
 
@@ -229,6 +242,7 @@ bool bcmLogMemberUpdate (const eBluetoothLogMember member, uint8_t* const array,
 {
 	bool success = true;
 
+	// Save the value into right slot of the structure.
 	switch (member) {
 		case BCM_LOG_SHARP_DISTANCE:
 			memcpy(btLog.sharpDistant, array, len);
@@ -321,6 +335,7 @@ void bcmReceive (uint8_t* const rxBuffer, const uint16_t length)
 
 void bcmLogGet (cBluetoothLog* const log)
 {
+	// Build up the structure.
 	memcpy(log->sharpDistant, btLog.sharpDistant, BCM_LOG_LENGHT_SHARP_DISTANCE);
 	memcpy(log->sharpCollisionWarning, btLog.sharpCollisionWarning, BCM_LOG_LENGHT_SHARP_COLLISION_WARNING);
 	memcpy(log->servoAngle, btLog.servoAngle, BCM_LOG_LENGHT_SERVO_ANGLE);

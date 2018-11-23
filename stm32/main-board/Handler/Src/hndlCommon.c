@@ -19,14 +19,18 @@
 uint32_t hndlGetNumberLength (const uint32_t number)
 {
 	uint32_t lenght = 0;
-	uint32_t temp = (uint32_t)number;
+	uint32_t temp = number;
 
+	// If the number was 0, then its length is 1.
 	if (temp == 0)
 	{
 		lenght = 1;
 	}
 	else
 	{
+		// The absolute value of the number is > 0.
+
+		// Count the digits/length.
 		while (temp > 0)
 		{
 			lenght++;
@@ -43,8 +47,12 @@ bool hndlConvertUintToUintArray (uint8_t* const array, const uint32_t value, con
 	uint32_t i = 0;
 	uint32_t temp;
 
+	// Check if the pointer is NULL.
 	if (array != NULL)
 	{
+		// Pointer is not NULL.
+
+		// Fill up the array with the digits of the value form the back.
 		temp = value;
 		for(i = len; i > 0; i--)
 		{
@@ -52,6 +60,7 @@ bool hndlConvertUintToUintArray (uint8_t* const array, const uint32_t value, con
 			temp /= 10;
 		}
 
+		// Success flag is set.
 		success = true;
 	}
 
@@ -79,10 +88,10 @@ void hndlPlaceIntegerToAsciiMsg (uint8_t* const array, const uint32_t value, con
 		offset = frameSize - length;
 	}
 
-	// Convert the vale to an array.
+	// Convert the vale to an array with the offset.
 	hndlConvertUintToUintArray(array+offset, value, length);
 
-	// Convert the array to ASCII characters.
+	// Convert the array to ASCII characters. Before the offset all will be '0'.
 	for (i = 1; i < frameSize; i++)
 	{
 		array[i] += 0x30;
@@ -111,25 +120,24 @@ void hndlPlaceFractionToAsciiMsg (
 	uint32_t convertedValue;
 	bool isNegative = false;
 
-	// Convert the double value to a integer
+	// Convert the double value to a integer.
 	for (i = 0; i < decimaldigits; i++)
 	{
 		temp *= 10;
 	}
 
-	// If it is a negative number take its absolute value and sign it negative
+	// If it is a negative number take its absolute value and sign it negative.
 	if(temp < 0)
 	{
 		temp *= -1;
 		isNegative = true;
 	}
 
-	// Cast the double to unsigned int
+	// Cast the double to unsigned int.
 	convertedValue = (uint32_t)temp;
 
-	// Call the Integer placer function with absolute value and negative indication flag
+	// Call the Integer placer function with absolute value and negative indication flag.
 	hndlPlaceIntegerToAsciiMsg(array, convertedValue, frameSize, isNegative);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
-

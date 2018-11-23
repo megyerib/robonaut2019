@@ -14,6 +14,7 @@
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
+//! Handles of the available message queues
 extern QueueHandle_t qSharpDistance_u32;	// 1
 extern QueueHandle_t qSharpCollWarn_x;
 extern QueueHandle_t qServoAngle_d;
@@ -40,10 +41,28 @@ extern QueueHandle_t qCtrlMtrCurr_d;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
+//! Converts a integer value to a unit8_t array so it can be sent out on bluetooth.
+//!
+//! @param value		value that will be sent out
+//! @param member		determines which how sent and what type of data
+//! @param length		how many character has to be sent out
+//! @return				was the conversion successful or not
 static bool traceWrapInteger (uint32_t* const value, const eBluetoothLogMember member, const uint32_t length);
 
+//! Converts a bool value to a unit8_t array so it can be sent out on bluetooth.
+//!
+//! @param value		value that will be sent out
+//! @param member		determines which how sent and what type of data
+//! @return				was the conversion successful or not
 static bool traceWrapBool (bool* const value, const eBluetoothLogMember member);
 
+//!	Converts a bool value to a unit8_t array so it can be sent out on bluetooth.
+//!
+//! @param value		value that will be sent out
+//! @param decimals		how many decimals of the double has to be sent out
+//! @param member		determines which how sent and what type of data
+//! @param length		how many character has to be sent out
+//! @return				was the conversion successful or not
 static bool traceWrapDouble (
 								double* const 			  value,
 								const uint32_t 			  decimals,
@@ -51,6 +70,11 @@ static bool traceWrapDouble (
 								const uint32_t 			  length
 							);
 
+//! Determines a power of 10 that can be used as a bound. With this the vlaue can be satured so it can be sent out in a
+//! given lenght and decimals value.
+//!
+//! @param digits		how many digit the value consist of
+//! @return				the calculated bound
 static uint32_t traceGetBoundCharNum (const uint32_t digits);
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -62,6 +86,7 @@ void traceInit (void)
 
 void traceBluetooth(const eBluetoothLogMember destination, void* const data)
 {
+	// Select who sent the log request.
 	switch (destination)
 	{
 		case BCM_LOG_SHARP_DISTANCE:		// 1
@@ -164,6 +189,7 @@ void traceFlushData (void)
 	bool     mtrCmdStopEngine;
 	double   ctrlMtrCurr;
 
+	// Collect and save the values from the queue into the bluetooth log structure.
 	xQueueReceive(qSharpDistance_u32, &sharpDist, 0);
 	traceWrapInteger(&sharpDist, BCM_LOG_SHARP_DISTANCE, BCM_LOG_LENGHT_SHARP_DISTANCE);
 
@@ -233,6 +259,7 @@ void traceFlushData (void)
 	xQueueReceive(qCtrlMtrCurr_d, &ctrlMtrCurr, 0);
 	traceWrapDouble(&ctrlMtrCurr, TRACE_DECIMALS_CTRL_MTR_CURR, BCM_LOG_CTR_MTR_CURR, BCM_LOG_LENGHT_CTRL_MTR_CURR);
 
+	// Send out the bluetooth log.
 	bcmBtBufferFlush();
 }
 
@@ -268,18 +295,21 @@ static bool traceWrapInteger (uint32_t* const value, const eBluetoothLogMember m
 	}
 	else
 	{
-		// postive
+		// positive
 		bound = traceGetBoundCharNum(length);
 
-		// Saturation
+		// Check the bound.
 		if (locValue >= bound)
 		{
+			// Over the bound, saturate under the bound.
 			locValue = bound - 1;
 		}
 	}
 
+	// Save the value into a buffer.
 	hndlPlaceIntegerToAsciiMsg(buffer, locValue, length, isNegative);
 
+	// Save the buffer into the bluetooth log structure.
 	traced = bcmLogMemberUpdate(member, buffer, length);
 
 	return traced;
@@ -290,8 +320,10 @@ static bool traceWrapBool (bool* const value, const eBluetoothLogMember member)
 	bool traced = false;
 	uint8_t buffer;
 
+	// Convert the bool value to ASCII character.
 	buffer = (uint8_t)(*value) + 0x30;
 
+	// Save the value to the bluetooth log structure.
 	traced = bcmLogMemberUpdate(member, &buffer, 1);
 
 	return traced;
@@ -310,7 +342,7 @@ static bool traceWrapDouble (
 	uint32_t bound;
 	double   locValue = *value;
 
-	// At least one integer digit is need, the alue can't be only decimals.
+	// At least one integer digit is need, the value can't be only decimals.
 	if(length > decimals)
 	{
 		// Empty the buffer;

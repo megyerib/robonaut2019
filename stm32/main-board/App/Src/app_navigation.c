@@ -62,6 +62,10 @@ void Task_Navigation(void* p)
 
 	cNedParameters ned;
 
+	a.a_x = 0;
+	a.a_y = 0;
+	a.a_z = 0;
+
 	while(1)
 	{
 		prev_a = a;
