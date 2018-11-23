@@ -1,15 +1,14 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      feedback.c
-//!  \brief
-//!  \details
+//!  \file      controller.c
+//!  \brief     
+//!  \details   
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "feedback.h"
-#include "ldriver.h"
+#include "controller.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -19,26 +18,20 @@
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static uint8_t mmToLedPos(uint8_t mm);
-
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void ledFeedback(LINE* line)
+float control(float in, CONTROLLER* C)
 {
-    uint32_t ledval = 0, i;
+    float out, diff;
 
-    for (i = 0; i < line->cnt; i++)
-    {
-        ledval |= mmToLedPos(line->lines[i]);
-        ledval |= mmToLedPos(line->lines[i] + 1);
-    }
+    C->sum += in;
+    diff = in - C->prev;
 
-    writeLed(ledval);
+    out = (C->P * in) + (C->I * C->sum) + (C->D * diff);
+
+    C->prev = in;
+
+    return out;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-static uint8_t mmToLedPos(uint8_t mm)
-{
-    return (uint8_t)((mm - MID_IR_POS_MM) / IR_DIST_MM + 16);
-}

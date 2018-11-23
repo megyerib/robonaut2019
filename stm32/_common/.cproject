@@ -20,13 +20,21 @@
 				<configuration artifactExtension="a" artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -f" description="" id="com.atollic.truestudio.lib.debug.923833076" name="Debug" parent="com.atollic.truestudio.lib.debug">
 					<folderInfo id="com.atollic.truestudio.lib.debug.923833076." name="/" resourcePath="">
 						<toolChain id="com.atollic.truestudio.lib.debug.toolchain.1630471259" name="Atollic ARM Tools" superClass="com.atollic.truestudio.lib.debug.toolchain">
-							<option id="com.atollic.truestudio.general.runtimelib.602013801" superClass="com.atollic.truestudio.general.runtimelib" value="com.atollic.truestudio.ld.general.clib.small" valueType="enumerated"/>
+							<option id="com.atollic.truestudio.general.runtimelib.602013801" name="Runtime Library" superClass="com.atollic.truestudio.general.runtimelib" value="com.atollic.truestudio.ld.general.clib.small" valueType="enumerated"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.atollic.truestudio.lib.debug.toolchain.platform.628575971" isAbstract="false" name="Debug platform" superClass="com.atollic.truestudio.lib.debug.toolchain.platform"/>
 							<builder buildPath="${workspace_loc:/_common}/Debug" id="com.atollic.truestudio.mbs.builder1.1488486069" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="com.atollic.truestudio.mbs.builder1"/>
 							<tool id="com.atollic.truestudio.lib.debug.toolchain.as.280013104" name="Assembler" superClass="com.atollic.truestudio.lib.debug.toolchain.as">
+								<option id="com.atollic.truestudio.as.general.incpath.1648321000" superClass="com.atollic.truestudio.as.general.incpath" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Specific/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/General/Inc}&quot;"/>
+								</option>
 								<inputType id="com.atollic.truestudio.as.input.230295260" name="Input" superClass="com.atollic.truestudio.as.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.lib.debug.toolchain.gcc.880920760" name="C Compiler" superClass="com.atollic.truestudio.lib.debug.toolchain.gcc">
+								<option id="com.atollic.truestudio.gcc.directories.select.1765195832" superClass="com.atollic.truestudio.gcc.directories.select" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Specific/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/General/Inc}&quot;"/>
+								</option>
 								<inputType id="com.atollic.truestudio.gcc.input.1217534984" superClass="com.atollic.truestudio.gcc.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.ld.base.1556977239" name="C Linker" superClass="com.atollic.truestudio.ld.base"/>
@@ -37,8 +45,9 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="General" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Specific|General" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="General"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Specific"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -63,13 +72,21 @@
 				<configuration artifactExtension="a" artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib" cleanCommand="rm -f" description="" id="com.atollic.truestudio.lib.release.735443093" name="Release" parent="com.atollic.truestudio.lib.release">
 					<folderInfo id="com.atollic.truestudio.lib.release.735443093." name="/" resourcePath="">
 						<toolChain id="com.atollic.truestudio.lib.release.toolchain.1065576774" name="Atollic ARM Tools" superClass="com.atollic.truestudio.lib.release.toolchain">
-							<option id="com.atollic.truestudio.general.runtimelib.302320745" superClass="com.atollic.truestudio.general.runtimelib" value="com.atollic.truestudio.ld.general.clib.small" valueType="enumerated"/>
+							<option id="com.atollic.truestudio.general.runtimelib.302320745" name="Runtime Library" superClass="com.atollic.truestudio.general.runtimelib" value="com.atollic.truestudio.ld.general.clib.small" valueType="enumerated"/>
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="com.atollic.truestudio.lib.release.toolchain.platform.944031713" isAbstract="false" name="Release platform" superClass="com.atollic.truestudio.lib.release.toolchain.platform"/>
 							<builder buildPath="${workspace_loc:/_common}/Release" id="com.atollic.truestudio.mbs.builder1.87726943" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="com.atollic.truestudio.mbs.builder1"/>
 							<tool id="com.atollic.truestudio.lib.release.toolchain.as.324710948" name="Assembler" superClass="com.atollic.truestudio.lib.release.toolchain.as">
+								<option id="com.atollic.truestudio.as.general.incpath.688323498" superClass="com.atollic.truestudio.as.general.incpath" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Specific/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/General/Inc}&quot;"/>
+								</option>
 								<inputType id="com.atollic.truestudio.as.input.1845647548" name="Input" superClass="com.atollic.truestudio.as.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.lib.release.toolchain.gcc.1591798049" name="C Compiler" superClass="com.atollic.truestudio.lib.release.toolchain.gcc">
+								<option id="com.atollic.truestudio.gcc.directories.select.254255380" superClass="com.atollic.truestudio.gcc.directories.select" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Specific/Inc}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/General/Inc}&quot;"/>
+								</option>
 								<inputType id="com.atollic.truestudio.gcc.input.1795394396" superClass="com.atollic.truestudio.gcc.input"/>
 							</tool>
 							<tool id="com.atollic.truestudio.ld.base.985317323" name="C Linker" superClass="com.atollic.truestudio.ld.base"/>
@@ -80,8 +97,9 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="General" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Specific|General" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="General"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Specific"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -96,4 +114,5 @@
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="refreshScope"/>
 </cproject>

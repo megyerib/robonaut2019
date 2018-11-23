@@ -92,60 +92,60 @@ eBspStatus bspUartTransmit_IT (const eBspUartDevice uartDevice, uint8_t* const p
 
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the Uart1 RX interrupt is present.
-__weak void bspUart1RxCpltCallback (void);
+void bspUart1RxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //!			This function will be called if the USB RX interrupt is present.
-__weak void bspUartUsbRxCpltCallback (void);
+void bspUartUsbRxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //!			This function will be called if the Uart3 RX interrupt is present.
-__weak void bspUart3RxCpltCallback (void);
+void bspUart3RxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //!			This function will be called if the Uart4 RX interrupt is present.
-__weak void bspUart4RxCpltCallback (void);
+void bspUart4RxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the Bluetooth RX interrupt is present.
-__weak void bspBluetoothRxCpltCallback (void);
+void bspBluetoothRxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the Radio RX interrupt is present.
-__weak void bspRadioRxCpltCallback (void);
+void bspRadioRxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the Uart1 RX interrupt is present.
-__weak void bspUart1TxCpltCallback (void);
+void bspUart1TxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the USB TX interrupt is present.
-__weak void bspUartUsbTxCpltCallback (void);
+void bspUartUsbTxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the Uart3 TX interrupt is present.
-__weak void bspUart3TxCpltCallback (void);
+void bspUart3TxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //!			This function will be called if the Uart4 TX interrupt is present.
-__weak void bspUart4TxCpltCallback (void);
+void bspUart4TxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //!			This function will be called if the Bluetooth TX interrupt is present.
-__weak void bspBluetoothTxCpltCallback (void);
+void bspBluetoothTxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //! 			This function will be called if the Radio TX interrupt is present.
-__weak void bspRadioTxCpltCallback (void);
+void bspRadioTxCpltCallback (void);
 

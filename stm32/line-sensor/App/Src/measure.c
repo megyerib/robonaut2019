@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      feedback.c
+//!  \file      measure.c
 //!  \brief
 //!  \details
 //!
@@ -8,8 +8,10 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "feedback.h"
-#include "ldriver.h"
+#include "measure.h"
+#include "adc.h"
+#include "ldriver.h" // for IR
+#include "mux.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -19,26 +21,43 @@
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static uint8_t mmToLedPos(uint8_t mm);
+static void measureSet(uint8_t set, uint32_t* dst);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void ledFeedback(LINE* line)
+void measure(uint32_t* dst)
 {
-    uint32_t ledval = 0, i;
+    // Késõbb lehet szórakozni azzal, hogy minden 3. vagy 2. infra led világít egyszerre.
+    uint32_t irval = 0x88888888, i;
 
-    for (i = 0; i < line->cnt; i++)
+    for (i = 0; i < 4; i++)
     {
-        ledval |= mmToLedPos(line->lines[i]);
-        ledval |= mmToLedPos(line->lines[i] + 1);
-    }
+        writeIr(irval);
+        HAL_Delay(1); // Beállási idõ. Ezt lehet majd egy timerrel csökkenteni.
 
-    writeLed(ledval);
+        measureSet(i, dst);
+        measureSet(i + 4, dst);
+
+        irval >>= 1;
+    }
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-static uint8_t mmToLedPos(uint8_t mm)
+// Beolvassa az összes ADC értékét egy adott MUX beállítás (set) mellett.
+static void measureSet(uint8_t set, uint32_t* dst)
 {
-    return (uint8_t)((mm - MID_IR_POS_MM) / IR_DIST_MM + 16);
+    int i;
+
+    setMux(set);
+
+    HAL_ADC_Start(&hadc);
+
+    for (i = 0; i < 4; i++)
+    {
+        HAL_ADC_PollForConversion(&hadc, HAL_MAX_DELAY);
+        dst[8*i+(7-set)] = HAL_ADC_GetValue(&hadc);
+    }
+
+    HAL_ADC_Stop(&hadc);
 }

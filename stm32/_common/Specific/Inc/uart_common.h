@@ -1,33 +1,47 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      eval.h
-//!  \brief     ADC measuring data to line position
-//!  \details
+//!  \file      uart_common.h
+//!  \brief     
+//!  \details   
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "stm32f0xx_hal.h"
-
 // Defines -------------------------------------------------------------------------------------------------------------
-
-#define IR_DIST_MM    9
-#define MID_IR_POS_MM 5
-#define MAXLINES      3
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
+typedef enum
+{
+    main = 0,
+    lineSensor_front,
+    lineSensor_rear,
+    motorController,
+
+    uartDevNum
+}
+UART_DEV_ID;
+
+typedef enum
+{
+    identifyYourself = 0,
+    identifyingMyself,
+    resendRequest,
+
+    uartMsgTypeNum
+}
+UART_MSG_TYPE;
+
 typedef struct
 {
-    uint16_t lines[MAXLINES];
-    uint8_t cnt;
-    uint8_t cross;
+    uint8_t type;
+    uint8_t length;
+    uint8_t checksum;
+    uint8_t payload[];
 }
-LINE;
+UART_MSG;
 
 // Variables -----------------------------------------------------------------------------------------------------------
 
 // Function prototypes -------------------------------------------------------------------------------------------------
-
-LINE getLine(uint32_t* measData);
