@@ -41,21 +41,21 @@ typedef enum SCH_ServoModel
  * @retval	Signals if the initialization of the servo was successful because
  * 			the valid config was found and set
  */
-const BSP_SrvInitStat sch_Configure_Servo();
+const eBSP_SrvInitStat sch_Configure_Servo();
 
 // --------------------------------------------------------------------------//
 
 // ------------------------------- Variables --------------------------------//
 
-extern BSP_SrvHandleTypeDef hsrv;
+extern cBSP_SrvHandleTypeDef hsrv;
 
 // --------------------------------------------------------------------------//
 
 // ------------------------------ Functions ---------------------------------//
 
-const BSP_SrvInitStat sch_Servo_Init(void)
+const eBSP_SrvInitStat sch_Servo_Init(void)
 {
-	BSP_SrvInitStat ret_val = SRV_INIT_OK;
+	eBSP_SrvInitStat ret_val = SRV_INIT_OK;
 
 	ret_val = sch_Configure_Servo();
 
@@ -110,9 +110,9 @@ void sch_Set_Servo_Angle(const double theta)
 	bsp_Servo_Set_Compare(compare);
 }
 
-const BSP_SrvInitStat sch_Configure_Servo()
+const eBSP_SrvInitStat sch_Configure_Servo()
 {
-	BSP_SrvInitStat ret_val = SRV_INIT_OK;
+	eBSP_SrvInitStat ret_val = SRV_INIT_OK;
 
 	switch(SCH_ACTUAL_SERVO)
 	{

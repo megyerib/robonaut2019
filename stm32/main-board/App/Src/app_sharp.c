@@ -13,6 +13,7 @@
 
 #include "queue.h"
 
+#include "trace.h"
 #include "sds_SharpDistanceSensor.h"
 
 #include "bsp_servo.h"
@@ -21,9 +22,6 @@
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 EventGroupHandle_t event_sharp;
-
-extern QueueHandle_t qSharpDistance_u16;
-extern QueueHandle_t qSharpCollWarn_x;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -65,19 +63,14 @@ void Task_Sharp(void* p)
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			xEventGroupClearBits(event_sharp, 1);
 			traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &noWarning);
-			//xQueueOverwrite(qSharpCollWarn, &noWarning);
 		}
 		else
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			xEventGroupSetBits(event_sharp, 1);
 			traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &warning);
-			//xQueueOverwrite(qSharpCollWarn, &warning);
 		}
 
-		//TODO trace
-		//bcmTraceSharpDistance(sharp_distance);
-		//xQueueOverwrite( qSharpDistance, &sharp_distance );
 		traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp_distance);
 
 		vTaskDelay(TASK_DELAY_40_MS);

@@ -14,6 +14,7 @@
 #include "bsp_servo.h"
 #include "drn_DeadReckoningNavigation.h"
 #include "inert.h"
+#include "trace.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -74,7 +75,9 @@ void Task_Navigation(void* p)
 
 		ned = drnReckonNavigation(v, w_drn, TASK_DELAY_16_MS);
 
-		//TODO trace
+		traceBluetooth(BCM_LOG_NAVI_N, &ned.n);
+		traceBluetooth(BCM_LOG_NAVI_E, &ned.e);
+		//traceBluetooth(BCM_LOG_NAVI_THETA, &);
 
 		inertTriggerMeasurement();
 
