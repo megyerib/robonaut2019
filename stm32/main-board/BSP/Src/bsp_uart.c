@@ -408,6 +408,7 @@ static eBspStatus bspUart1Init (void)
 
     HAL_UART_MspInit(&huart1);
 
+    HAL_NVIC_SetPriority(USART1_IRQn, 2, 0);
     NVIC_EnableIRQ(USART1_IRQn);
 
 	return status;
@@ -432,6 +433,7 @@ static eBspStatus bspUartUsbInit (void)
 
 	 HAL_UART_MspInit(&huart2);
 
+	 HAL_NVIC_SetPriority(USART3_IRQn, 5, 1);
 	 NVIC_EnableIRQ(USART2_IRQn);
 
 	return status;
@@ -456,6 +458,7 @@ static eBspStatus bspUart3Init (void)
 
 	 HAL_UART_MspInit(&huart3);
 
+	 HAL_NVIC_SetPriority(USART3_IRQn, 2, 1);
 	 NVIC_EnableIRQ(USART3_IRQn);
 
 	return status;
@@ -480,6 +483,7 @@ static eBspStatus bspUart4Init (void)
 
     HAL_UART_MspInit(&huart4);
 
+    HAL_NVIC_SetPriority(UART4_IRQn, 2, 2);
     NVIC_EnableIRQ(UART4_IRQn);
 
 	return status;
@@ -504,6 +508,7 @@ static eBspStatus bspUartBluetoothInit (void)
 
 	HAL_UART_MspInit(&huart5);
 
+	HAL_NVIC_SetPriority(UART5_IRQn, 5, 0);
 	NVIC_EnableIRQ(UART5_IRQn);
 
 	return status;
@@ -528,6 +533,7 @@ static eBspStatus bspUartRadioInit (void)
 
     HAL_UART_MspInit(&huart6);
 
+    HAL_NVIC_SetPriority(USART6_IRQn, 2, 3);
     NVIC_EnableIRQ(USART6_IRQn);
 
 	return status;
