@@ -108,7 +108,7 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	xTaskCreate(Task_CarDiagnosticsTool,
 				"TASK_CAR_DIAGNOSTICS_TOOL",
-				DEFAULT_STACK_SIZE,
+				DEFAULT_STACK_SIZE+100,
 				NULL,
 				TASK_CDT_PRIO,
 				NULL);
