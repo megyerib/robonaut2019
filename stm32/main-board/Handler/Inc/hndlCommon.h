@@ -24,7 +24,7 @@ uint32_t hndlGetNumberLength (const uint32_t number);
 
 bool hndlConvertUintToUintArray (uint8_t* const array, const uint32_t value, const uint32_t len);
 
-void hndlPlaceIntegerToAsciiMsg (uint8_t* const array, const uint32_t value, const uint32_t frameSize);
+void hndlPlaceIntegerToAsciiMsg (uint8_t* const array, const uint32_t value, const uint32_t frameSize, const bool neg);
 
 void hndlPlaceFractionToAsciiMsg (
 										uint8_t* const array,

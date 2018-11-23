@@ -17,29 +17,30 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define BCM_LOG_LENGHT_SHARP_DISTANCE				5
+#define BCM_LOG_LENGHT_SHARP_DISTANCE				5	// 1
 #define BCM_LOG_LENGHT_SHARP_COLLISION_WARNING		1
 #define BCM_LOG_LENGHT_SERVO_ANGLE					5
-#define BCM_LOG_LENGHT_INERT_ACCEL_X				3
-#define BCM_LOG_LENGHT_INERT_ACCEL_Y				3
-#define BCM_LOG_LENGHT_INERT_ACCEL_Z				3
-#define BCM_LOG_LENGHT_INERT_ANG_VEL_X				3
-#define BCM_LOG_LENGHT_INERT_ANG_VEL_Y				3
-#define BCM_LOG_LENGHT_INERT_ANG_VEL_Z				3
-#define BCM_LOG_LENGHT_NAVI_N						7
-#define BCM_LOG_LENGHT_NAVI_E						7
-#define BCM_LOG_LENGHT_NAVI_THETA					6
-#define BCM_LOG_LENGHT_ENC_VEL						4
+#define BCM_LOG_LENGHT_INERT_ACCEL_X				4	// neg
+#define BCM_LOG_LENGHT_INERT_ACCEL_Y				4	// neg
+#define BCM_LOG_LENGHT_INERT_ACCEL_Z				4	// neg
+#define BCM_LOG_LENGHT_INERT_ANG_VEL_X				4	// neg
+#define BCM_LOG_LENGHT_INERT_ANG_VEL_Y				4	// neg
+#define BCM_LOG_LENGHT_INERT_ANG_VEL_Z				4	// neg
+#define BCM_LOG_LENGHT_NAVI_N						5	// 10 neg
+#define BCM_LOG_LENGHT_NAVI_E						5	// neg
+#define BCM_LOG_LENGHT_NAVI_THETA					5
+#define BCM_LOG_LENGHT_ENC_VEL						5	// neg
 #define BCM_LOG_LENGHT_TOF_1_DISTANCE				5
 #define BCM_LOG_LENGHT_TOF_2_DISTANCE				5
 #define BCM_LOG_LENGHT_TOF_3_DISTANCE				5
-#define BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT			3
-#define BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT				3
-#define BCM_LOG_LENGHT_MTR_CURR						4
-#define BCM_LOG_LENGHT_MTR_SYS_CURR					4
+#define BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT			5
+#define BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT				5
+#define BCM_LOG_LENGHT_MTR_CURR						9
+#define BCM_LOG_LENGHT_MTR_SYS_CURR					4	// 20
 #define BCM_LOG_LENGHT_MTR_SRV_CURR					4
-#define BCM_LOG_LENGHT_CTRL_MTR_CURR				4
-#define BCM_LOG_LENGHT_CMD_STOP_ENGINE				1
+#define BCM_LOG_LENGHT_MTR_CMD_STOP_ENGINE			1
+#define BCM_LOG_LENGHT_CTRL_MTR_CURR				6
+
 
 
 
@@ -64,15 +65,15 @@
 														BCM_LOG_LENGHT_MTR_CURR +					\
 														BCM_LOG_LENGHT_MTR_SYS_CURR +				\
 														BCM_LOG_LENGHT_MTR_SRV_CURR +				\
-														BCM_LOG_LENGHT_CTRL_MTR_CURR +				\
-														BCM_LOG_LENGHT_CMD_STOP_ENGINE				\
+														BCM_LOG_LENGHT_MTR_CMD_STOP_ENGINE +		\
+														BCM_LOG_LENGHT_CTRL_MTR_CURR 				\
 													)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 typedef enum
 {
-	BCM_LOG_SHARP_DISTANCE 			= 0,
+	BCM_LOG_SHARP_DISTANCE 			= 0,	// 1
 	BCM_LOG_SHARP_COLLISION_WARNING,
 	BCM_LOG_SERVO_ANGLE,
 	BCM_LOG_INERT_ACCEL_X,
@@ -81,7 +82,7 @@ typedef enum
 	BCM_LOG_INERT_ANG_VEL_X,
 	BCM_LOG_INERT_ANG_VEL_Y,
 	BCM_LOG_INERT_ANG_VEL_Z,
-	BCM_LOG_NAVI_N,
+	BCM_LOG_NAVI_N,							// 10
 	BCM_LOG_NAVI_E,
 	BCM_LOG_NAVI_THETA,
 	BCM_LOG_ENC_VEL,
@@ -91,17 +92,17 @@ typedef enum
 	BCM_LOG_MTR_MAIN_BAT_VOLT,
 	BCM_LOG_MTR_SEC_BAT_VOLT,
 	BCM_LOG_MTR_CURR,
-	BCM_LOG_MTR_SYS_CURR,
+	BCM_LOG_MTR_SYS_CURR,					// 20
 	BCM_LOG_MTR_SRV_CURR,
-	BCM_LOG_CTR_MTR_CURR,
-	BCM_LOG_CMD_STOP_ENGINE
+	BCM_LOG_MTR_CMD_STOP_ENGINE,
+	BCM_LOG_CTR_MTR_CURR
 } eBluetoothLogMember;
 
 typedef struct
 {
-	uint8_t sharpDistant[BCM_LOG_LENGHT_SHARP_DISTANCE];						//! distance in mm
-	uint8_t sharpCollisionWarning[BCM_LOG_LENGHT_SHARP_COLLISION_WARNING];		//! y or n
-	uint8_t servoAngle[BCM_LOG_LENGHT_SERVO_ANGLE];								//! rad
+	uint8_t sharpDistant[BCM_LOG_LENGHT_SHARP_DISTANCE];						//!< distance in cm
+	uint8_t sharpCollisionWarning[BCM_LOG_LENGHT_SHARP_COLLISION_WARNING];		//!< status flag
+	uint8_t servoAngle[BCM_LOG_LENGHT_SERVO_ANGLE];								//!< angle in rad
 	uint8_t inertAccelX[BCM_LOG_LENGHT_INERT_ACCEL_X];
 	uint8_t inertAccelY[BCM_LOG_LENGHT_INERT_ACCEL_Y];
 	uint8_t inertAccelZ[BCM_LOG_LENGHT_INERT_ACCEL_Z];
@@ -115,14 +116,13 @@ typedef struct
 	uint8_t tof1Distance[BCM_LOG_LENGHT_TOF_1_DISTANCE];
 	uint8_t tof2Distance[BCM_LOG_LENGHT_TOF_2_DISTANCE];
 	uint8_t tof3Distance[BCM_LOG_LENGHT_TOF_3_DISTANCE];
-	uint8_t mtrMainBatVolt[BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT];
-	uint8_t mtrSecBatVolt[BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT];
+	uint8_t mtrMainBatVolt[BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT];					//!< voltage in V
+	uint8_t mtrSecBatVolt[BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT];						//!< voltage in V
 	uint8_t mtrCurr[BCM_LOG_LENGHT_MTR_CURR];
-	uint8_t mtrSysCurr[BCM_LOG_LENGHT_MTR_SYS_CURR];
-	uint8_t mtrSrvCurr[BCM_LOG_LENGHT_MTR_SRV_CURR];
+	uint8_t mtrSysCurr[BCM_LOG_LENGHT_MTR_SYS_CURR];							//!< current in mA
+	uint8_t mtrSrvCurr[BCM_LOG_LENGHT_MTR_SRV_CURR];							//!< current in mA
+	uint8_t mtrCmdStopEngine[BCM_LOG_LENGHT_MTR_CMD_STOP_ENGINE];				//!< command flag
 	uint8_t ctrMtrCurr[BCM_LOG_LENGHT_CTRL_MTR_CURR];
-	uint8_t cmdStopEngine[BCM_LOG_LENGHT_CMD_STOP_ENGINE];
-
 } cBluetoothLog;
 
 typedef struct
@@ -142,6 +142,8 @@ bool connected;
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 void bcmInit (void);
+
+bool bcmBluetoothConnected (void);
 
 void bcmResetBluetooth (void);
 
