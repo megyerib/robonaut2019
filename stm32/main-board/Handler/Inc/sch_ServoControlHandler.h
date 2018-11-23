@@ -29,7 +29,7 @@
  *
  * @retval	Result of the initialization (OK, FAIL).
  */
-const BSP_SrvInitStat sch_Servo_Init(void);
+const eBSP_SrvInitStat sch_Servo_Init(void);
 
 /*
  * @brief	Gets the servo position in radian.
