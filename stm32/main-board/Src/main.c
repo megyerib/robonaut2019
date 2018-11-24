@@ -88,7 +88,7 @@ void InitTasks();
 void InitTasks()
 {
 	TaskInit_CarDiagnosticsTool();
-	TaskInit_Sharp(NULL);
+	TaskInit_Sharp();
 	TaskInit_Servo();
 	TaskInit_Navigation();
 
