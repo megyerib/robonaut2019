@@ -64,6 +64,7 @@
 #include "app_servo.h"
 #include "app_navigation.h"
 #include "app_cdt.h"
+#include "app_SpeedControl.h"
 
 #include "trace.h"
 /* USER CODE END Includes */
@@ -91,6 +92,7 @@ void InitTasks()
 	TaskInit_Sharp();
 	TaskInit_Servo();
 	TaskInit_Navigation();
+	TaskInit_SControl();
 
 
 	vTaskStartScheduler();
