@@ -19,7 +19,7 @@ typedef struct
     float D;
     float prev;
     float sum;
-    int   dt;
+    int   dt;   // [?]
 }
 CONTROLLER;
 

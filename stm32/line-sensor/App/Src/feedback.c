@@ -25,12 +25,14 @@ static uint8_t mmToLedPos(uint8_t mm);
 
 void ledFeedback(LINE* line)
 {
-    uint32_t ledval = 0, i;
+    uint32_t ledval = 0, i, ledpos = 0;
 
     for (i = 0; i < line->cnt; i++)
     {
-        ledval |= mmToLedPos(line->lines[i]);
-        ledval |= mmToLedPos(line->lines[i] + 1);
+        ledpos = mmToLedPos(line->lines[i]);
+
+        ledval |= 1 << ledpos;
+        ledval |= 1 << (ledpos + 1);
     }
 
     writeLed(ledval);

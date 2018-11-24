@@ -9,6 +9,7 @@
 // Includes ------------------------------------------------------------------------------------------------------------
 
 #include "eval.h"
+#include "math_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -23,59 +24,37 @@
 static uint32_t max4_pos(int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
 static void     magicDiff(uint32_t* src, uint32_t* dst);
 static int16_t  ledPosToMm(uint8_t ledPos);
+static uint32_t evalWeightedMean(uint32_t* arr, uint32_t i);
+static uint32_t evalIsPeak(uint32_t* arr, uint32_t i, uint32_t mean, uint32_t stdDev);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 LINE getLine(uint32_t* measData)
 {
-    uint32_t filtered[32], i;
-    LINE ret = {
-        .cnt = 0,
+    uint32_t filtered[32];
+    uint32_t i;
+    uint32_t avg;
+    uint32_t stdDev;
+
+    LINE ret =
+    {
+        .cnt   = 0,
         .cross = 0
     };
 
-    // Szûrés
+    // Filtering
     magicDiff(measData, filtered);
 
-    // Szenzorsor eleje
-    if (filtered[1] + THRESHOLD < filtered[0])
-    {
-        ret.lines[0] =
-            (filtered[0] * ledPosToMm(0) + filtered[1] * ledPosToMm(1)) /
-            (filtered[0] + filtered[1]);
+    // Average, standard deviation
+    avg = mean(filtered, 32);
+    stdDev = standardDeviation(filtered, 32, avg);
 
-        ret.cnt++;
-    }
-
-    // Szenzorsor közepe
-    for (i = 1; i < 31; i++)
+    // Szenzorsor
+    for (i = 0; i < 32; i++)
     {
-        if ((filtered[i-1] + THRESHOLD < filtered[i] && filtered[i+1] < filtered[i]) ||
-            (filtered[i+1] + THRESHOLD < filtered[i] && filtered[i-1] < filtered[i]))
+        if (ret.cnt < MAXLINES && evalIsPeak(filtered, i, avg, stdDev))
         {
-            if (ret.cnt < MAXLINES)
-            {
-                ret.lines[ret.cnt] =
-                    (filtered[i-1] * ledPosToMm(i-1) +
-                     filtered[i]   * ledPosToMm(i)   +
-                     filtered[i+1] * ledPosToMm(i+1))
-                     /
-                    (filtered[i-1] + filtered[i] + filtered[i+1]);
-
-                ret.cnt++;
-            }
-        }
-    }
-
-    // Szenzorsor vége
-    if (filtered[30] + THRESHOLD < filtered[31])
-    {
-        if (ret.cnt < MAXLINES)
-        {
-            ret.lines[ret.cnt] =
-                (filtered[30] * ledPosToMm(30) + filtered[31] * ledPosToMm(31)) /
-                (filtered[30] + filtered[31]);
-
+            ret.lines[ret.cnt] = evalWeightedMean(filtered, i);
             ret.cnt++;
         }
     }
@@ -147,3 +126,58 @@ static int16_t ledPosToMm(uint8_t ledPos)
 {
     return ((int16_t)ledPos - 16) * IR_DIST_MM + MID_IR_POS_MM;
 }
+
+static uint32_t evalWeightedMean(uint32_t* arr, uint32_t i)
+{
+    if (i == 0)
+    {
+        return
+            (arr[0] * ledPosToMm(0) + arr[1] * ledPosToMm(1))
+             /
+            (arr[0] + arr[1]);
+    }
+    else if (i == 31)
+    {
+        return
+            (arr[30] * ledPosToMm(30) + arr[31] * ledPosToMm(31))
+             /
+            (arr[30] + arr[31]);
+    }
+    else
+    {
+        return
+            (arr[i-1] * ledPosToMm(i-1) +
+             arr[i]   * ledPosToMm(i)   +
+             arr[i+1] * ledPosToMm(i+1))
+             /
+            (arr[i-1] + arr[i] + arr[i+1]);
+    }
+}
+
+static uint32_t evalIsPeak(uint32_t* arr, uint32_t i, uint32_t mean, uint32_t stdDev)
+{
+    // Threshold
+    if (arr[i] < mean + stdDev)
+    {
+        return 0;
+    }
+
+    // Peak
+    if (i == 0)
+    {
+        return (arr[1]  + THRESHOLD) < arr[0];
+    }
+    else if (i == 31)
+    {
+        return (arr[30] + THRESHOLD) < arr[31];
+    }
+    else
+    {
+        return
+            ( ((arr[i-1] + THRESHOLD) < arr[i]) && (arr[i+1] < arr[i]) )
+            ||
+            ( ((arr[i+1] + THRESHOLD) < arr[i]) && (arr[i-1] < arr[i]) );
+    }
+}
+
+// END -----------------------------------------------------------------------------------------------------------------
