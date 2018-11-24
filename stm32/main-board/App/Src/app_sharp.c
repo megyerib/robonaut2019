@@ -8,13 +8,13 @@
 
 // ------------------------------- Includes -------------------------------- //
 
+#include "app_common.h"
 #include "app_sharp.h"
 
-#include "app_common.h"
-#include "bsp_servo.h"
-
-#include "task.h"
+#include "trace.h"
 #include "sds_SharpDistanceSensor.h"
+
+#include "bsp_servo.h"
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -24,10 +24,8 @@ EventGroupHandle_t event_sharp;
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void TaskInit_Sharp(void * p)
+void TaskInit_Sharp (void)
 {
-	(void)p;
-
 	semSharp = xSemaphoreCreateBinary();
 	event_sharp = xEventGroupCreate();
 
@@ -44,11 +42,13 @@ void TaskInit_Sharp(void * p)
 				NULL);
 }
 
-void Task_Sharp(void* p)
+void Task_Sharp (void* p)
 {
 	(void)p;
 
-	uint16_t sharp_distance = 0;
+	uint32_t sharp_distance = 0;
+	bool warning = true;
+	bool noWarning = false;
 
 	while(1)
 	{
@@ -58,12 +58,17 @@ void Task_Sharp(void* p)
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			xEventGroupClearBits(event_sharp, 1);
+			traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &noWarning);
 		}
 		else
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			xEventGroupSetBits(event_sharp, 1);
+			traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &warning);
 		}
+
+		traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp_distance);
+
 		vTaskDelay(TASK_DELAY_40_MS);
 	}
 }

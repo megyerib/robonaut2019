@@ -32,7 +32,7 @@
  *
  * @retval	Status of the testing.
  */
-const BSP_Servo_TIM_Stat bsp_Servo_Check_PWM();
+const eBSP_Servo_TIM_Stat bsp_Servo_Check_PWM();
 
 /*
  * @brief	Initializes the servo timer according to the setting of the hsrv.
@@ -45,17 +45,17 @@ void bsp_Servo_TIM_Init();
 
 extern TIM_HandleTypeDef htim2;
 
-BSP_SrvHandleTypeDef hsrv;
+cBSP_SrvHandleTypeDef hsrv;
 
 // --------------------------------------------------------------------------//
 
 // ------------------------------ Functions ---------------------------------//
 
 
-const BSP_SrvInitStat bsp_Servo_Init_PWM(void)
+const eBSP_SrvInitStat bsp_Servo_Init_PWM(void)
 {
-	BSP_SrvInitStat status = SRV_INIT_OK;
-	BSP_Servo_TIM_Stat tim_stat = SRV_TIM_STAT_OK;
+	eBSP_SrvInitStat status = SRV_INIT_OK;
+	eBSP_Servo_TIM_Stat tim_stat = SRV_TIM_STAT_OK;
 
 	// Init the servo timer
 	bsp_Servo_TIM_Init();
@@ -117,7 +117,7 @@ const uint32_t bsp_Servo_Get_Compare()
 	return __HAL_TIM_GET_COMPARE(&BSP_SRV_HTIM2, BSP_SRV_TIM_CHANNEL);
 }
 
-const BSP_Servo_TIM_Stat bsp_Servo_Check_PWM()
+const eBSP_Servo_TIM_Stat bsp_Servo_Check_PWM()
 {
 	int ret_val = SRV_TIM_STAT_OK;
 

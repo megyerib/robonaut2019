@@ -3,6 +3,7 @@
 	<name>line-sensor</name>
 	<comment></comment>
 	<projects>
+		<project>_common</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

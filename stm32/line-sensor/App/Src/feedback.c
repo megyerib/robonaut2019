@@ -1,24 +1,44 @@
-#include "feedback.h"
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//!
+//!  \file      feedback.c
+//!  \brief
+//!  \details
+//!
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "../../BSP/Inc/ldriver.h"
+// Includes ------------------------------------------------------------------------------------------------------------
+
+#include "feedback.h"
+#include "ldriver.h"
+
+// Defines -------------------------------------------------------------------------------------------------------------
+
+// Typedefs ------------------------------------------------------------------------------------------------------------
+
+// Local (static) & extern variables -----------------------------------------------------------------------------------
+
+// Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static uint8_t mmToLedPos(uint8_t mm);
 
+// Global function definitions -----------------------------------------------------------------------------------------
+
 void ledFeedback(LINE* line)
 {
-	uint32_t ledval = 0, i;
+    uint32_t ledval = 0, i;
 
-	for (i = 0; i < line->cnt; i++)
-	{
-		ledval |= mmToLedPos(line->lines[i]);
-		ledval |= mmToLedPos(line->lines[i] + 1);
-	}
+    for (i = 0; i < line->cnt; i++)
+    {
+        ledval |= mmToLedPos(line->lines[i]);
+        ledval |= mmToLedPos(line->lines[i] + 1);
+    }
 
-	writeLed(ledval);
+    writeLed(ledval);
 }
+
+// Local (static) function definitions ---------------------------------------------------------------------------------
 
 static uint8_t mmToLedPos(uint8_t mm)
 {
-	return (uint8_t)((mm - MID_IR_POS_MM) / IR_DIST_MM + 16);
+    return (uint8_t)((mm - MID_IR_POS_MM) / IR_DIST_MM + 16);
 }
-

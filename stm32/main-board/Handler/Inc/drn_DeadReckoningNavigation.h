@@ -21,20 +21,20 @@ typedef struct
 {
 	double x;
 	double y;
-} VelocityVector;
+} cVelocityVector;
 
 //TODO _Joci_ needs update
 typedef struct
 {
 	double omega;
 	double time;
-} AngularVelocity;
+} cAngularVelocity;
 
 typedef struct
 {
 	double n;
 	double e;
-} NED_Parameters;
+} cNedParameters;
 
 // --------------------------------------------------------------------------//
 
@@ -46,16 +46,16 @@ SemaphoreHandle_t semDrNavi;
 
 // ------------------------------ Declarations ------------------------------//
 
-void drn_Init (void);
+void drnInit (void);
 
-const NED_Parameters drn_GetNedCoordinates (void);
+cNedParameters drnGetNedCoordinates (void);
 
-void drn_SetNedCoordinates (const NED_Parameters coords);
+void drnSetNedCoordinates (const cNedParameters coords);
 
 //												[m/s]							[rad/s]					[ms]
-const NED_Parameters drn_ReckonNavigation (const VelocityVector v, const AngularVelocity w, const uint32_t dt);
+cNedParameters drnReckonNavigation (const cVelocityVector v, const cAngularVelocity w, const uint32_t dt);
 
-const double drn_NumInteg_Trapezoidal (const double a, const double b, const double fa, const double fb);
+double drnNumIntegTrapezoidal (const double a, const double b, const double fa, const double fb);
 
 
 // --------------------------------------------------------------------------//

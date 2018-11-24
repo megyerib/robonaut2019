@@ -13,6 +13,8 @@
 
 #include "bsp_servo.h"
 #include "drn_DeadReckoningNavigation.h"
+#include "inert.h"
+#include "trace.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -31,7 +33,10 @@ void TaskInit_Navigation(void)
 	if(semDrNavi != NULL)
 	{
 		xSemaphoreGive(semDrNavi);
-		drn_Init();
+		drnInit();
+		inertInit();
+
+		inertTriggerMeasurement();
 	}
 
 	xTaskCreate(Task_Navigation,
@@ -48,16 +53,40 @@ void Task_Navigation(void* p)
 {
 	(void)p;
 
-	NED_Parameters carCoordinates;
+	Accel prev_a;
+	Accel a;
+	cVelocityVector v;
 
-	carCoordinates.n = 0;
-	carCoordinates.e = 0;
+	AngVel w;
+	cAngularVelocity w_drn;
+
+	cNedParameters ned;
+
+	a.a_x = 0;
+	a.a_y = 0;
+	a.a_z = 0;
+
+//	UBaseType_t naviStackUsage;
+//	naviStackUsage = uxTaskGetStackHighWaterMark(NULL);
 
 	while(1)
 	{
-		//drn_ReckonNavigation(v, w, dt)
+		prev_a = a;
+		a = inertGetAccel();
+		w = inertGetAngVel();
 
-		carCoordinates = drn_GetNedCoordinates();
+		w_drn.omega = w.omega_z;
+
+		v.x = drnNumIntegTrapezoidal(0, TASK_DELAY_16_MS, prev_a.a_x, a.a_x);
+		v.y = drnNumIntegTrapezoidal(0, TASK_DELAY_16_MS, prev_a.a_y, a.a_y);
+
+		ned = drnReckonNavigation(v, w_drn, TASK_DELAY_16_MS);
+
+		traceBluetooth(BCM_LOG_NAVI_N, &ned.n);
+		traceBluetooth(BCM_LOG_NAVI_E, &ned.e);
+		//traceBluetooth(BCM_LOG_NAVI_THETA, &);
+
+		inertTriggerMeasurement();
 
 		vTaskDelay(TASK_DELAY_16_MS);
 	}

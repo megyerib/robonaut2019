@@ -137,6 +137,91 @@ eBspStatus bspUartInitDevice (const eBspUartDevice uartDevice)
 	return status;
 }
 
+eBspStatus bspUartReceive (const eBspUartDevice uartDevice,
+								 uint8_t* const pData,
+								 const uint16_t Size,
+							     const uint32_t Timeout
+							)
+{
+	eBspStatus status = BSP_ERROR;
+
+	switch (uartDevice)
+	{
+		case Uart_1:
+			status = HAL_UART_Receive(&BSP_UART_1_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_USB:
+			status = HAL_UART_Receive(&BSP_UART_USB_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_3:
+			status = HAL_UART_Receive(&BSP_UART_3_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_4:
+			status = HAL_UART_Receive(&BSP_UART_4_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_Bluetooth:
+			status = HAL_UART_Receive(&BSP_UART_BT_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_Radio:
+			status = HAL_UART_Receive(&BSP_UART_RADIO_HANDLER, pData, Size, Timeout);
+			break;
+
+		default:
+			status = BSP_ERROR;
+			break;
+	}
+
+	return status;
+}
+
+eBspStatus bspUartTransmit (
+								 const eBspUartDevice uartDevice,
+								  uint8_t* const 	  pData,
+								  const uint16_t 	  Size,
+								  const uint32_t 	  Timeout
+							)
+{
+	eBspStatus status = BSP_ERROR;
+
+	switch (uartDevice)
+	{
+		case Uart_1:
+			status = HAL_UART_Transmit(&BSP_UART_1_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_USB:
+			status = HAL_UART_Transmit(&BSP_UART_USB_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_3:
+			status = HAL_UART_Transmit(&BSP_UART_3_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_4:
+			status = HAL_UART_Transmit(&BSP_UART_4_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_Bluetooth:
+			status = HAL_UART_Transmit(&BSP_UART_BT_HANDLER, pData, Size, Timeout);
+			break;
+
+		case Uart_Radio:
+			status = HAL_UART_Transmit(&BSP_UART_RADIO_HANDLER, pData, Size, Timeout);
+			break;
+
+		default:
+			status = BSP_ERROR;
+			break;
+	}
+
+	return status;
+}
+
 eBspStatus bspUartReceive_IT (const eBspUartDevice uartDevice, uint8_t* const pData, const uint16_t Size)
 {
 	eBspStatus status = BSP_ERROR;
@@ -302,11 +387,16 @@ void HAL_UART_RxCpltCallback (UART_HandleTypeDef *huart)
 	}
 }
 
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+
+}
+
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 static eBspStatus bspUart1Init (void)
 {
-	eBspStatus status = BSP_ERROR;
+	eBspStatus status = BSP_OK;
 
 	BSP_UART_1_HANDLER.Instance 				= BSP_UART_1_INSTANCE;
 	BSP_UART_1_HANDLER.Init.BaudRate 			= 115200;
@@ -316,13 +406,15 @@ static eBspStatus bspUart1Init (void)
 	BSP_UART_1_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
 	BSP_UART_1_HANDLER.Init.HwFlowCtl 			= UART_HWCONTROL_NONE;
 	BSP_UART_1_HANDLER.Init.OverSampling 		= UART_OVERSAMPLING_16;
-	if (HAL_UART_Init(&BSP_UART_1_HANDLER) == HAL_OK)
+
+	if (HAL_UART_Init(&BSP_UART_1_HANDLER) != HAL_OK)
 	{
-		status = BSP_OK;
+		status = BSP_ERROR;
 	}
 
     HAL_UART_MspInit(&huart1);
 
+    HAL_NVIC_SetPriority(USART1_IRQn, 2, 0);
     NVIC_EnableIRQ(USART1_IRQn);
 
 	return status;
@@ -330,7 +422,7 @@ static eBspStatus bspUart1Init (void)
 
 static eBspStatus bspUartUsbInit (void)
 {
-	eBspStatus status = BSP_ERROR;
+	eBspStatus status = BSP_OK;
 
 	BSP_UART_USB_HANDLER.Instance 				= BSP_UART_USB_INSTANCE;
 	BSP_UART_USB_HANDLER.Init.BaudRate 			= 115200;
@@ -340,21 +432,23 @@ static eBspStatus bspUartUsbInit (void)
 	BSP_UART_USB_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
 	BSP_UART_USB_HANDLER.Init.HwFlowCtl 		= UART_HWCONTROL_NONE;
 	BSP_UART_USB_HANDLER.Init.OverSampling 		= UART_OVERSAMPLING_16;
-	if (HAL_UART_Init(&BSP_UART_USB_HANDLER) == HAL_OK)
+
+	if (HAL_UART_Init(&BSP_UART_USB_HANDLER) != HAL_OK)
 	{
-		status = BSP_OK;
+		status = BSP_ERROR;
 	}
 
-	 HAL_UART_MspInit(&huart2);
+    HAL_UART_MspInit(&huart2);
 
-	 NVIC_EnableIRQ(USART2_IRQn);
+    HAL_NVIC_SetPriority(USART3_IRQn, 5, 1);
+    NVIC_EnableIRQ(USART2_IRQn);
 
 	return status;
 }
 
 static eBspStatus bspUart3Init (void)
 {
-	eBspStatus status = BSP_ERROR;
+	eBspStatus status = BSP_OK;
 
 	BSP_UART_3_HANDLER.Instance 				= BSP_UART_3_INSTANCE;
 	BSP_UART_3_HANDLER.Init.BaudRate 			= 115200;
@@ -364,21 +458,23 @@ static eBspStatus bspUart3Init (void)
 	BSP_UART_3_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
 	BSP_UART_3_HANDLER.Init.HwFlowCtl 			= UART_HWCONTROL_NONE;
 	BSP_UART_3_HANDLER.Init.OverSampling 		= UART_OVERSAMPLING_16;
-	if (HAL_UART_Init(&BSP_UART_3_HANDLER) == HAL_OK)
+
+	if (HAL_UART_Init(&BSP_UART_3_HANDLER) != HAL_OK)
 	{
-		status = BSP_OK;
+		status = BSP_ERROR;
 	}
 
-	 HAL_UART_MspInit(&huart3);
+	HAL_UART_MspInit(&huart3);
 
-	 NVIC_EnableIRQ(USART3_IRQn);
+	HAL_NVIC_SetPriority(USART3_IRQn, 2, 1);
+	NVIC_EnableIRQ(USART3_IRQn);
 
 	return status;
 }
 
 static eBspStatus bspUart4Init (void)
 {
-	eBspStatus status = BSP_ERROR;
+	eBspStatus status = BSP_OK;
 
 	BSP_UART_4_HANDLER.Instance 				= BSP_UART_4_INSTANCE;
 	BSP_UART_4_HANDLER.Init.BaudRate 			= 115200;
@@ -388,13 +484,15 @@ static eBspStatus bspUart4Init (void)
 	BSP_UART_4_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
 	BSP_UART_4_HANDLER.Init.HwFlowCtl 			= UART_HWCONTROL_NONE;
 	BSP_UART_4_HANDLER.Init.OverSampling 		= UART_OVERSAMPLING_16;
-	if (HAL_UART_Init(&BSP_UART_4_HANDLER) == HAL_OK)
+
+	if (HAL_UART_Init(&BSP_UART_4_HANDLER) != HAL_OK)
 	{
-		status = BSP_OK;
+		status = BSP_ERROR;
 	}
 
     HAL_UART_MspInit(&huart4);
 
+    HAL_NVIC_SetPriority(UART4_IRQn, 2, 2);
     NVIC_EnableIRQ(UART4_IRQn);
 
 	return status;
@@ -402,7 +500,7 @@ static eBspStatus bspUart4Init (void)
 
 static eBspStatus bspUartBluetoothInit (void)
 {
-	eBspStatus status = BSP_ERROR;
+	eBspStatus status = BSP_OK;
 
 	BSP_UART_BT_HANDLER.Instance 				= BSP_UART_BT_INSTANCE;
 	BSP_UART_BT_HANDLER.Init.BaudRate 			= 115200;
@@ -412,13 +510,15 @@ static eBspStatus bspUartBluetoothInit (void)
 	BSP_UART_BT_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
 	BSP_UART_BT_HANDLER.Init.HwFlowCtl 			= UART_HWCONTROL_NONE;
 	BSP_UART_BT_HANDLER.Init.OverSampling		= UART_OVERSAMPLING_16;
-	if (HAL_UART_Init(&BSP_UART_BT_HANDLER) == HAL_OK)
+
+	if (HAL_UART_Init(&BSP_UART_BT_HANDLER) != HAL_OK)
 	{
-		status = BSP_OK;
+		status = BSP_ERROR;
 	}
 
 	HAL_UART_MspInit(&huart5);
 
+	HAL_NVIC_SetPriority(UART5_IRQn, 5, 0);
 	NVIC_EnableIRQ(UART5_IRQn);
 
 	return status;
@@ -426,7 +526,7 @@ static eBspStatus bspUartBluetoothInit (void)
 
 static eBspStatus bspUartRadioInit (void)
 {
-	eBspStatus status = BSP_ERROR;
+	eBspStatus status = BSP_OK;
 
 	BSP_UART_RADIO_HANDLER.Instance 			= BSP_UART_RADIO_INSTANCE;
 	BSP_UART_RADIO_HANDLER.Init.BaudRate 		= 115200;
@@ -436,14 +536,30 @@ static eBspStatus bspUartRadioInit (void)
 	BSP_UART_RADIO_HANDLER.Init.Mode 			= UART_MODE_TX_RX;
 	BSP_UART_RADIO_HANDLER.Init.HwFlowCtl 		= UART_HWCONTROL_NONE;
 	BSP_UART_RADIO_HANDLER.Init.OverSampling 	= UART_OVERSAMPLING_16;
-	if (HAL_UART_Init(&BSP_UART_RADIO_HANDLER) == HAL_OK)
+
+	if (HAL_UART_Init(&BSP_UART_RADIO_HANDLER) != HAL_OK)
 	{
-		status = BSP_OK;
+		status = BSP_ERROR;
 	}
 
     HAL_UART_MspInit(&huart6);
 
+    HAL_NVIC_SetPriority(USART6_IRQn, 2, 3);
     NVIC_EnableIRQ(USART6_IRQn);
 
 	return status;
 }
+
+
+__weak void bspUart1RxCpltCallback     (void) {}
+__weak void bspUartUsbRxCpltCallback   (void) {}
+__weak void bspUart3RxCpltCallback     (void) {}
+__weak void bspUart4RxCpltCallback     (void) {}
+__weak void bspBluetoothRxCpltCallback (void) {}
+__weak void bspRadioRxCpltCallback     (void) {}
+__weak void bspUart1TxCpltCallback     (void) {}
+__weak void bspUartUsbTxCpltCallback   (void) {}
+__weak void bspUart3TxCpltCallback     (void) {}
+__weak void bspUart4TxCpltCallback     (void) {}
+__weak void bspBluetoothTxCpltCallback (void) {}
+__weak void bspRadioTxCpltCallback     (void) {}

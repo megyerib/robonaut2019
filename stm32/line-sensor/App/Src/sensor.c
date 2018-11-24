@@ -1,27 +1,48 @@
-// BSP
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//!
+//!  \file      sensor.c
+//!  \brief
+//!  \details
+//!
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Includes ------------------------------------------------------------------------------------------------------------
+
 #include "eval.h"
 #include "feedback.h"
-#include "../../BSP/Inc/ldriver.h"
-#include "../../BSP/Inc/measure.h"
-#include "../../BSP/Inc/mux.h"
+#include "ldriver.h"
+#include "measure.h"
+#include "mux.h"
+
+// Defines -------------------------------------------------------------------------------------------------------------
+
+// Typedefs ------------------------------------------------------------------------------------------------------------
+
+// Local (static) & extern variables -----------------------------------------------------------------------------------
+
+// Local (static) function prototypes ----------------------------------------------------------------------------------
+
+// Global function definitions -----------------------------------------------------------------------------------------
+
+// Local (static) function definitions ---------------------------------------------------------------------------------
 
 void startSensor()
 {
-	uint32_t measVals[32];
-	LINE line;
+    uint32_t measVals[32];
+    LINE line;
 
-	// Init
-	initLDriver();
-	initMux();
+    // Init
+    initLDriver();
+    initMux();
 
-	enableIr();
-	enableLed();
+    enableIr();
+    enableLed();
 
-	// Loop
-	while (1)
-	{
-		measure(measVals);
-		line = getLine(measVals);
-		ledFeedback(&line);
-	}
+    // Loop
+    while (1)
+    {
+        measure(measVals);
+        line = getLine(measVals);
+        ledFeedback(&line);
+    }
 }

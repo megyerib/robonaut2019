@@ -18,7 +18,7 @@
 typedef struct
 {
 	double theta;
-	VelocityVector v;
+	cVelocityVector v;
 } StrapDownNavigation;
 
 // --------------------------------------------------------------------------//
@@ -29,11 +29,11 @@ typedef struct
 
 //static void drn_UpdateOrientation (const double omega, const double time);
 
-static void drn_UpdateOrientation (const double omega, const double dt);
+static void drnUpdateOrientation (const double omega, const double dt);
 
-static void drn_UpdateVelocity (const double u, const double v);
+static void drnUpdateVelocity (const double u, const double v);
 
-static void drn_CalculateNedParameters (const double dt);
+static void drnCalculateNedParameters (const double dt);
 
 // --------------------------------------------------------------------------//
 
@@ -44,16 +44,16 @@ StrapDownNavigation naviOffset;
 StrapDownNavigation naviState;
 StrapDownNavigation prevNaviState;
 
-AngularVelocity		prevMeasure;
+cAngularVelocity		prevMeasure;
 
-NED_Parameters		nedPosition;
-NED_Parameters		prevNedPosition;
+cNedParameters		nedPosition;
+cNedParameters		prevNedPosition;
 
 // --------------------------------------------------------------------------//
 
 // ------------------------------ Functions ---------------------------------//
 
-void drn_Init (void)
+void drnInit (void)
 {
 	naviOffset.theta = 0;
 	naviOffset.v.x = 0;
@@ -79,9 +79,9 @@ void drn_Init (void)
 	prevNedPosition.e = 0;
 }
 
-const NED_Parameters drn_GetNedCoordinates (void)
+cNedParameters drnGetNedCoordinates (void)
 {
-	NED_Parameters ned;
+	cNedParameters ned;
 
 	xSemaphoreTake(semDrNavi, portMAX_DELAY);
 	ned.n = nedPosition.n;
@@ -91,7 +91,7 @@ const NED_Parameters drn_GetNedCoordinates (void)
 	return ned;
 }
 
-void drn_SetNedCoordinates (const NED_Parameters coords)
+void drnSetNedCoordinates (const cNedParameters coords)
 {
 	xSemaphoreTake(semDrNavi, portMAX_DELAY);
 	nedPosition.n = coords.n;
@@ -100,23 +100,23 @@ void drn_SetNedCoordinates (const NED_Parameters coords)
 }
 
 // v = [m/s], w = [rad/s], dt = [ms]
-const NED_Parameters drn_ReckonNavigation (const VelocityVector v, const AngularVelocity w, const uint32_t dt)
+cNedParameters drnReckonNavigation (const cVelocityVector v, const cAngularVelocity w, const uint32_t dt)
 {
-	NED_Parameters retval;
+	cNedParameters retval;
 
 	//Convert time to sec
-	volatile const double dt_s = (double)dt / 1000;
+	double dt_s = (double)dt / 1000;
 
-	drn_UpdateOrientation(w.omega, dt_s);
-	drn_UpdateVelocity(v.x, v.y);
-	drn_CalculateNedParameters(dt_s);
+	drnUpdateOrientation(w.omega, dt_s);
+	drnUpdateVelocity(v.x, v.y);
+	drnCalculateNedParameters(dt_s);
 
-	retval = drn_GetNedCoordinates();
+	retval = drnGetNedCoordinates();
 
 	return retval;
 }
 
-const double drn_NumInteg_Trapezoidal (const double a, const double b, const double fa, const double fb)
+double drnNumIntegTrapezoidal (const double a, const double b, const double fa, const double fb)
 {
 	double integral;
 
@@ -145,12 +145,12 @@ const double drn_NumInteg_Trapezoidal (const double a, const double b, const dou
 }*/
 
 // omega = [rad/s], dt = [s] -> theta = [rad]
-static void drn_UpdateOrientation (const double omega, const double dt)
+static void drnUpdateOrientation (const double omega, const double dt)
 {
 	volatile double dtheta;
 
 	// Calculate the derivative of the new theta form the current and the last omega value
-	dtheta = drn_NumInteg_Trapezoidal(0, dt, prevMeasure.omega, omega);
+	dtheta = drnNumIntegTrapezoidal(0, dt, prevMeasure.omega, omega);
 
 	// Determine the current theta value
 	naviState.theta = prevNaviState.theta + dtheta;
@@ -161,18 +161,18 @@ static void drn_UpdateOrientation (const double omega, const double dt)
 }
 
 // u, v = [m/s]
-static void drn_UpdateVelocity (const double u, const double v)
+static void drnUpdateVelocity (const double u, const double v)
 {
 	naviState.v.x = u;
 	naviState.v.y = v;
 }
 
 // dt = [s] -> n = [m], e = [m]
-static void drn_CalculateNedParameters (const double dt)
+static void drnCalculateNedParameters (const double dt)
 {
 	volatile double delta_n;
 	volatile double delta_e;
-	volatile NED_Parameters coords;
+	volatile cNedParameters coords;
 
 	// Determine the derivative of the NED coordinations
 	delta_n = naviState.v.x*cos(naviState.theta) - naviState.v.y*sin(naviState.theta);
@@ -187,7 +187,7 @@ static void drn_CalculateNedParameters (const double dt)
 	prevNedPosition.e = coords.e;
 
 	// Save the new result
-	drn_SetNedCoordinates(coords);
+	drnSetNedCoordinates(coords);
 }
 
 // --------------------------------------------------------------------------//

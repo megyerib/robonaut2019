@@ -39,13 +39,11 @@ RadioSignal radioGetState()
 
 void bspRadioRxCpltCallback()
 {
-    uint8_t newState;
-
 	bspUartReceive_IT(Uart_Radio, &message, 1);
 
     if (message >= '0' && message <= '5')
     {
-        newState = message - '0';
+        state = message - '0';
     }
     else
     {
