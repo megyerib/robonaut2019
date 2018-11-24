@@ -1,0 +1,5 @@
+bsp_pwm.c:24:6:BSP_PWMStart	8	static
+bsp_pwm.c:39:6:BSP_CreateDutyCycle	16	static
+bsp_pwm.c:45:6:BSP_CreateCompareValue	16	static
+bsp_pwm.c:59:6:BSP_PWMSetCompareRegisters	32	static
+bsp_pwm.c:82:6:BSP_SetDutyCycle	24	static

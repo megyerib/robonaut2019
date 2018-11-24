@@ -1,0 +1,2 @@
+bsp_communication.c:31:6:initComm	8	static
+bsp_communication.c:37:6:HAL_UART_RxCpltCallback	16	static

@@ -1,0 +1,11 @@
+bsp_leds.c:27:6:BSP_SetLEDBurstOFF5V	8	static
+bsp_leds.c:32:6:BSP_SetLEDBurtsOFF6V	8	static
+bsp_leds.c:37:6:BSP_SetLEDHeartbeat	8	static
+bsp_leds.c:44:6:BSP_SetLEDHeartbeatBlinking	8	static
+bsp_leds.c:51:6:BSP_SetLEDOrange	8	static
+bsp_leds.c:58:6:BSP_SetLEDOrangeBlinking	8	static
+bsp_leds.c:65:6:BSP_SetLEDFault	8	static
+bsp_leds.c:82:6:BSP_ResetLEDHeartbeat	8	static
+bsp_leds.c:89:6:BSP_ResetLEDOrange	8	static
+bsp_leds.c:96:6:BSP_ResetLEDFault	8	static
+bsp_leds.c:101:6:BSP_LEDStart	8	static

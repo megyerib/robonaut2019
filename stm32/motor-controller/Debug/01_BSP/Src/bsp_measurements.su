@@ -1,0 +1,2 @@
+bsp_measurements.c:26:6:BSP_GetMeasurementValues	32	static
+bsp_measurements.c:45:6:BSP_GetMeasurements	48	static
