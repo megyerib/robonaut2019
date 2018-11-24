@@ -165,29 +165,29 @@ void traceBluetooth(const eBluetoothLogMember destination, void* const data)
 
 void traceFlushData (void)
 {
-	uint32_t sharpDist;
-	bool     sharpColWarn;
-	double   srvAngle;
-	double   inertAccelX;
-	double   inertAccelY;
-	double   inertAccelZ;
-	double   inertAngVelX;
-	double   inertAngVelY;
-	double   inertAngVelZ;
-	double   naviN;
-	double   naviE;
-	double   naviTheta;
-	double   encVel;
-	uint32_t tof1Distance;
-	uint32_t tof2Distance;
-	uint32_t tof3Distance;
-	double   mtrMainBatVolt;
-	double   mtrSecBatVolt;
-	double   mtrCurr;
-	uint32_t mtrSysCurr;
-	uint32_t mtrSrvCurr;
-	bool     mtrCmdStopEngine;
-	double   ctrlMtrCurr;
+	uint32_t sharpDist        = 0;
+	bool     sharpColWarn     = 0;
+	double   srvAngle         = 0;
+	double   inertAccelX      = 0;
+	double   inertAccelY      = 0;
+	double   inertAccelZ      = 0;
+	double   inertAngVelX     = 0;
+	double   inertAngVelY     = 0;
+	double   inertAngVelZ     = 0;
+	double   naviN            = 0;
+	double   naviE            = 0;
+	double   naviTheta        = 0;
+	double   encVel           = 0;
+	uint32_t tof1Distance     = 0;
+	uint32_t tof2Distance     = 0;
+	uint32_t tof3Distance     = 0;
+	double   mtrMainBatVolt   = 0;
+	double   mtrSecBatVolt    = 0;
+	double   mtrCurr          = 0;
+	uint32_t mtrSysCurr       = 0;
+	uint32_t mtrSrvCurr       = 0;
+	bool     mtrCmdStopEngine = 0;
+	double   ctrlMtrCurr      = 0;
 
 	// Collect and save the values from the queue into the bluetooth log structure.
 	xQueueReceive(qSharpDistance_u32, &sharpDist, 0);

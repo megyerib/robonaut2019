@@ -108,7 +108,7 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	xTaskCreate(Task_CarDiagnosticsTool,
 				"TASK_CAR_DIAGNOSTICS_TOOL",
-				DEFAULT_STACK_SIZE+100,
+				DEFAULT_STACK_SIZE+100 ,
 				NULL,
 				TASK_CDT_PRIO,
 				NULL);
@@ -138,6 +138,9 @@ void Task_CarDiagnosticsTool(void* p)
 	bspUartTransmit(Uart_USB, 	bypassResp2, sizeof(bypassResp2), 1000);*/
 
 	uint8_t helloMsg[18] = "Hello Override\r\n";
+
+//	UBaseType_t cdtStackUsage;
+//	cdtStackUsage = uxTaskGetStackHighWaterMark(NULL);
 
 	//TODO remove
 	//uint16_t bufferShrpDstQ;
