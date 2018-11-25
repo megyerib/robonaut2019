@@ -14,7 +14,6 @@
 
 // Variables -----------------------------------------------------------------------------------------------------------
 
-unsigned char ReceiveBufferUART[24];
 unsigned char DutyCycleFromUART[24];
 float ConvertedDutyCycle;
 

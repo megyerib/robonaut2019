@@ -25,9 +25,12 @@
 
 void APP_TestApplication()
 {
-	//APP_MessageIdentificationForTesting(ReceiveBufferUART, &ConvertedDutyCycle);
-	//APP_SetDutyCycle(&ConvertedDutyCycle);	//for testing the Transistors
-	//APP_SetLEDDutyClyeForTesting(&ConvertedDutyCycle);
+	while(1)
+	{
+		//APP_MessageIdentificationForTesting(ReceiveBufferUART, &ConvertedDutyCycle);
+		//APP_SetDutyCycle(&ConvertedDutyCycle);	//for testing the Transistors
+		//APP_SetLEDDutyClyeForTesting(&ConvertedDutyCycle);
+	}
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

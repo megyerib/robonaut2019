@@ -51,8 +51,12 @@ void BSP_SetLEDHeartbeatBlinking(void)
 
 void BSP_SetLEDHeartbeatBlinkingDutyCyle(float* DutyCyle)
 {
+	int32_t CompareValue = 0;
+
+	CompareValue = (*DutyCyle) * PERIOD_LED_HEARTBEAT;
+
 	HAL_TIM_Base_Start(&htim3);
-	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, *DutyCyle);
+	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, CompareValue);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 }
 

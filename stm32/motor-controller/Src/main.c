@@ -111,10 +111,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   APP_Init();
+  APP_TestApplication();
 
   while (1)
   {
-	  APP_TestApplication();
+
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

@@ -12,6 +12,7 @@
 #include "stm32f0xx_hal.h"
 #include "usart.h"
 #include "bsp_leds.h"
+#include "bsp_pwm.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -23,6 +24,7 @@
 
 unsigned char response[] = "Got it!\r\n";
 int CharCount;
+unsigned char ReceiveBufferUART[24];
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -46,14 +48,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			CharCount = 0;
 
 			int32_t Converted = 0;
-			while(DutyCycleFromUART[i] != '\r')
+			while(ReceiveBufferUART[i] != '\r' && ReceiveBufferUART[i] != '\n')
 			{
 				Converted *= 10;
-				Converted+= DutyCycleFromUART[i] - '0';
-				ConvertedDutyCycle = Converted + 0.0;
-				ConvertedDutyCycle /= 100;
+				Converted += ReceiveBufferUART[i] - '0';
+				i++;
 			}
-			BSP_SetLEDHeartbeatBlinkingDutyCyle(&ConvertedDutyCycle);
+
+			ConvertedDutyCycle = Converted + 0.0;
+			ConvertedDutyCycle /= 100;
+
+			BSP_SetDutyCycle(&ConvertedDutyCycle);
+			//BSP_SetLEDHeartbeatBlinkingDutyCyle(&ConvertedDutyCycle);
 			HAL_UART_Transmit_IT(MAIN_BOARD_UART, response, 5);
 		}
 		else
