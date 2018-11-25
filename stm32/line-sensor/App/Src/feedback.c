@@ -19,7 +19,7 @@
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static uint8_t mmToLedPos(uint8_t mm);
+static uint8_t mmToLedPos(int16_t mm);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -40,7 +40,10 @@ void ledFeedback(LINE* line)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-static uint8_t mmToLedPos(uint8_t mm)
+static uint8_t mmToLedPos(int16_t mm)
 {
-    return (uint8_t)((mm - MID_IR_POS_MM) / IR_DIST_MM + 16);
+    uint8_t ret = (uint8_t)((mm + MID_IR_POS_MM + 15 * IR_DIST_MM) / IR_DIST_MM);
+
+    //uint8_t ret = (uint8_t)((mm - MID_IR_POS_MM) / IR_DIST_MM + 16);
+    return ret;
 }

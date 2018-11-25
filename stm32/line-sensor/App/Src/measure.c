@@ -15,17 +15,19 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
+#define SENSOR_NUM 32
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void measureSet(uint8_t set, uint32_t* dst);
+static void measureSet(uint8_t set, uint32_t dst[SENSOR_NUM]);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void measure(uint32_t* dst)
+void measure(uint32_t dst[SENSOR_NUM])
 {
     // Késõbb lehet szórakozni azzal, hogy minden 3. vagy 2. infra led világít egyszerre.
     uint32_t irval = 0x88888888, i;
@@ -45,7 +47,7 @@ void measure(uint32_t* dst)
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 // Beolvassa az összes ADC értékét egy adott MUX beállítás (set) mellett.
-static void measureSet(uint8_t set, uint32_t* dst)
+static void measureSet(uint8_t set, uint32_t dst[SENSOR_NUM])
 {
     int i;
 

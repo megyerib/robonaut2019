@@ -14,6 +14,7 @@
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define THRESHOLD 500
+#define SENSOR_NUM 32
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -24,12 +25,12 @@
 static uint32_t max4_pos(int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
 static void     magicDiff(uint32_t* src, uint32_t* dst);
 static int16_t  ledPosToMm(uint8_t ledPos);
-static uint32_t evalWeightedMean(uint32_t* arr, uint32_t i);
+static int32_t evalWeightedMean(uint32_t* arr, uint32_t i);
 static uint32_t evalIsPeak(uint32_t* arr, uint32_t i, uint32_t mean, uint32_t stdDev);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-LINE getLine(uint32_t* measData)
+LINE getLine(uint32_t measData[SENSOR_NUM])
 {
     uint32_t filtered[32];
     uint32_t i;
@@ -124,34 +125,42 @@ static uint32_t max4_pos(int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4)
 
 static int16_t ledPosToMm(uint8_t ledPos)
 {
-    return ((int16_t)ledPos - 16) * IR_DIST_MM + MID_IR_POS_MM;
+    int16_t ret = ((int16_t)ledPos - 16) * IR_DIST_MM + MID_IR_POS_MM;
+    return ret;
 }
 
-static uint32_t evalWeightedMean(uint32_t* arr, uint32_t i)
+static int32_t evalWeightedMean(uint32_t arr[SENSOR_NUM], uint32_t i) // TODO itt a hiba
 {
+    int32_t w1, w2, w3, div, ret;
+
     if (i == 0)
     {
-        return
-            (arr[0] * ledPosToMm(0) + arr[1] * ledPosToMm(1))
-             /
-            (arr[0] + arr[1]);
+       w1 = 0;
+       w2 = arr[0] * ledPosToMm(0);
+       w3 = arr[1] * ledPosToMm(1);
+
+       div = arr[0] + arr[1];
     }
     else if (i == 31)
     {
-        return
-            (arr[30] * ledPosToMm(30) + arr[31] * ledPosToMm(31))
-             /
-            (arr[30] + arr[31]);
+        w1 = arr[30] * ledPosToMm(30);
+        w2 = arr[31] * ledPosToMm(31);
+        w3 = 0;
+
+        div = arr[30] + arr[31];
     }
     else
     {
-        return
-            (arr[i-1] * ledPosToMm(i-1) +
-             arr[i]   * ledPosToMm(i)   +
-             arr[i+1] * ledPosToMm(i+1))
-             /
-            (arr[i-1] + arr[i] + arr[i+1]);
+        w1 = arr[i-1] * ledPosToMm(i-1);
+        w2 = arr[i  ] * ledPosToMm(i  );
+        w3 = arr[i+1] * ledPosToMm(i+1);
+
+        div = arr[i-1] + arr[i] + arr[i+1];
     }
+
+    ret = (w1 + w2 + w3) / div;
+
+    return ret;
 }
 
 static uint32_t evalIsPeak(uint32_t* arr, uint32_t i, uint32_t mean, uint32_t stdDev)

@@ -16,11 +16,13 @@
 #define MID_IR_POS_MM 5
 #define MAXLINES      3
 
+#define SENSOR_NUM 32
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 typedef struct
 {
-    uint16_t lines[MAXLINES];
+    int16_t lines[MAXLINES];
     uint8_t cnt;
     uint8_t cross;
 }
@@ -30,4 +32,4 @@ LINE;
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-LINE getLine(uint32_t* measData);
+LINE getLine(uint32_t measData[SENSOR_NUM]);

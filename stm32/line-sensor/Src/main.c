@@ -46,6 +46,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "sensor.h"
+#include "test.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
