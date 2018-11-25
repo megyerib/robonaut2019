@@ -40,6 +40,9 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern ADC_HandleTypeDef hadc;
+extern TIM_HandleTypeDef htim1;
+extern UART_HandleTypeDef huart1;
 
 /******************************************************************************/
 /*            Cortex-M0 Processor Interruption and Exception Handlers         */ 
@@ -123,6 +126,48 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f0xx.s).                    */
 /******************************************************************************/
+
+/**
+* @brief This function handles ADC global interrupt.
+*/
+void ADC1_IRQHandler(void)
+{
+  /* USER CODE BEGIN ADC1_IRQn 0 */
+
+  /* USER CODE END ADC1_IRQn 0 */
+  HAL_ADC_IRQHandler(&hadc);
+  /* USER CODE BEGIN ADC1_IRQn 1 */
+
+  /* USER CODE END ADC1_IRQn 1 */
+}
+
+/**
+* @brief This function handles TIM1 break, update, trigger and commutation interrupts.
+*/
+void TIM1_BRK_UP_TRG_COM_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 0 */
+
+  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
+  /* USER CODE BEGIN TIM1_BRK_UP_TRG_COM_IRQn 1 */
+
+  /* USER CODE END TIM1_BRK_UP_TRG_COM_IRQn 1 */
+}
+
+/**
+* @brief This function handles USART1 global interrupt.
+*/
+void USART1_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART1_IRQn 0 */
+
+  /* USER CODE END USART1_IRQn 0 */
+  HAL_UART_IRQHandler(&huart1);
+  /* USER CODE BEGIN USART1_IRQn 1 */
+
+  /* USER CODE END USART1_IRQn 1 */
+}
 
 /* USER CODE BEGIN 1 */
 

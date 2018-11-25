@@ -28,8 +28,8 @@ void APP_Init(void)
 	BSP_LEDStart();
 	//BSP_UARTStart();
 	//BSP_ADCStart();
+	BSP_InitUART();
 	BSP_PWMStart();
-	initComm();
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

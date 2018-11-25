@@ -10,6 +10,7 @@
 
 #include "app_current_controller.h"
 #include "bsp_pwm.h"
+#include "bsp_leds.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -21,9 +22,14 @@
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void APP_SetDutyCycle(float DutyCycle)
+void APP_SetDutyCycle(float* DutyCycle)
 {
-	BSP_SetDutyCycle(&DutyCycle);
+	BSP_SetDutyCycle(DutyCycle);
+}
+
+void APP_SetLEDDutyClyeForTesting(float* ConvertedDutyCycle)
+{
+	BSP_SetLEDHeartbeatBlinkingDutyCyle(ConvertedDutyCycle);
 }
 
 void App_CurrentController()

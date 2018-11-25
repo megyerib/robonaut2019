@@ -16,7 +16,8 @@
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-void APP_SetDutyCycle(float DutyCycle);
+void APP_SetDutyCycle(float* DutyCycle);
+void APP_SetLEDDutyClyeForTesting(float* ConvertedDutyCycle);
 
 void App_CurrentController();
 

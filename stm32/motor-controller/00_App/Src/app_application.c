@@ -1,41 +1,35 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      app_commands.c
-//!  \brief
-//!  \details
+//!  \file      app_application.c
+//!  \brief     
+//!  \details   
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Includes ------------------------------------------------------------------------------------------------------------
-
-#include "stm32f0xx_hal.h"
+#include "app_applicaton.h"
 #include "app_commands.h"
-#include "bsp_communication.h"
+#include "app_current_controller.h"
+#include "app_init.h"
+#include "app_measurements_evaluation.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
-unsigned char DutyCycleFromUART[24];
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-// Local (static) function definitions ---------------------------------------------------------------------------------
-
-void APP_MessageIdentificationForTesting(unsigned char* DutyCycleFromUART, float* ConvertedDutyCycle)
+void APP_TestApplication()
 {
-	int i = 0;
-	int32_t Converted = 0;
-	while(DutyCycleFromUART[i] != '0')
-	{
-		Converted *= 10;
-		Converted+= DutyCycleFromUART[i] - '0';
-		*ConvertedDutyCycle = Converted + 0.0;
-		*ConvertedDutyCycle /= 100;
-	}
-
+	//APP_MessageIdentificationForTesting(ReceiveBufferUART, &ConvertedDutyCycle);
+	//APP_SetDutyCycle(&ConvertedDutyCycle);	//for testing the Transistors
+	//APP_SetLEDDutyClyeForTesting(&ConvertedDutyCycle);
 }
+
+// Local (static) function definitions ---------------------------------------------------------------------------------
 
 // END -----------------------------------------------------------------------------------------------------------------

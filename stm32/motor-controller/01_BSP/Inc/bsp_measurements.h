@@ -37,12 +37,12 @@ float MainBatVoltage;
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 void BSP_GetMeasurementValues	(
-											int32_t* MotorCurrentValue,
-											int32_t* ServoCurrentValue,
-											int32_t* SystemCurrentValue,
-											int32_t* SecBatVoltageValue,
-											int32_t* MainBatVoltageValue
-										);
+									int32_t* MotorCurrentValue,
+									int32_t* ServoCurrentValue,
+									int32_t* SystemCurrentValue,
+									int32_t* SecBatVoltageValue,
+									int32_t* MainBatVoltageValue
+								);
 
 void BSP_GetMeasurements	(
 								float* MotorCurrent,

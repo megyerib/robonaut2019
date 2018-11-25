@@ -8,6 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include "stm32f0xx_hal.h"
 #include "bsp_leds.h"
 #include "gpio.h"
 #include "tim.h"
@@ -45,6 +46,13 @@ void BSP_SetLEDHeartbeatBlinking(void)
 {
 	HAL_TIM_Base_Start(&htim3);
 	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, PERIOD_LED_HEARTBEAT/2);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+}
+
+void BSP_SetLEDHeartbeatBlinkingDutyCyle(float* DutyCyle)
+{
+	HAL_TIM_Base_Start(&htim3);
+	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, *DutyCyle);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 }
 

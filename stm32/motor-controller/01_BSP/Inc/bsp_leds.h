@@ -22,6 +22,7 @@ void BSP_SetLEDBurstOFF5V(void);
 void BSP_SetLEDBurtsOFF6V(void);
 void BSP_SetLEDHeartbeat(void);
 void BSP_SetLEDHeartbeatBlinking(void);
+void BSP_SetLEDHeartbeatBlinkingDutyCyle(float* DutyCyle);
 void BSP_SetLEDOrange(void);
 void BSP_SetLEDFault(void);
 

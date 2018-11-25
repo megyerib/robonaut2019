@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>motor-controller</name>
-	<comment></comment>
+	<comment />
 	<projects>
 		<project>_common</project>
 	</projects>
@@ -16,7 +16,7 @@
 				</dictionary>
 				<dictionary>
 					<key>?name?</key>
-					<value></value>
+					<value />
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.append_environment</key>
@@ -24,7 +24,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildArguments</key>
-					<value></value>
+					<value />
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildCommand</key>
