@@ -56,7 +56,7 @@ void MX_ADC_Init(void)
     /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
     */
   hadc.Instance = ADC1;
-  hadc.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc.Init.Resolution = ADC_RESOLUTION_12B;
   hadc.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc.Init.ScanConvMode = ADC_SCAN_DIRECTION_FORWARD;
@@ -137,12 +137,15 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     PA3     ------> ADC_IN3
     PA4     ------> ADC_IN4 
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
-                          |GPIO_PIN_4;
+    GPIO_InitStruct.Pin = ADCMotorCurrent_Pin|ADCServoCurrent_Pin|ADCSystemCurrent_Pin|ADCSecBatVoltage_Pin 
+                          |ADCMainBatVoltage_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+    /* ADC1 interrupt Init */
+    HAL_NVIC_SetPriority(ADC1_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(ADC1_IRQn);
   /* USER CODE BEGIN ADC1_MspInit 1 */
 
   /* USER CODE END ADC1_MspInit 1 */
@@ -167,9 +170,11 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* adcHandle)
     PA3     ------> ADC_IN3
     PA4     ------> ADC_IN4 
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3 
-                          |GPIO_PIN_4);
+    HAL_GPIO_DeInit(GPIOA, ADCMotorCurrent_Pin|ADCServoCurrent_Pin|ADCSystemCurrent_Pin|ADCSecBatVoltage_Pin 
+                          |ADCMainBatVoltage_Pin);
 
+    /* ADC1 interrupt Deinit */
+    HAL_NVIC_DisableIRQ(ADC1_IRQn);
   /* USER CODE BEGIN ADC1_MspDeInit 1 */
 
   /* USER CODE END ADC1_MspDeInit 1 */

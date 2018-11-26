@@ -65,6 +65,9 @@ void Task_Navigation(void* p)
 	a.a_y = 0;
 	a.a_z = 0;
 
+//	UBaseType_t naviStackUsage;
+//	naviStackUsage = uxTaskGetStackHighWaterMark(NULL);
+
 	while(1)
 	{
 		prev_a = a;

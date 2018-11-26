@@ -46,6 +46,9 @@
 
 /* USER CODE BEGIN Includes */
 
+#include "app_applicaton.h"
+#include "app_init.h"
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -99,6 +102,7 @@ int main(void)
   MX_TIM1_Init();
   MX_ADC_Init();
   MX_USART1_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -106,11 +110,8 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  HAL_GPIO_WritePin(I2C_LED_GPIO_Port,I2C_LED_Pin,GPIO_PIN_SET);
-  HAL_GPIO_WritePin(UART_LED_GPIO_Port, UART_LED_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(SPI_LED_GPIO_Port, SPI_LED_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(PWM_ON_5V_GPIO_Port, PWM_ON_5V_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(PWM_ON_6V_GPIO_Port, PWM_ON_6V_Pin, GPIO_PIN_SET);
+  APP_Init();
+  APP_TestApplication();
 
   while (1)
   {
@@ -137,13 +138,11 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI14|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
-  RCC_OscInitStruct.HSI14CalibrationValue = 16;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
   RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {

@@ -10,8 +10,6 @@
 
 #include "../../1_App/Inc/app_sharp.h"
 
-#include "queue.h"
-
 #include "../../1_App/Inc/app_common.h"
 #include "../../2_Handler/Inc/sds_SharpDistanceSensor.h"
 #include "../../2_Handler/Inc/trace.h"
@@ -25,10 +23,8 @@ EventGroupHandle_t event_sharp;
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void TaskInit_Sharp(void * p)
+void TaskInit_Sharp (void)
 {
-	(void)p;
-
 	semSharp = xSemaphoreCreateBinary();
 	event_sharp = xEventGroupCreate();
 
@@ -45,11 +41,11 @@ void TaskInit_Sharp(void * p)
 				NULL);
 }
 
-void Task_Sharp(void* p)
+void Task_Sharp (void* p)
 {
 	(void)p;
 
-	uint16_t sharp_distance = 0;
+	uint32_t sharp_distance = 0;
 	bool warning = true;
 	bool noWarning = false;
 

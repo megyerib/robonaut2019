@@ -64,7 +64,9 @@
 #include "../1_App/Inc/app_navigation.h"
 #include "../1_App/Inc/app_servo.h"
 #include "../1_App/Inc/app_sharp.h"
-#include "../2_Handler/Inc/trace.h"
+#include "app_SpeedControl.h"
+
+#include "trace.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -87,9 +89,10 @@ void InitTasks();
 void InitTasks()
 {
 	TaskInit_CarDiagnosticsTool();
-	TaskInit_Sharp(NULL);
+	TaskInit_Sharp();
 	TaskInit_Servo();
 	TaskInit_Navigation();
+	TaskInit_SControl();
 
 
 	vTaskStartScheduler();

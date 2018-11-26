@@ -49,16 +49,26 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define PWM_ON_6V_Pin GPIO_PIN_6
-#define PWM_ON_6V_GPIO_Port GPIOA
-#define PWM_ON_5V_Pin GPIO_PIN_7
-#define PWM_ON_5V_GPIO_Port GPIOA
-#define UART_LED_Pin GPIO_PIN_0
-#define UART_LED_GPIO_Port GPIOB
-#define SPI_LED_Pin GPIO_PIN_1
-#define SPI_LED_GPIO_Port GPIOB
-#define I2C_LED_Pin GPIO_PIN_2
-#define I2C_LED_GPIO_Port GPIOB
+#define ADCMotorCurrent_Pin GPIO_PIN_0
+#define ADCMotorCurrent_GPIO_Port GPIOA
+#define ADCServoCurrent_Pin GPIO_PIN_1
+#define ADCServoCurrent_GPIO_Port GPIOA
+#define ADCSystemCurrent_Pin GPIO_PIN_2
+#define ADCSystemCurrent_GPIO_Port GPIOA
+#define ADCSecBatVoltage_Pin GPIO_PIN_3
+#define ADCSecBatVoltage_GPIO_Port GPIOA
+#define ADCMainBatVoltage_Pin GPIO_PIN_4
+#define ADCMainBatVoltage_GPIO_Port GPIOA
+#define BurstOFF6V_Pin GPIO_PIN_6
+#define BurstOFF6V_GPIO_Port GPIOA
+#define BurstOFF5V_Pin GPIO_PIN_7
+#define BurstOFF5V_GPIO_Port GPIOA
+#define LEDHeartbeat_Pin GPIO_PIN_0
+#define LEDHeartbeat_GPIO_Port GPIOB
+#define LEDOrange_Pin GPIO_PIN_1
+#define LEDOrange_GPIO_Port GPIOB
+#define LEDProblem_Pin GPIO_PIN_2
+#define LEDProblem_GPIO_Port GPIOB
 
 /* ########################## Assert Selection ############################## */
 /**
