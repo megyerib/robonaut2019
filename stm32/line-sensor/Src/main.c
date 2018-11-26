@@ -45,8 +45,8 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "sensor.h"
-#include "test.h"
+#include "../1_App/Inc/sensor.h"
+#include "../1_App/Inc/test.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/

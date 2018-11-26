@@ -60,12 +60,11 @@
 /* USER CODE BEGIN Includes */
 #include "FreeRTOS.h"
 
-#include "app_sharp.h"
-#include "app_servo.h"
-#include "app_navigation.h"
-#include "app_cdt.h"
-
-#include "trace.h"
+#include "../1_App/Inc/app_cdt.h"
+#include "../1_App/Inc/app_navigation.h"
+#include "../1_App/Inc/app_servo.h"
+#include "../1_App/Inc/app_sharp.h"
+#include "../2_Handler/Inc/trace.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -179,6 +178,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+
   while (1)
   {
 
