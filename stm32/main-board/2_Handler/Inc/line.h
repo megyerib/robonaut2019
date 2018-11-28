@@ -17,9 +17,9 @@
 typedef struct
 {
     uint16_t d;
-    uint16_t theta;
+    float theta; // Radian
 }
-Line;
+LINE;
 
 typedef struct
 {
@@ -51,6 +51,6 @@ ArcDir;
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 void lineInit();
-Line lineGet();
+LINE lineGet();
 Arc lineGetArc(uint16_t r_mm, ArcDir dir);
 RoadSignal lineGetRoadSignal();

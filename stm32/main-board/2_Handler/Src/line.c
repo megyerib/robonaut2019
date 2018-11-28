@@ -15,8 +15,8 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define FRONT_Y (120) /* mm */
-#define REAR_Y  (-20) /* mm */
+#define Y_FRONT (120) /* mm */
+#define Y_REAR  (-20) /* mm */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ static uint8_t valid[2];
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static Line Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -46,10 +46,8 @@ void lineInit()
     valid[0] = valid[1] = 0;
 }
 
-Line lineGet()
+LINE lineGet()
 {
-    Line ret;
-
     LINE_SENSOR_OUT front;
     LINE_SENSOR_OUT rear;
 
@@ -59,6 +57,17 @@ Line lineGet()
     int i;
 
     // ---------------------------------
+
+    if (valid[0] == 0 || valid[1] == 0)
+    {
+        LINE ret =
+        {
+            .d = 0,
+            .theta = 0.0f
+        };
+
+        return ret;
+    }
 
     // Get temporary data
     __disable_irq();
@@ -75,9 +84,7 @@ Line lineGet()
         x_rear += rear.lines[i];
     x_rear /= rear.cnt;
 
-
-
-    return ret;
+    return Descartes2Polar(x_rear, Y_REAR, x_front, Y_FRONT);
 }
 
 Arc lineGetArc(uint16_t r_mm, ArcDir dir)
@@ -96,19 +103,19 @@ RoadSignal lineGetRoadSignal()
 
 // Interrupt handler callbacks -----------------------------
 
-void bspLineFrontTxCpltCallback (void)
+void bspLineFrontRxCpltCallback (void)
 {
     sensor_front_out = front_tmp;
 
     valid[0] = 1;
 }
 
-void bspLineRearTxCpltCallback (void)
+/*void bspLineRearRxCpltCallback (void)
 {
     sensor_rear_out = rear_tmp;
 
     valid[1] = 1;
-}
+}*/
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
@@ -125,13 +132,11 @@ void bspLineRearTxCpltCallback (void)
  (x1;x2) x----- |
                 |           */
 
-static Line Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
+static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
-    Line ret;
-    float x;
-    float y;
-    float a; // y = ax + b
-    float b;
+    LINE ret;
+    float x, y;
+    float a, b; // y = ax + b
     float alpha;
 
     x = (float)x2 - (float)x1;
@@ -143,7 +148,18 @@ static Line Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 
     ret.d = ((b/2) * sqrt(1 + 1/(a*a)));
 
-    alpha = atan2f(y, x);
+    alpha = atanf(a);
+
+    if (alpha >= 0.0)
+    {
+        ret.theta = alpha - 90.0;
+    }
+    else
+    {
+        ret.theta = alpha + 90.0;
+    }
+
+    ret.theta *= 180 / PI; // ° -> rad
 
     return ret;
 }

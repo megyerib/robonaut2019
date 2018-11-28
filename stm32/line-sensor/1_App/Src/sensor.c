@@ -8,11 +8,12 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../1_App/Inc/eval.h"
-#include "../../1_App/Inc/feedback.h"
-#include "../../1_App/Inc/measure.h"
-#include "../../2_BSP/Inc/ldriver.h"
-#include "../../2_BSP/Inc/mux.h"
+#include "eval.h"
+#include "feedback.h"
+#include "measure.h"
+#include "ldriver.h"
+#include "mux.h"
+#include "comm.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -44,5 +45,6 @@ void startSensor()
         measure(measVals);
         line = getLine(measVals);
         ledFeedback(&line);
+        sendLine(&line);
     }
 }
