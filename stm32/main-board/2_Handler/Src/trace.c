@@ -38,6 +38,8 @@ extern QueueHandle_t qMtrSysCurr_u32;		// 20
 extern QueueHandle_t qMtrSrvCurr_u32;
 extern QueueHandle_t qMtrCmdStopEngine_x;
 extern QueueHandle_t qCtrlMtrCurr_d;
+extern QueueHandle_t qLineD_u32;
+extern QueueHandle_t qLineTheta_u32;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -158,6 +160,12 @@ void traceBluetooth(const eBluetoothLogMember destination, void* const data)
 		case BCM_LOG_CTR_MTR_CURR:
 			xQueueOverwrite(qCtrlMtrCurr_d, (double* const)data);
 			break;
+		case BCM_LOG_LINE_D:
+			xQueueOverwrite(qLineD_u32, (uint32_t* const)data);
+			break;
+		case BCM_LOG_LINE_THETA:
+			xQueueOverwrite(qLineTheta_u32, (uint32_t* const)data);
+			break;
 		default:
 			break;
 	}
@@ -188,6 +196,8 @@ void traceFlushData (void)
 	uint32_t mtrSrvCurr       = 0;
 	bool     mtrCmdStopEngine = 0;
 	double   ctrlMtrCurr      = 0;
+	uint32_t lineD			  = 0;
+	uint32_t lineTheta		  = 0;
 
 	// Collect and save the values from the queue into the bluetooth log structure.
 	xQueueReceive(qSharpDistance_u32, &sharpDist, 0);
@@ -258,6 +268,12 @@ void traceFlushData (void)
 
 	xQueueReceive(qCtrlMtrCurr_d, &ctrlMtrCurr, 0);
 	traceWrapDouble(&ctrlMtrCurr, TRACE_DECIMALS_CTRL_MTR_CURR, BCM_LOG_CTR_MTR_CURR, BCM_LOG_LENGHT_CTRL_MTR_CURR);
+
+	xQueueReceive(qLineD_u32, &lineD, 0);
+	traceWrapInteger(&lineD, BCM_LOG_LINE_D, BCM_LOG_LENGHT_LINE_D);
+
+	xQueueReceive(qLineTheta_u32, &lineTheta, 0);
+	traceWrapInteger(&lineTheta, BCM_LOG_LINE_THETA, BCM_LOG_LENGHT_LINE_THETA);
 
 	// Send out the bluetooth log.
 	bcmBtBufferFlush();

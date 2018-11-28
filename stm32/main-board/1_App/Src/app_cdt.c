@@ -41,6 +41,8 @@ QueueHandle_t qMtrSysCurr_u32;		// 20
 QueueHandle_t qMtrSrvCurr_u32;
 QueueHandle_t qMtrCmdStopEngine_x;
 QueueHandle_t qCtrlMtrCurr_d;
+QueueHandle_t qLineD_u32;
+QueueHandle_t qLineTheta_u32;
 
 /*uint8_t	txBtMsg0[16] = "AT+AB FWVersion\r";
 uint8_t txBtMsg1[25] = "AT+AB LocalName Override\r";
@@ -93,6 +95,8 @@ void TaskInit_CarDiagnosticsTool(void)
 	qMtrSrvCurr_u32     = xQueueCreate( 1, sizeof( uint32_t ) );
 	qMtrCmdStopEngine_x = xQueueCreate( 1, sizeof( bool ) );
 	qCtrlMtrCurr_d		= xQueueCreate( 1, sizeof( double ) );
+	qLineD_u32			= xQueueCreate( 1, sizeof( uint32_t ) );
+	qLineTheta_u32		= xQueueCreate( 1, sizeof( uint32_t ) );
 
 	// Atollic debug queues
 	vQueueAddToRegistry(qSharpDistance_u32, "SharpDistance");
@@ -106,7 +110,7 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	xTaskCreate(Task_CarDiagnosticsTool,
 				"TASK_CAR_DIAGNOSTICS_TOOL",
-				DEFAULT_STACK_SIZE+100 ,
+				DEFAULT_STACK_SIZE+150 ,
 				NULL,
 				TASK_CDT_PRIO,
 				NULL);
