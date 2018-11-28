@@ -589,7 +589,7 @@ static void bspUartAssignDevices(void)
     huart_bluetooth  = &huart5;
     huart_radio      = &huart6;
 
-    usart_line_front = USART2;
+    usart_usb        = USART2;
     usart_bluetooth  = UART5;
     usart_radio      = USART6;
 
@@ -599,8 +599,8 @@ static void bspUartAssignDevices(void)
     huart_line_rear  = &huart4;
 
     usart_motor      = USART1;
-    usart_line_rear  = USART3;
-    usart_usb        = UART4;
+    usart_line_front = USART3;
+    usart_line_rear  = UART4;
 
 }
 
