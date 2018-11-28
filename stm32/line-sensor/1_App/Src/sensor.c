@@ -29,7 +29,7 @@
 void startSensor()
 {
     uint32_t measVals[32];
-    LINE line;
+    LINE_SENSOR_OUT line;
 
     // Init
     initLDriver();

@@ -18,12 +18,14 @@
 //! @brief	Enums for the application of the available UART devices.
 typedef enum
 {
-	Uart_1 			= 0,
+	Uart_Motor = 0,
 	Uart_USB,
-	Uart_3,
-	Uart_4,
+	Uart_LineFront,
+	Uart_LineRear,
 	Uart_Bluetooth,
-	Uart_Radio
+	Uart_Radio,
+
+	Uart_DeviceNum
 } eBspUartDevice;
 
 // Variables -----------------------------------------------------------------------------------------------------------
@@ -32,7 +34,7 @@ typedef enum
 //! @brief	Initializes all of the UART devices.
 //!
 //! @retval	Successful or unsuccessful init.
-eBspStatus bspUartInitAll (void);
+eBspStatus bspUartInit (void);
 
 
 //! @brief	Initializes a given UART periphery
@@ -55,7 +57,7 @@ eBspStatus bspUartReceive (const eBspUartDevice uartDevice,
 							     const uint32_t Timeout
 							);
 
-//!
+
 //! @brief	Sends an amount of data in blocking mode. This function encapsulates a HAL function.
 //!
 //! @param	uartDevice	Enum to the handler of the UART periphery that will transmit the message.
@@ -79,7 +81,7 @@ eBspStatus bspUartTransmit (const eBspUartDevice uartDevice,
 //! @retval	Returns BSP_OK if the receiving was successful.
 eBspStatus bspUartReceive_IT (const eBspUartDevice uartDevice, uint8_t* const pData, const uint16_t Size);
 
-//!
+
 //! @brief	Sends an amount of data in non blocking mode. This function encapsulates a HAL function.
 //!
 //! @param	uartDevice	Enum to the handler of the UART periphery that will transmit the message.
@@ -90,9 +92,11 @@ eBspStatus bspUartReceive_IT (const eBspUartDevice uartDevice, uint8_t* const pD
 eBspStatus bspUartTransmit_IT (const eBspUartDevice uartDevice, uint8_t* const pData, const uint16_t Size);
 
 
+// RxCpltCallback functions ----------------------------------------------------
+
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the Uart1 RX interrupt is present.
-void bspUart1RxCpltCallback (void);
+void bspMotorRxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
@@ -102,12 +106,12 @@ void bspUartUsbRxCpltCallback (void);
 
 //! @brief	You can implement this callback function in other parts of the code.
 //!			This function will be called if the Uart3 RX interrupt is present.
-void bspUart3RxCpltCallback (void);
+void bspLineFrontRxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //!			This function will be called if the Uart4 RX interrupt is present.
-void bspUart4RxCpltCallback (void);
+void bspLineRearRxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
@@ -120,9 +124,11 @@ void bspBluetoothRxCpltCallback (void);
 void bspRadioRxCpltCallback (void);
 
 
+// TxCpltCallback functions ----------------------------------------------------
+
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the Uart1 RX interrupt is present.
-void bspUart1TxCpltCallback (void);
+void bspMotorTxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
@@ -132,12 +138,12 @@ void bspUartUsbTxCpltCallback (void);
 
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the Uart3 TX interrupt is present.
-void bspUart3TxCpltCallback (void);
+void bspLineFrontTxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
 //!			This function will be called if the Uart4 TX interrupt is present.
-void bspUart4TxCpltCallback (void);
+void bspLineRearTxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
@@ -146,6 +152,7 @@ void bspBluetoothTxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
-//! 			This function will be called if the Radio TX interrupt is present.
+//! 		This function will be called if the Radio TX interrupt is present.
 void bspRadioTxCpltCallback (void);
 
+// END -----------------------------------------------------------------------------------------------------------------

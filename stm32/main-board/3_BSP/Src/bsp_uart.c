@@ -8,14 +8,13 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../3_BSP/Inc/bsp_uart.h"
-
+#include "bsp_uart.h"
 #include "usart.h"
 #include "gpio.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define		BSP_UART_1_HANDLER			huart1
+/*#define		BSP_UART_1_HANDLER		huart1
 #define		BSP_UART_1_INSTANCE			USART1
 
 #define		BSP_UART_USB_HANDLER		huart2
@@ -31,7 +30,7 @@
 #define		BSP_UART_BT_INSTANCE		UART5
 
 #define		BSP_UART_RADIO_HANDLER		huart6
-#define		BSP_UART_RADIO_INSTANCE		USART6
+#define		BSP_UART_RADIO_INSTANCE		USART6*/
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -44,12 +43,27 @@ extern UART_HandleTypeDef huart4;
 extern UART_HandleTypeDef huart5;
 extern UART_HandleTypeDef huart6;
 
+// For dynamic device assignment
+static UART_HandleTypeDef* huart_motor;
+static UART_HandleTypeDef* huart_line_front;
+static UART_HandleTypeDef* huart_line_rear;
+static UART_HandleTypeDef* huart_usb;
+static UART_HandleTypeDef* huart_bluetooth;
+static UART_HandleTypeDef* huart_radio;
+
+static USART_TypeDef* usart_motor;
+static USART_TypeDef* usart_line_front;
+static USART_TypeDef* usart_line_rear;
+static USART_TypeDef* usart_usb;
+static USART_TypeDef* usart_bluetooth;
+static USART_TypeDef* usart_radio;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 
 //! @brief	Initializes the UART 1 periphery.
 //! @retval	Returns BSP_OK upon successful init.
-static eBspStatus bspUart1Init (void);
+static eBspStatus bspUartMotorInit (void);
 
 
 //! @brief	Initializes the UART 2 periphery.
@@ -59,12 +73,12 @@ static eBspStatus bspUartUsbInit (void);
 
 //! @brief	Initializes the UART 3 periphery.
 //! @retval	Returns BSP_OK upon successful init.
-static eBspStatus bspUart3Init (void);
+static eBspStatus bspUartLineFrontInit (void);
 
 
 //! @brief	Initializes the UART 4 periphery.
 //! @retval	Returns BSP_OK upon successful init.
-static eBspStatus bspUart4Init (void);
+static eBspStatus bspUartLineRearInit (void);
 
 
 //! @brief	Initializes the UART 5 periphery.
@@ -76,25 +90,34 @@ static eBspStatus bspUartBluetoothInit (void);
 //! @retval	Returns BSP_OK upon successful init.
 static eBspStatus bspUartRadioInit (void);
 
+//! @brief  Assign UART 1-3-4 to line sensors & motor controller
+static void bspUartAssignDevices(void);
+
 // Global function definitions -----------------------------------------------------------------------------------------
 
-eBspStatus bspUartInitAll (void)
+eBspStatus bspUartInit (void)
 {
 	eBspStatus ret = BSP_OK;
 
-	eBspStatus status1   = bspUart1Init();
-	eBspStatus statusUsb = bspUartUsbInit();
-	eBspStatus status3   = bspUart3Init();
-	eBspStatus status4   = bspUart4Init();
-	eBspStatus statusBt  = bspUartBluetoothInit();
-	eBspStatus statusRd  = bspUartRadioInit();
+	eBspStatus statusMotor     = bspUartMotorInit();
+	eBspStatus statusUsb       = bspUartUsbInit();
+	eBspStatus statusLineFront = bspUartLineFrontInit();
+	eBspStatus statusLineRear  = bspUartLineRearInit();
+	eBspStatus statusBt        = bspUartBluetoothInit();
+	eBspStatus statusRd        = bspUartRadioInit();
 
 	// Check if all of the Init was successful.
-	if( status1 != BSP_OK || statusUsb != BSP_OK || status3 != BSP_OK || status4 != BSP_OK
-			|| statusBt != BSP_OK || statusRd != BSP_OK)
+	if( statusMotor     != BSP_OK ||
+	    statusUsb       != BSP_OK ||
+	    statusLineFront != BSP_OK ||
+	    statusLineRear  != BSP_OK ||
+	    statusBt        != BSP_OK ||
+	    statusRd        != BSP_OK )
 	{
 		ret = BSP_ERROR;
 	}
+
+	bspUartAssignDevices();
 
 	return ret;
 }
@@ -106,20 +129,20 @@ eBspStatus bspUartInitDevice (const eBspUartDevice uartDevice)
 	// Initialize the given periphery.
 	switch (uartDevice)
 	{
-		case Uart_1:
-			status = bspUart1Init();
+		case Uart_Motor:
+			status = bspUartMotorInit();
 			break;
 
 		case Uart_USB:
 			status = bspUartUsbInit();
 			break;
 
-		case Uart_3:
-			status = bspUart3Init();
+		case Uart_LineFront:
+			status = bspUartLineFrontInit();
 			break;
 
-		case Uart_4:
-			status = bspUart4Init();
+		case Uart_LineRear:
+			status = bspUartLineRearInit();
 			break;
 
 		case Uart_Bluetooth:
@@ -148,28 +171,28 @@ eBspStatus bspUartReceive (const eBspUartDevice uartDevice,
 
 	switch (uartDevice)
 	{
-		case Uart_1:
-			status = HAL_UART_Receive(&BSP_UART_1_HANDLER, pData, Size, Timeout);
+		case Uart_Motor:
+			status = HAL_UART_Receive(huart_motor, pData, Size, Timeout);
 			break;
 
 		case Uart_USB:
-			status = HAL_UART_Receive(&BSP_UART_USB_HANDLER, pData, Size, Timeout);
+			status = HAL_UART_Receive(huart_usb, pData, Size, Timeout);
 			break;
 
-		case Uart_3:
-			status = HAL_UART_Receive(&BSP_UART_3_HANDLER, pData, Size, Timeout);
+		case Uart_LineFront:
+			status = HAL_UART_Receive(huart_line_front, pData, Size, Timeout);
 			break;
 
-		case Uart_4:
-			status = HAL_UART_Receive(&BSP_UART_4_HANDLER, pData, Size, Timeout);
+		case Uart_LineRear:
+			status = HAL_UART_Receive(huart_line_rear, pData, Size, Timeout);
 			break;
 
 		case Uart_Bluetooth:
-			status = HAL_UART_Receive(&BSP_UART_BT_HANDLER, pData, Size, Timeout);
+			status = HAL_UART_Receive(huart_bluetooth, pData, Size, Timeout);
 			break;
 
 		case Uart_Radio:
-			status = HAL_UART_Receive(&BSP_UART_RADIO_HANDLER, pData, Size, Timeout);
+			status = HAL_UART_Receive(huart_radio, pData, Size, Timeout);
 			break;
 
 		default:
@@ -191,28 +214,28 @@ eBspStatus bspUartTransmit (
 
 	switch (uartDevice)
 	{
-		case Uart_1:
-			status = HAL_UART_Transmit(&BSP_UART_1_HANDLER, pData, Size, Timeout);
+		case Uart_Motor:
+			status = HAL_UART_Transmit(huart_motor, pData, Size, Timeout);
 			break;
 
 		case Uart_USB:
-			status = HAL_UART_Transmit(&BSP_UART_USB_HANDLER, pData, Size, Timeout);
+			status = HAL_UART_Transmit(huart_usb, pData, Size, Timeout);
 			break;
 
-		case Uart_3:
-			status = HAL_UART_Transmit(&BSP_UART_3_HANDLER, pData, Size, Timeout);
+		case Uart_LineFront:
+			status = HAL_UART_Transmit(huart_line_front, pData, Size, Timeout);
 			break;
 
-		case Uart_4:
-			status = HAL_UART_Transmit(&BSP_UART_4_HANDLER, pData, Size, Timeout);
+		case Uart_LineRear:
+			status = HAL_UART_Transmit(huart_line_rear, pData, Size, Timeout);
 			break;
 
 		case Uart_Bluetooth:
-			status = HAL_UART_Transmit(&BSP_UART_BT_HANDLER, pData, Size, Timeout);
+			status = HAL_UART_Transmit(huart_bluetooth, pData, Size, Timeout);
 			break;
 
 		case Uart_Radio:
-			status = HAL_UART_Transmit(&BSP_UART_RADIO_HANDLER, pData, Size, Timeout);
+			status = HAL_UART_Transmit(huart_radio, pData, Size, Timeout);
 			break;
 
 		default:
@@ -229,28 +252,28 @@ eBspStatus bspUartReceive_IT (const eBspUartDevice uartDevice, uint8_t* const pD
 
 	switch (uartDevice)
 	{
-		case Uart_1:
-			status = HAL_UART_Receive_IT(&BSP_UART_1_HANDLER, pData, Size);
+		case Uart_Motor:
+			status = HAL_UART_Receive_IT(huart_motor, pData, Size);
 			break;
 
 		case Uart_USB:
-			status = HAL_UART_Receive_IT(&BSP_UART_USB_HANDLER, pData, Size);
+			status = HAL_UART_Receive_IT(huart_usb, pData, Size);
 			break;
 
-		case Uart_3:
-			status = HAL_UART_Receive_IT(&BSP_UART_3_HANDLER, pData, Size);
+		case Uart_LineFront:
+			status = HAL_UART_Receive_IT(huart_line_front, pData, Size);
 			break;
 
-		case Uart_4:
-			status = HAL_UART_Receive_IT(&BSP_UART_4_HANDLER, pData, Size);
+		case Uart_LineRear:
+			status = HAL_UART_Receive_IT(huart_line_rear, pData, Size);
 			break;
 
 		case Uart_Bluetooth:
-			status = HAL_UART_Receive_IT(&BSP_UART_BT_HANDLER, pData, Size);
+			status = HAL_UART_Receive_IT(huart_bluetooth, pData, Size);
 			break;
 
 		case Uart_Radio:
-			status = HAL_UART_Receive_IT(&BSP_UART_RADIO_HANDLER, pData, Size);
+			status = HAL_UART_Receive_IT(huart_radio, pData, Size);
 			break;
 
 		default:
@@ -267,28 +290,28 @@ eBspStatus bspUartTransmit_IT (const eBspUartDevice uartDevice, uint8_t* const p
 
 	switch (uartDevice)
 	{
-		case Uart_1:
-			status = HAL_UART_Transmit_IT(&BSP_UART_1_HANDLER, pData, Size);
+		case Uart_Motor:
+			status = HAL_UART_Transmit_IT(huart_motor, pData, Size);
 			break;
 
 		case Uart_USB:
-			status = HAL_UART_Transmit_IT(&BSP_UART_USB_HANDLER, pData, Size);
+			status = HAL_UART_Transmit_IT(huart_usb, pData, Size);
 			break;
 
-		case Uart_3:
-			status = HAL_UART_Transmit_IT(&BSP_UART_3_HANDLER, pData, Size);
+		case Uart_LineFront:
+			status = HAL_UART_Transmit_IT(huart_line_front, pData, Size);
 			break;
 
-		case Uart_4:
-			status = HAL_UART_Transmit_IT(&BSP_UART_4_HANDLER, pData, Size);
+		case Uart_LineRear:
+			status = HAL_UART_Transmit_IT(huart_line_rear, pData, Size);
 			break;
 
 		case Uart_Bluetooth:
-			status = HAL_UART_Transmit_IT(&BSP_UART_BT_HANDLER, pData, Size);
+			status = HAL_UART_Transmit_IT(huart_bluetooth, pData, Size);
 			break;
 
 		case Uart_Radio:
-			status = HAL_UART_Transmit_IT(&BSP_UART_RADIO_HANDLER, pData, Size);
+			status = HAL_UART_Transmit_IT(huart_radio, pData, Size);
 			break;
 
 		default:
@@ -332,28 +355,28 @@ void USART6_IRQHandler (void)
 
 void HAL_UART_TxCpltCallback (UART_HandleTypeDef *huart)
 {
-	// Decide which periphery owns the interrupt.
-	if (huart->Instance == BSP_UART_1_INSTANCE)
+    // Decide which periphery owns the interrupt.
+	if (huart->Instance == usart_motor)
 	{
-		bspUart1TxCpltCallback();
+		bspMotorTxCpltCallback();
 	}
-	else if (huart->Instance == BSP_UART_USB_INSTANCE)
+	else if (huart->Instance == usart_usb)
 	{
 		bspUartUsbTxCpltCallback();
 	}
-	else if (huart->Instance == BSP_UART_3_INSTANCE)
+	else if (huart->Instance == usart_line_front)
 	{
-		bspUart3TxCpltCallback();
+		bspLineFrontTxCpltCallback();
 	}
-	else if (huart->Instance == BSP_UART_4_INSTANCE)
+	else if (huart->Instance == usart_line_rear)
 	{
-		bspUart4TxCpltCallback();
+		bspLineRearTxCpltCallback();
 	}
-	else if(huart->Instance == BSP_UART_BT_INSTANCE)
+	else if(huart->Instance == usart_bluetooth)
 	{
 		bspBluetoothTxCpltCallback();
 	}
-	else if(huart->Instance == BSP_UART_RADIO_INSTANCE)
+	else if(huart->Instance == usart_radio)
 	{
 		bspRadioTxCpltCallback();
 	}
@@ -362,27 +385,27 @@ void HAL_UART_TxCpltCallback (UART_HandleTypeDef *huart)
 void HAL_UART_RxCpltCallback (UART_HandleTypeDef *huart)
 {
 	// Decide which periphery owns the interrupt.
-	if(huart->Instance == BSP_UART_1_INSTANCE)
+	if(huart->Instance == usart_motor)
 	{
-		bspUart1RxCpltCallback();
+		bspMotorRxCpltCallback();
 	}
-	else if(huart->Instance == BSP_UART_USB_INSTANCE)
+	else if(huart->Instance == usart_usb)
 	{
 		bspUartUsbRxCpltCallback();
 	}
-	else if(huart->Instance == BSP_UART_3_INSTANCE)
+	else if(huart->Instance == usart_line_front)
 	{
-		bspUart3RxCpltCallback();
+		bspLineFrontRxCpltCallback();
 	}
-	else if(huart->Instance == BSP_UART_4_INSTANCE)
+	else if(huart->Instance == usart_line_rear)
 	{
-		bspUart4RxCpltCallback();
+		bspLineRearRxCpltCallback();
 	}
-	else if(huart->Instance == BSP_UART_BT_INSTANCE)
+	else if(huart->Instance == usart_bluetooth)
 	{
 		bspBluetoothRxCpltCallback();
 	}
-	else if(huart->Instance == BSP_UART_RADIO_INSTANCE)
+	else if(huart->Instance == usart_radio)
 	{
 		bspRadioRxCpltCallback();
 	}
@@ -395,20 +418,21 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-static eBspStatus bspUart1Init (void)
+static eBspStatus bspUartMotorInit (void)
 {
 	eBspStatus status = BSP_OK;
 
-	BSP_UART_1_HANDLER.Instance 				= BSP_UART_1_INSTANCE;
-	BSP_UART_1_HANDLER.Init.BaudRate 			= 115200;
-	BSP_UART_1_HANDLER.Init.WordLength	 		= UART_WORDLENGTH_8B;
-	BSP_UART_1_HANDLER.Init.StopBits 			= UART_STOPBITS_1;
-	BSP_UART_1_HANDLER.Init.Parity 				= UART_PARITY_NONE;
-	BSP_UART_1_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
-	BSP_UART_1_HANDLER.Init.HwFlowCtl 			= UART_HWCONTROL_NONE;
-	BSP_UART_1_HANDLER.Init.OverSampling 		= UART_OVERSAMPLING_16;
+	huart_motor->Instance 				= usart_motor;
 
-	if (HAL_UART_Init(&BSP_UART_1_HANDLER) != HAL_OK)
+	huart_motor->Init.BaudRate 			= 115200;
+	huart_motor->Init.WordLength	 	= UART_WORDLENGTH_8B;
+	huart_motor->Init.StopBits 			= UART_STOPBITS_1;
+	huart_motor->Init.Parity 			= UART_PARITY_NONE;
+	huart_motor->Init.Mode 				= UART_MODE_TX_RX;
+	huart_motor->Init.HwFlowCtl 		= UART_HWCONTROL_NONE;
+	huart_motor->Init.OverSampling 		= UART_OVERSAMPLING_16;
+
+	if (HAL_UART_Init(huart_motor) != HAL_OK)
 	{
 		status = BSP_ERROR;
 	}
@@ -425,16 +449,17 @@ static eBspStatus bspUartUsbInit (void)
 {
 	eBspStatus status = BSP_OK;
 
-	BSP_UART_USB_HANDLER.Instance 				= BSP_UART_USB_INSTANCE;
-	BSP_UART_USB_HANDLER.Init.BaudRate 			= 115200;
-	BSP_UART_USB_HANDLER.Init.WordLength	 	= UART_WORDLENGTH_8B;
-	BSP_UART_USB_HANDLER.Init.StopBits 			= UART_STOPBITS_1;
-	BSP_UART_USB_HANDLER.Init.Parity 			= UART_PARITY_NONE;
-	BSP_UART_USB_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
-	BSP_UART_USB_HANDLER.Init.HwFlowCtl 		= UART_HWCONTROL_NONE;
-	BSP_UART_USB_HANDLER.Init.OverSampling 		= UART_OVERSAMPLING_16;
+	huart_usb->Instance 			= usart_usb;
 
-	if (HAL_UART_Init(&BSP_UART_USB_HANDLER) != HAL_OK)
+	huart_usb->Init.BaudRate 		= 115200;
+	huart_usb->Init.WordLength	 	= UART_WORDLENGTH_8B;
+	huart_usb->Init.StopBits 		= UART_STOPBITS_1;
+	huart_usb->Init.Parity 			= UART_PARITY_NONE;
+	huart_usb->Init.Mode 			= UART_MODE_TX_RX;
+	huart_usb->Init.HwFlowCtl 		= UART_HWCONTROL_NONE;
+	huart_usb->Init.OverSampling 	= UART_OVERSAMPLING_16;
+
+	if (HAL_UART_Init(huart_usb) != HAL_OK)
 	{
 		status = BSP_ERROR;
 	}
@@ -447,20 +472,21 @@ static eBspStatus bspUartUsbInit (void)
 	return status;
 }
 
-static eBspStatus bspUart3Init (void)
+static eBspStatus bspUartLineFrontInit (void)
 {
 	eBspStatus status = BSP_OK;
 
-	BSP_UART_3_HANDLER.Instance 				= BSP_UART_3_INSTANCE;
-	BSP_UART_3_HANDLER.Init.BaudRate 			= 115200;
-	BSP_UART_3_HANDLER.Init.WordLength	 		= UART_WORDLENGTH_8B;
-	BSP_UART_3_HANDLER.Init.StopBits 			= UART_STOPBITS_1;
-	BSP_UART_3_HANDLER.Init.Parity 				= UART_PARITY_NONE;
-	BSP_UART_3_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
-	BSP_UART_3_HANDLER.Init.HwFlowCtl 			= UART_HWCONTROL_NONE;
-	BSP_UART_3_HANDLER.Init.OverSampling 		= UART_OVERSAMPLING_16;
+	huart_line_front->Instance 				= usart_line_front;
 
-	if (HAL_UART_Init(&BSP_UART_3_HANDLER) != HAL_OK)
+	huart_line_front->Init.BaudRate 		= 115200;
+	huart_line_front->Init.WordLength	 	= UART_WORDLENGTH_8B;
+	huart_line_front->Init.StopBits 		= UART_STOPBITS_1;
+	huart_line_front->Init.Parity 			= UART_PARITY_NONE;
+	huart_line_front->Init.Mode 			= UART_MODE_TX_RX;
+	huart_line_front->Init.HwFlowCtl 		= UART_HWCONTROL_NONE;
+	huart_line_front->Init.OverSampling 	= UART_OVERSAMPLING_16;
+
+	if (HAL_UART_Init(huart_line_front) != HAL_OK)
 	{
 		status = BSP_ERROR;
 	}
@@ -473,20 +499,21 @@ static eBspStatus bspUart3Init (void)
 	return status;
 }
 
-static eBspStatus bspUart4Init (void)
+static eBspStatus bspUartLineRearInit (void)
 {
 	eBspStatus status = BSP_OK;
 
-	BSP_UART_4_HANDLER.Instance 				= BSP_UART_4_INSTANCE;
-	BSP_UART_4_HANDLER.Init.BaudRate 			= 115200;
-	BSP_UART_4_HANDLER.Init.WordLength	 		= UART_WORDLENGTH_8B;
-	BSP_UART_4_HANDLER.Init.StopBits 			= UART_STOPBITS_1;
-	BSP_UART_4_HANDLER.Init.Parity 				= UART_PARITY_NONE;
-	BSP_UART_4_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
-	BSP_UART_4_HANDLER.Init.HwFlowCtl 			= UART_HWCONTROL_NONE;
-	BSP_UART_4_HANDLER.Init.OverSampling 		= UART_OVERSAMPLING_16;
+	huart_line_rear->Instance 				= usart_line_rear;
 
-	if (HAL_UART_Init(&BSP_UART_4_HANDLER) != HAL_OK)
+	huart_line_rear->Init.BaudRate 			= 115200;
+	huart_line_rear->Init.WordLength	 	= UART_WORDLENGTH_8B;
+	huart_line_rear->Init.StopBits 			= UART_STOPBITS_1;
+	huart_line_rear->Init.Parity 			= UART_PARITY_NONE;
+	huart_line_rear->Init.Mode 				= UART_MODE_TX_RX;
+	huart_line_rear->Init.HwFlowCtl 		= UART_HWCONTROL_NONE;
+	huart_line_rear->Init.OverSampling 		= UART_OVERSAMPLING_16;
+
+	if (HAL_UART_Init(huart_line_rear) != HAL_OK)
 	{
 		status = BSP_ERROR;
 	}
@@ -503,16 +530,17 @@ static eBspStatus bspUartBluetoothInit (void)
 {
 	eBspStatus status = BSP_OK;
 
-	BSP_UART_BT_HANDLER.Instance 				= BSP_UART_BT_INSTANCE;
-	BSP_UART_BT_HANDLER.Init.BaudRate 			= 115200;
-	BSP_UART_BT_HANDLER.Init.WordLength 		= UART_WORDLENGTH_8B;
-	BSP_UART_BT_HANDLER.Init.StopBits			= UART_STOPBITS_1;
-	BSP_UART_BT_HANDLER.Init.Parity 			= UART_PARITY_NONE;
-	BSP_UART_BT_HANDLER.Init.Mode 				= UART_MODE_TX_RX;
-	BSP_UART_BT_HANDLER.Init.HwFlowCtl 			= UART_HWCONTROL_NONE;
-	BSP_UART_BT_HANDLER.Init.OverSampling		= UART_OVERSAMPLING_16;
+	huart_bluetooth->Instance 				= usart_bluetooth;
 
-	if (HAL_UART_Init(&BSP_UART_BT_HANDLER) != HAL_OK)
+	huart_bluetooth->Init.BaudRate 			= 115200;
+	huart_bluetooth->Init.WordLength 		= UART_WORDLENGTH_8B;
+	huart_bluetooth->Init.StopBits			= UART_STOPBITS_1;
+	huart_bluetooth->Init.Parity 			= UART_PARITY_NONE;
+	huart_bluetooth->Init.Mode 				= UART_MODE_TX_RX;
+	huart_bluetooth->Init.HwFlowCtl 		= UART_HWCONTROL_NONE;
+	huart_bluetooth->Init.OverSampling		= UART_OVERSAMPLING_16;
+
+	if (HAL_UART_Init(huart_bluetooth) != HAL_OK)
 	{
 		status = BSP_ERROR;
 	}
@@ -529,16 +557,17 @@ static eBspStatus bspUartRadioInit (void)
 {
 	eBspStatus status = BSP_OK;
 
-	BSP_UART_RADIO_HANDLER.Instance 			= BSP_UART_RADIO_INSTANCE;
-	BSP_UART_RADIO_HANDLER.Init.BaudRate 		= 115200;
-	BSP_UART_RADIO_HANDLER.Init.WordLength	 	= UART_WORDLENGTH_8B;
-	BSP_UART_RADIO_HANDLER.Init.StopBits 		= UART_STOPBITS_1;
-	BSP_UART_RADIO_HANDLER.Init.Parity 			= UART_PARITY_NONE;
-	BSP_UART_RADIO_HANDLER.Init.Mode 			= UART_MODE_TX_RX;
-	BSP_UART_RADIO_HANDLER.Init.HwFlowCtl 		= UART_HWCONTROL_NONE;
-	BSP_UART_RADIO_HANDLER.Init.OverSampling 	= UART_OVERSAMPLING_16;
+	huart_radio->Instance 			    = usart_radio;
 
-	if (HAL_UART_Init(&BSP_UART_RADIO_HANDLER) != HAL_OK)
+	huart_radio->Init.BaudRate 		    = 115200;
+	huart_radio->Init.WordLength	    = UART_WORDLENGTH_8B;
+	huart_radio->Init.StopBits 		    = UART_STOPBITS_1;
+	huart_radio->Init.Parity 		    = UART_PARITY_NONE;
+	huart_radio->Init.Mode 			    = UART_MODE_TX_RX;
+	huart_radio->Init.HwFlowCtl 	    = UART_HWCONTROL_NONE;
+	huart_radio->Init.OverSampling 	    = UART_OVERSAMPLING_16;
+
+	if (HAL_UART_Init(huart_radio) != HAL_OK)
 	{
 		status = BSP_ERROR;
 	}
@@ -551,16 +580,47 @@ static eBspStatus bspUartRadioInit (void)
 	return status;
 }
 
+static void bspUartAssignDevices(void)
+{
+    // TODO Auto device identification
 
-__weak void bspUart1RxCpltCallback     (void) {}
-__weak void bspUartUsbRxCpltCallback   (void) {}
-__weak void bspUart3RxCpltCallback     (void) {}
-__weak void bspUart4RxCpltCallback     (void) {}
+    // Fix
+    huart_usb        = &huart2;
+    huart_bluetooth  = &huart5;
+    huart_radio      = &huart6;
+
+    usart_line_front = USART2;
+    usart_bluetooth  = UART5;
+    usart_radio      = USART6;
+
+    // Dynamically assigned
+    huart_motor      = &huart1;
+    huart_line_front = &huart3;
+    huart_line_rear  = &huart4;
+
+    usart_motor      = USART1;
+    usart_line_rear  = USART3;
+    usart_usb        = UART4;
+
+}
+
+// RxCpltCallbacks -----------------------------
+
+__weak void bspUartUsbRxCpltCallback   (void) {} // Fix
 __weak void bspBluetoothRxCpltCallback (void) {}
 __weak void bspRadioRxCpltCallback     (void) {}
-__weak void bspUart1TxCpltCallback     (void) {}
-__weak void bspUartUsbTxCpltCallback   (void) {}
-__weak void bspUart3TxCpltCallback     (void) {}
-__weak void bspUart4TxCpltCallback     (void) {}
+
+__weak void bspMotorRxCpltCallback     (void) {} // Dynamically assigned
+__weak void bspLineFrontRxCpltCallback (void) {}
+__weak void bspLineRearRxCpltCallback  (void) {}
+
+
+// TxCpltCallbacks -----------------------------
+
+__weak void bspUartUsbTxCpltCallback   (void) {} // Fix
 __weak void bspBluetoothTxCpltCallback (void) {}
 __weak void bspRadioTxCpltCallback     (void) {}
+
+__weak void bspMotorTxCpltCallback     (void) {} // Dynamically assigned
+__weak void bspLineFrontTxCpltCallback (void) {}
+__weak void bspLineRearTxCpltCallback  (void) {}

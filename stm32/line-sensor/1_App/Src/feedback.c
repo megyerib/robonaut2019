@@ -24,7 +24,7 @@ static uint8_t mmToLedPos(int16_t mm);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void ledFeedback(LINE* line)
+void ledFeedback(LINE_SENSOR_OUT* line)
 {
     uint32_t ledval = 0, i, ledpos = 0;
 

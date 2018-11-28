@@ -31,14 +31,14 @@ static uint32_t evalIsPeak(uint32_t* arr, uint32_t i, uint32_t mean, uint32_t st
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-LINE getLine(uint32_t measData[SENSOR_NUM])
+LINE_SENSOR_OUT getLine(uint32_t measData[SENSOR_NUM])
 {
     uint32_t filtered[32];
     uint32_t i;
     uint32_t avg;
     uint32_t stdDev;
 
-    LINE ret =
+    LINE_SENSOR_OUT ret =
     {
         .cnt   = 0,
         .cross = 0

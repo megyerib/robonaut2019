@@ -52,5 +52,5 @@ ArcDir;
 
 void lineInit();
 Line lineGet();
-Arc lineGetArc(uint16_t r, ArcDir dir);
+Arc lineGetArc(uint16_t r_mm, ArcDir dir);
 RoadSignal lineGetRoadSignal();

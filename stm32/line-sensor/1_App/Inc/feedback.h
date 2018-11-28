@@ -20,4 +20,4 @@
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-void ledFeedback(LINE* line);
+void ledFeedback(LINE_SENSOR_OUT* line);
