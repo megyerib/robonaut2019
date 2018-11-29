@@ -60,14 +60,16 @@
 /* USER CODE BEGIN Includes */
 #include "FreeRTOS.h"
 
-#include "../1_App/Inc/app_cdt.h"
-#include "../1_App/Inc/app_navigation.h"
-#include "../1_App/Inc/app_servo.h"
-#include "../1_App/Inc/app_sharp.h"
+#include "app_cdt.h"
+#include "app_navigation.h"
+#include "app_servo.h"
+#include "app_sharp.h"
 #include "app_SpeedControl.h"
 #include "bsp_common.h"
 
 #include "app_linefollow.h"
+
+#include "app_QualificationStateMachine.h"
 
 #include "trace.h"
 /* USER CODE END Includes */
@@ -92,12 +94,12 @@ void InitTasks();
 void InitTasks()
 {
 	TaskInit_CarDiagnosticsTool();
-	TaskInit_Sharp();
+	/*TaskInit_Sharp();
 	TaskInit_Servo();
 	TaskInit_Navigation();
 	TaskInit_SControl();
-	TaskInit_LineFollow();
-
+	TaskInit_LineFollow();*/
+	TaskInit_QSM();
 
 	vTaskStartScheduler();
 }

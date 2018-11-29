@@ -65,14 +65,14 @@ const eBSP_SrvInitStat sch_Servo_Init(void)
 		// Valid servo model is chosen.
 
 		// Configure the TIM PWM, if error occurs TIM clk is disabled
-		bsp_Servo_Init_PWM();
+		bspServoInit();
 	}
 	else
 	{
 		// Error: No valid servo motor was selected.
 
 		// Disable CLK
-		bsp_Servo_Disable_TIM();
+		bspServoTimerDisable();
 	}
 
 	return ret_val;
@@ -84,7 +84,7 @@ const double sch_Get_Servo_Angle()
 	double angle;
 
 	//Actual position
-	compare = bsp_Servo_Get_Compare();
+	compare = bspServoGetCompare();
 
 	return angle = compare * hsrv.Gradient + hsrv.Y_intercept;
 }
@@ -108,7 +108,7 @@ void sch_Set_Servo_Angle(const double theta)
 	}
 	*/
 
-	bsp_Servo_Set_Compare(compare);
+	bspServoSetCompare(compare);
 }
 
 const eBSP_SrvInitStat sch_Configure_Servo()

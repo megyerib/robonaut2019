@@ -10,7 +10,6 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "tim.h"
 #include "adc.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -82,21 +81,21 @@ extern ADC_HandleTypeDef hadc1;
 //!			clk is disabled so no harm can be done.
 //!
 //! @retval	Init was successful or not: SRV_INIT_STATUS
-const eBSP_SrvInitStat bsp_Servo_Init_PWM(void);
+const eBSP_SrvInitStat bspServoInit(void);
 
 //! @brief	Disables the servo timer clock.
-void bsp_Servo_Disable_TIM(void);
+void bspServoTimerDisable(void);
 
 //! @brief	Enables the servo timer.
-void bsp_Servo_Enable_TIM(void);
+void bspServoTimerEnable(void);
 
 //! @brief	Sets the timer compare to a given value and changes the duty cycle
 //!			of the PWM. Servo will rotate to this position.
 //!
 //! @param	_pos_ : The desired compare value.
-void bsp_Servo_Set_Compare(const uint32_t pos);
+void bspServoSetCompare(const uint32_t pos);
 
 //! @brief	Gets the servo timer compare value.
 //!
 //! @retval	The compare value.
-const uint32_t bsp_Servo_Get_Compare();
+const uint32_t bspServoGetCompare();
