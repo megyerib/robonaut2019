@@ -1,16 +1,17 @@
-/*
- * bsp_servo.c
- *
- *  Created on: 2018. nov. 1.
- *      Author: Joci
- */
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//!
+//!  \file      bsp_servo.c
+//!  \brief     Controls the servo.
+//!  \details
+//!
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "../../3_BSP/Inc/bsp_servo.h"
+#include "bsp_servo.h"
 
 #include "stm32f4xx_hal_tim.h"
+#include "tim.h"
 
 // --------------------------------------------------------------------------//
 
@@ -26,18 +27,10 @@
 
 // ------------------------------ Declarations ------------------------------//
 
-/*
- * @brief	Checks if the PWM settings of the servo module variable are correct
- * 			according to the HW and the validated SRV_MOTOR.
- *
- * @retval	Status of the testing.
- */
-const eBSP_Servo_TIM_Stat bsp_Servo_Check_PWM();
 
-/*
- * @brief	Initializes the servo timer according to the setting of the hsrv.
- */
-void bsp_Servo_TIM_Init();
+static eBSP_Servo_TIM_Stat bspServoCheckPWM();
+
+static void bspServoTimerInit();
 
 // --------------------------------------------------------------------------//
 
@@ -52,16 +45,16 @@ cBSP_SrvHandleTypeDef hsrv;
 // ------------------------------ Functions ---------------------------------//
 
 
-const eBSP_SrvInitStat bsp_Servo_Init_PWM(void)
+const eBSP_SrvInitStat bspServoInit(void)
 {
 	eBSP_SrvInitStat status = SRV_INIT_OK;
 	eBSP_Servo_TIM_Stat tim_stat = SRV_TIM_STAT_OK;
 
 	// Init the servo timer
-	bsp_Servo_TIM_Init();
+	bspServoTimerInit();
 
 	// Check if the settings are correct
-	tim_stat = bsp_Servo_Check_PWM();
+	tim_stat = bspServoCheckPWM();
 
 	if(tim_stat == SRV_TIM_STAT_OK)
 	{
@@ -71,7 +64,7 @@ const eBSP_SrvInitStat bsp_Servo_Init_PWM(void)
 		HAL_TIM_PWM_Start(&BSP_SRV_HTIM2, BSP_SRV_TIM_CHANNEL);
 
 		// Set the servo in the middle position
-		bsp_Servo_Set_Compare(hsrv.Deg_90);
+		bspServoSetCompare(hsrv.Deg_90);
 	}
 	else
 	{
@@ -79,23 +72,23 @@ const eBSP_SrvInitStat bsp_Servo_Init_PWM(void)
 		status = SRV_INIT_FAIL_SRV_PWM;
 
 		// Disable CLK
-		bsp_Servo_Disable_TIM();
+		bspServoTimerDisable();
 	}
 
 	return status;
 }
 
-void bsp_Servo_Disable_TIM(void)
+void bspServoTimerDisable(void)
 {
 	HAL_TIM_PWM_MspDeInit(&BSP_SRV_HTIM2);
 }
 
-void bsp_Servo_Enable_TIM(void)
+void bspServoTimerEnable(void)
 {
 	HAL_TIM_PWM_MspInit(&BSP_SRV_HTIM2);
 }
 
-void bsp_Servo_Set_Compare(const uint32_t value)
+void bspServoSetCompare(const uint32_t value)
 {
 	uint32_t valid_value = value;
 
@@ -112,12 +105,18 @@ void bsp_Servo_Set_Compare(const uint32_t value)
 	__HAL_TIM_SET_COMPARE(&BSP_SRV_HTIM2, BSP_SRV_TIM_CHANNEL, valid_value);
 }
 
-const uint32_t bsp_Servo_Get_Compare()
+const uint32_t bspServoGetCompare()
 {
 	return __HAL_TIM_GET_COMPARE(&BSP_SRV_HTIM2, BSP_SRV_TIM_CHANNEL);
 }
 
-const eBSP_Servo_TIM_Stat bsp_Servo_Check_PWM()
+/*
+ * @brief	Checks if the PWM settings of the servo module variable are correct
+ * 			according to the HW and the validated SRV_MOTOR.
+ *
+ * @retval	Status of the testing.
+ */
+static eBSP_Servo_TIM_Stat bspServoCheckPWM()
 {
 	int ret_val = SRV_TIM_STAT_OK;
 
@@ -161,7 +160,9 @@ const eBSP_Servo_TIM_Stat bsp_Servo_Check_PWM()
 	return ret_val;
 }
 
-void bsp_Servo_TIM_Init()
+
+//! @brief	Initializes the servo timer according to the setting of the hsrv.
+static void bspServoTimerInit()
 {
 	TIM_MasterConfigTypeDef sMasterConfig;
 	TIM_OC_InitTypeDef sConfigOC;
