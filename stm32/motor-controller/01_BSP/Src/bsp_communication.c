@@ -59,7 +59,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			ConvertedDutyCycle /= 100;
 
 			BSP_SetDutyCycle(&ConvertedDutyCycle);
-			//BSP_SetLEDHeartbeatBlinkingDutyCyle(&ConvertedDutyCycle);
 			HAL_UART_Transmit_IT(MAIN_BOARD_UART, response, 5);
 		}
 		else
