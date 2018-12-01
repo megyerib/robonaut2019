@@ -24,7 +24,7 @@
 void bspInit()
 {
     bspUartInit();
-    bspServoInit();
+    //bspServoInit();
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
