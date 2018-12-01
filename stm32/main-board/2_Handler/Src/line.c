@@ -10,8 +10,12 @@
 
 #include "line.h"
 #include "bsp_uart.h"
-#include "line_common.h"
 #include "math.h"
+
+#include "line_common.h"
+#include "uart_frame.h"
+
+#include <string.h> // Memcpy
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -24,13 +28,11 @@
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static LINE_SENSOR_OUT sensor_front_out;
-static LINE_SENSOR_OUT sensor_rear_out;
+static uint8_t rxbuf_front[30];
+static uint8_t rxcnt_front;
 
 static LINE_SENSOR_OUT front_tmp;
 static LINE_SENSOR_OUT rear_tmp;
-
-static uint8_t valid[2];
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -40,10 +42,7 @@ static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 
 void lineInit()
 {
-    bspUartReceive_IT(Uart_LineFront, (uint8_t*) &front_tmp, sizeof(sensor_front_out));
-    bspUartReceive_IT(Uart_LineFront, (uint8_t*) &rear_tmp, sizeof(sensor_rear_out));
-
-    valid[0] = valid[1] = 0;
+    bspUartReceive_IT(Uart_LineFront, &rxbuf_front[rxcnt_front], 1);
 }
 
 LINE lineGet()
@@ -58,7 +57,7 @@ LINE lineGet()
 
     // ---------------------------------
 
-    if (valid[0] == 0 || valid[1] == 0)
+    /*if (valid[0] == 0 || valid[1] == 0)
     {
         LINE ret =
         {
@@ -67,12 +66,12 @@ LINE lineGet()
         };
 
         return ret;
-    }
+    }*/
 
     // Get temporary data
     __disable_irq();
-        front = sensor_front_out;
-        rear  = sensor_rear_out;
+        front = front_tmp;
+        rear  = rear_tmp;
     __enable_irq();
 
     // Get center line position
@@ -84,7 +83,15 @@ LINE lineGet()
         x_rear += rear.lines[i];
     x_rear /= rear.cnt;
 
-    return Descartes2Polar(x_rear, Y_REAR, x_front, Y_FRONT);
+    //return Descartes2Polar(x_rear, Y_REAR, x_front, Y_FRONT);
+
+    LINE ret =
+    {
+        .d = x_front,
+        .theta = 0
+    };
+
+    return ret;
 }
 
 Arc lineGetArc(uint16_t r_mm, ArcDir dir)
@@ -105,17 +112,33 @@ RoadSignal lineGetRoadSignal()
 
 void bspLineFrontRxCpltCallback (void)
 {
-    sensor_front_out = front_tmp;
+	uint8_t tmp[30];
+	int tmplen;
 
-    valid[0] = 1;
+	if (isUartFrameEnded(rxbuf_front, rxcnt_front))
+	{
+		convertFromUartFrame(rxbuf_front, tmp, rxcnt_front, &tmplen);
+
+		if (tmplen == sizeof(LINE_SENSOR_OUT))
+		{
+			memcpy((uint8_t*) &front_tmp, tmp, sizeof(LINE_SENSOR_OUT));
+			rxcnt_front = 0;
+		}
+		else
+		{
+			// Error
+		}
+	}
+
+	rxcnt_front++;
+
+	bspUartReceive_IT(Uart_LineFront, &rxbuf_front[rxcnt_front], 1);
 }
 
-/*void bspLineRearRxCpltCallback (void)
+void bspLineRearRxCpltCallback (void)
 {
-    sensor_rear_out = rear_tmp;
 
-    valid[1] = 1;
-}*/
+}
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 

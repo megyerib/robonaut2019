@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      app_linefollow.c
+//!  \file      app_init.c
 //!  \brief     
 //!  \details   
 //!
@@ -8,10 +8,12 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "app_common.h"
-#include "line.h"
+#include "stm32f4xx_hal.h"
 
-#include "bsp_uart.h" // TODO remove
+#include "bsp_common.h"
+
+#include "app_cdt.h"
+#include "app_steeringDemo.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -21,32 +23,19 @@
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void Task_LineFollow (void* p);
-
-// Global function definitions -----------------------------------------------------------------------------------------
-
-void TaskInit_LineFollow (void)
-{
-    lineInit();
-
-    xTaskCreate(Task_LineFollow,
-                "TASK_LINE_FOLLOW",
-                DEFAULT_STACK_SIZE,
-                NULL,
-                TASK_LINE_FOLLOW_PRIO,
-                NULL);
-}
-
-uint8_t rxBuf[3];
-
-static void Task_LineFollow (void* p)
-{
-    (void)p;
-
-    while (1)
-    {
-
-    }
-}
+// Global function definitions /////////////////////////////////////////////////////////////////////////////////////////
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+void Init()
+{
+	// Wait for the PSU init
+	HAL_Delay(1000);
+
+	bspInit();
+
+	TaskInit_steeringDemo();
+	TaskInit_CarDiagnosticsTool();
+}
+
+// END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

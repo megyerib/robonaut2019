@@ -43,7 +43,7 @@ void ledFeedback(LINE_SENSOR_OUT* line)
 
 static uint8_t mmToLedPos(int16_t mm)
 {
-    uint8_t ret = (uint8_t)((mm + MID_IR_POS_MM + 15 * IR_DIST_MM) / IR_DIST_MM);
+    uint8_t ret = (uint8_t)(32 - (mm + MID_IR_POS_MM + 15 * IR_DIST_MM) / IR_DIST_MM); // TODO Why?
 
     //uint8_t ret = (uint8_t)((mm - MID_IR_POS_MM) / IR_DIST_MM + 16);
     return ret;

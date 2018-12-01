@@ -58,20 +58,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "FreeRTOS.h"
-
-#include "app_cdt.h"
-#include "app_navigation.h"
-#include "app_servo.h"
-#include "app_sharp.h"
-#include "app_SpeedControl.h"
-#include "bsp_common.h"
-
-#include "app_linefollow.h"
-
-#include "app_QualificationStateMachine.h"
-
-#include "trace.h"
+#include "app_init.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -87,22 +74,11 @@ void MX_FREERTOS_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void InitTasks();
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void InitTasks()
-{
-	TaskInit_CarDiagnosticsTool();
-	/*TaskInit_Sharp();
-	TaskInit_Servo();
-	TaskInit_Navigation();
-	TaskInit_SControl();
-	TaskInit_LineFollow();*/
-	TaskInit_QSM();
 
-	vTaskStartScheduler();
-}
 /* USER CODE END 0 */
 
 /**
@@ -129,8 +105,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  // Wait for the PSU init
-  HAL_Delay(1000);
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -148,9 +123,7 @@ int main(void)
   MX_UART4_Init();
   MX_I2C3_Init();
   /* USER CODE BEGIN 2 */
-  bspInit();
-
-  InitTasks();
+  Init();
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */

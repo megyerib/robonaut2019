@@ -99,6 +99,8 @@ eBspStatus bspUartInit (void)
 {
 	eBspStatus ret = BSP_OK;
 
+	bspUartAssignDevices();
+
 	eBspStatus statusMotor     = bspUartMotorInit();
 	eBspStatus statusUsb       = bspUartUsbInit();
 	eBspStatus statusLineFront = bspUartLineFrontInit();
@@ -116,8 +118,6 @@ eBspStatus bspUartInit (void)
 	{
 		ret = BSP_ERROR;
 	}
-
-	bspUartAssignDevices();
 
 	return ret;
 }

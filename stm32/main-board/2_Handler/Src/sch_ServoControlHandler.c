@@ -7,9 +7,9 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "../../2_Handler/Inc/sch_ServoControlHandler.h"
+#include "sch_ServoControlHandler.h"
 
-#include "../../3_BSP/Inc/bsp_common.h"
+#include "bsp_common.h"
 
 // --------------------------------------------------------------------------//
 
@@ -92,9 +92,10 @@ const double sch_Get_Servo_Angle()
 void sch_Set_Servo_Angle(const double theta)
 {
 	uint32_t compare;
+	double theta2 = theta + PI/2;
 
 	// Calculate the position from the angle
-	compare = (uint32_t)((theta - hsrv.Y_intercept) / hsrv.Gradient);
+	compare = (uint32_t)(((theta2 - hsrv.Y_intercept) / hsrv.Gradient) + hsrv.CV_compensation);
 
 	/* REDUNDANT
 	// Make certain that the theta is in the valid interval.
@@ -123,11 +124,13 @@ const eBSP_SrvInitStat sch_Configure_Servo()
 			hsrv.PWM_prescaler = 1343;
 			hsrv.PWM_period = 1249;
 
-			hsrv.Right_End = 70;
-			hsrv.Deg_30 = 74;
-			hsrv.Deg_90 = 94;
-			hsrv.Deg_150 = 113;
-			hsrv.Left_End = 115;
+			hsrv.Right_End = 68;
+			//hsrv.Deg_30 = 74;
+			hsrv.Deg_90 = 91;
+			//hsrv.Deg_150 = 113;
+			hsrv.Left_End = 114;
+
+			hsrv.CV_compensation = -1;
 
 			// 3°/inc = PI/60 rad/inc
 			hsrv.Gradient = PI/180 * (90-30)/(hsrv.Deg_90-hsrv.Deg_30);

@@ -1,56 +1,31 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      line.h
-//!  \brief     Getting line position
-//!  \details
+//!  \file      uart_frame.h
+//!  \brief     
+//!  \details   
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "stm32f4xx_hal.h"
+#include <stdint.h>
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
+#define ESCAPE_CHAR (0xFF)
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
-typedef struct
-{
-    int16_t d; // TODO Originally uint
-    float theta; // Radian
-}
-LINE;
-
-typedef struct
-{
-    uint16_t d;
-    uint16_t theta;
-}
-Arc;
-
 typedef enum
 {
-    Nothing = 0,
-    DoubleLine,
-    TripleLine,
-    // ...
-
-    RoadSignalNum
+    frameBegin = 0,
+    frameEnd
 }
-RoadSignal;
-
-typedef enum
-{
-    Left,
-    Right
-}
-ArcDir;
+SPECIAL_CHAR;
 
 // Variables -----------------------------------------------------------------------------------------------------------
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-void lineInit();
-LINE lineGet();
-Arc lineGetArc(uint16_t r_mm, ArcDir dir);
-RoadSignal lineGetRoadSignal();
+void convertToUartFrame(uint8_t* payload, uint8_t* frame, int payloadLen, int* framelen);
+void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* payloadLen);

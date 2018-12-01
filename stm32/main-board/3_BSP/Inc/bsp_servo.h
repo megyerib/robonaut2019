@@ -64,6 +64,8 @@ typedef struct
 	uint16_t Deg_150;
 	uint16_t Left_End;			//! element of ]90°,180°] interval
 
+	int16_t CV_compensation;   //! Compare value compensation (most be set after every settings)
+
 	//! Characteristics: theta = position * m + b
 	double Gradient;			///! m
 	double Y_intercept;			///! b
