@@ -14,7 +14,7 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define THRESHOLD 500
+#define THRESHOLD 200
 #define SENSOR_NUM 32
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ static uint32_t max4_pos(int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4)
 
 static int16_t ledPosToMm(uint8_t ledPos)
 {
-    int16_t ret = ((int16_t)ledPos - 16) * IR_DIST_MM + MID_IR_POS_MM;
+    int16_t ret = (16 - (int16_t)ledPos) * IR_DIST_MM + MID_IR_POS_MM;
     return ret;
 }
 

@@ -8,6 +8,10 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include "motor.h"
+#include "bsp_uart.h"
+#include <stdio.h>
+
 /* Defines -------------------------------------------------------------------------------------------------------------
           _  _
        =        =    DIFF_IN_GEAR                       .--.
@@ -32,6 +36,8 @@
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
+static char d_buf[20];
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -39,6 +45,18 @@
 void motorInit()
 {
 
+}
+
+void motorSetTorque(int16_t torqe)
+{
+
+}
+
+void motorSetDutyCycle(uint8_t d)
+{
+    sprintf(d_buf, "%02d\r\n", d);
+
+    bspUartTransmit_IT(Uart_Motor, (uint8_t*) d_buf, 4);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

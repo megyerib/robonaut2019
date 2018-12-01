@@ -10,6 +10,7 @@
 
 #include "comm.h"
 #include "usart.h"
+#include "uart_frame.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -23,6 +24,9 @@
 static uint8_t buf[ENTRY_LEN*ENTRY_NUM+1];
 
 static LINE_SENSOR_OUT line_buf;
+
+static uint8_t output_buffer[20];
+static int outputBufLen;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -46,7 +50,14 @@ void sendLine(LINE_SENSOR_OUT* line)
 {
     line_buf = *line;
 
-    HAL_UART_Transmit_IT(&huart1, (uint8_t*) &line_buf, sizeof(line_buf));
+    convertToUartFrame(
+            (uint8_t*) &line_buf,
+            output_buffer,
+            sizeof(line_buf),
+            &outputBufLen
+    );
+
+    HAL_UART_Transmit_IT(&huart1, output_buffer, outputBufLen);
 }
 
 // We have only 1 UART

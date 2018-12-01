@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      app_linefollow.c
+//!  \file      app_steeringDemo.c
 //!  \brief     
 //!  \details   
 //!
@@ -9,9 +9,12 @@
 // Includes ------------------------------------------------------------------------------------------------------------
 
 #include "app_common.h"
+#include "app_steeringDemo.h"
+#include "sch_ServoControlHandler.h"
+#include "motor.h"
 #include "line.h"
-
-#include "bsp_uart.h" // TODO remove
+#include "bsp_common.h"
+#include "bsp_uart.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -21,31 +24,36 @@
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void Task_LineFollow (void* p);
-
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void TaskInit_LineFollow (void)
+void TaskInit_steeringDemo(void)
 {
+    //sch_Servo_Init();
+
     lineInit();
 
-    xTaskCreate(Task_LineFollow,
-                "TASK_LINE_FOLLOW",
+    xTaskCreate(Task_steeringDemo,
+                "TASK_DEMO",
                 DEFAULT_STACK_SIZE,
                 NULL,
-                TASK_LINE_FOLLOW_PRIO,
+                TASK_SRV_PRIO,
                 NULL);
 }
 
-uint8_t rxBuf[3];
-
-static void Task_LineFollow (void* p)
+void Task_steeringDemo(void* p)
 {
-    (void)p;
+    //sch_Set_Servo_Angle(0);
 
-    while (1)
+    //bsp_Servo_Rotate(0);
+
+	LINE l;
+
+
+	while(1)
     {
+		l = lineGet();
 
+		vTaskDelay(10);
     }
 }
 
