@@ -6,44 +6,36 @@
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// ------------------------------- Includes -------------------------------- //
+// Includes ------------------------------------------------------------------------------------------------------------
 
 #include "bsp_servo.h"
 
 #include "stm32f4xx_hal_tim.h"
 #include "tim.h"
 
-// --------------------------------------------------------------------------//
+// Defines -------------------------------------------------------------------------------------------------------------
 
-// -------------------------------- Defines ---------------------------------//
+#define		BSP_SRV_HTIM2			 	htim2
+#define		BSP_SRV_TIM_INSATNCE	 	TIM2
+#define		BSP_SRV_TIM_CHANNEL		 	TIM_CHANNEL_1
 
-#define		BSP_SRV_HTIM2			 htim2
-#define		BSP_SRV_TIM_INSATNCE	 TIM2
-#define		BSP_SRV_TIM_CHANNEL		 TIM_CHANNEL_1
+#define 	BSP_SRV_TIM_APB1_FREQ    	84000000		   // Hz
 
-#define 	BSP_SRV_TIM_APB1_FREQ    84000000		   // Hz
+// Typedefs ------------------------------------------------------------------------------------------------------------
+// Local (static) & extern variables -----------------------------------------------------------------------------------
 
-// --------------------------------------------------------------------------//
-
-// ------------------------------ Declarations ------------------------------//
-
-
-static eBSP_Servo_TIM_Stat bspServoCheckPWM();
-
-static void bspServoTimerInit();
-
-// --------------------------------------------------------------------------//
-
-// ------------------------------- Variables --------------------------------//
 
 extern TIM_HandleTypeDef htim2;
 
 cBSP_SrvHandleTypeDef hsrv;
 
-// --------------------------------------------------------------------------//
+// Local (static) function prototypes ----------------------------------------------------------------------------------
 
-// ------------------------------ Functions ---------------------------------//
+static eBSP_Servo_TIM_Stat bspServoCheckPWM();
 
+static void bspServoTimerInit();
+
+// Global function definitions -----------------------------------------------------------------------------------------
 
 const eBSP_SrvInitStat bspServoInit(void)
 {
@@ -110,12 +102,12 @@ const uint32_t bspServoGetCompare()
 	return __HAL_TIM_GET_COMPARE(&BSP_SRV_HTIM2, BSP_SRV_TIM_CHANNEL);
 }
 
-/*
- * @brief	Checks if the PWM settings of the servo module variable are correct
- * 			according to the HW and the validated SRV_MOTOR.
- *
- * @retval	Status of the testing.
- */
+// Local (static) function definitions ---------------------------------------------------------------------------------
+
+
+//! @brief	Checks if the PWM settings of the servo module variable are correct
+//!			according to the HW and the validated SRV_MOTOR.
+//! @retval	Status of the testing.
 static eBSP_Servo_TIM_Stat bspServoCheckPWM()
 {
 	int ret_val = SRV_TIM_STAT_OK;
@@ -194,5 +186,3 @@ static void bspServoTimerInit()
 	_Error_Handler(__FILE__, __LINE__);
 	}
 }
-
-// --------------------------------------------------------------------------//

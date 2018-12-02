@@ -12,13 +12,11 @@
 #include "app_QualificationStateMachine.h"
 
 #include "trace.h"
+#include "servo.h"
+#include "sharp.h"
 #include "line.h"
 #include "motor.h"
-#include "sch_ServoControlHandler.h"
 #include "scm_SpeedControlModule.h"
-#include "sds_SharpDistanceSensor.h"
-
-//TODO: move to motor.h
 #include "bsp_uart.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -49,7 +47,7 @@ void TaskInit_QSM (void)
 
 	lineInit();
 	motorInit();
-	sch_Servo_Init();
+	servoInit();
 	scmInitControllerPI();
 
 	xTaskCreate(Task_QSM,
@@ -82,7 +80,7 @@ void Task_QSM (void* p)
 	{
 		switch (state)
 		{
-			sharpDist = sds_GetDistance();
+			sharpDist = sharpGetDistance();
 
 			if (sharpDist < 20)
 			{
@@ -95,7 +93,7 @@ void Task_QSM (void* p)
 
 			case RobotCarState_WaitingStart:
 				// Set the wheel in straight forward.
-				servoAngle = 1.5707;			// 90°
+				servoAngle = 1.5707;			// 90ï¿½
 
 				// Speed = 0.
 				motorDutyCycle = 0;				// %
@@ -156,7 +154,7 @@ void Task_QSM (void* p)
 
 		// Send set points to the actuators.
 		bspUartTransmit_IT(Uart_Motor, motorBoardBuffer, 1);
-		sch_Set_Servo_Angle(servoAngle);
+		servoSetAngle(servoAngle);
 
 
 		// BT logging

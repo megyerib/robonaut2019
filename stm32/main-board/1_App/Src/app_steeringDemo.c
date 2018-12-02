@@ -10,7 +10,8 @@
 
 #include "app_common.h"
 #include "app_steeringDemo.h"
-#include "sch_ServoControlHandler.h"
+#include "trace.h"
+#include "servo.h"
 #include "motor.h"
 #include "line.h"
 #include "bsp_common.h"
@@ -28,7 +29,7 @@
 
 void TaskInit_steeringDemo(void)
 {
-    sch_Servo_Init();
+    servoInit();
 
     lineInit();
 
@@ -49,7 +50,7 @@ void Task_steeringDemo(void* p)
 	double angle;
 
 	motorSetDutyCycle(10);
-	sch_Set_Servo_Angle(0);
+	servoSetAngle(0);
 
 	while(1)
     {
@@ -57,7 +58,7 @@ void Task_steeringDemo(void* p)
 
 		angle = -1.0 * (l.d / 150.0) * (PI/3);
 
-		sch_Set_Servo_Angle(angle);
+		servoSetAngle(angle);
 
 		traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
 
