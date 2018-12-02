@@ -1,29 +1,44 @@
-/*
- * drn_DeadReckoningNavigation.c
- *
- *  Created on: 2018. nov. 9.
- *      Author: Joci
- */
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//!
+//!  \file		naviDeadReckoning.c
+//!  \brief
+//!  \details	This module is responsible for the navigation of the car. This module implements the simple Dead
+//! 			Reckoning algorithm.
+//!
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// ------------------------------- Includes -------------------------------- //
+// Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../2_Handler/Inc/drn_DeadReckoningNavigation.h"
 
+#include "naviDeadReckoning.h"
 #include "math.h"
 
-// --------------------------------------------------------------------------//
+// Defines -------------------------------------------------------------------------------------------------------------
 
-// -------------------------------- Defines ---------------------------------//
+// TODO move to hndlCommon.h and include to sharp too.
+#define 	WAIT_SEMAPHORE			100		//!< Ticks [ms]
+
+// Typedefs ------------------------------------------------------------------------------------------------------------
 
 typedef struct
 {
 	double theta;
 	cVelocityVector v;
-} StrapDownNavigation;
+} cStrapDownNavigation;
 
-// --------------------------------------------------------------------------//
+// Local (static) & extern variables -----------------------------------------------------------------------------------
 
-// ------------------------------ Declarations ------------------------------//
+static cStrapDownNavigation naviOffset;
+
+static cStrapDownNavigation naviState;
+static cStrapDownNavigation prevNaviState;
+
+static cAngularVelocity prevMeasure;
+
+static cNedParameters nedPosition;
+static cNedParameters prevNedPosition;
+
+// Local (static) function prototypes ----------------------------------------------------------------------------------
 
 //static const double drn_NumInteg_Trapezoidal (const double a, const double b, const double fa, const double fb);
 
@@ -35,25 +50,9 @@ static void drnUpdateVelocity (const double u, const double v);
 
 static void drnCalculateNedParameters (const double dt);
 
-// --------------------------------------------------------------------------//
+// Global function definitions -----------------------------------------------------------------------------------------
 
-// ------------------------------- Variables --------------------------------//
-
-StrapDownNavigation naviOffset;
-
-StrapDownNavigation naviState;
-StrapDownNavigation prevNaviState;
-
-cAngularVelocity		prevMeasure;
-
-cNedParameters		nedPosition;
-cNedParameters		prevNedPosition;
-
-// --------------------------------------------------------------------------//
-
-// ------------------------------ Functions ---------------------------------//
-
-void drnInit (void)
+void naviDRInit (void)
 {
 	naviOffset.theta = 0;
 	naviOffset.v.x = 0;
@@ -79,28 +78,32 @@ void drnInit (void)
 	prevNedPosition.e = 0;
 }
 
-cNedParameters drnGetNedCoordinates (void)
+cNedParameters naviDRGetNedCoordinates (void)
 {
 	cNedParameters ned;
 
-	xSemaphoreTake(semDrNavi, portMAX_DELAY);
-	ned.n = nedPosition.n;
-	ned.e = nedPosition.e;
-	xSemaphoreGive(semDrNavi);
+	if (xSemaphoreTake(semDrNavi, WAIT_SEMAPHORE) == pdTRUE)
+	{
+		ned.n = nedPosition.n;
+		ned.e = nedPosition.e;
+		xSemaphoreGive(semDrNavi);
+	}
 
 	return ned;
 }
 
-void drnSetNedCoordinates (const cNedParameters coords)
+void naviDRSetNedCoordinates (const cNedParameters coords)
 {
-	xSemaphoreTake(semDrNavi, portMAX_DELAY);
-	nedPosition.n = coords.n;
-	nedPosition.e = coords.e;
-	xSemaphoreGive(semDrNavi);
+	if (xSemaphoreTake(semDrNavi, WAIT_SEMAPHORE) == pdTRUE)
+	{
+		nedPosition.n = coords.n;
+		nedPosition.e = coords.e;
+		xSemaphoreGive(semDrNavi);
+	}
 }
 
 // v = [m/s], w = [rad/s], dt = [ms]
-cNedParameters drnReckonNavigation (const cVelocityVector v, const cAngularVelocity w, const uint32_t dt)
+cNedParameters naviDRNavigate (const cVelocityVector v, const cAngularVelocity w, const uint32_t dt)
 {
 	cNedParameters retval;
 
@@ -111,12 +114,12 @@ cNedParameters drnReckonNavigation (const cVelocityVector v, const cAngularVeloc
 	drnUpdateVelocity(v.x, v.y);
 	drnCalculateNedParameters(dt_s);
 
-	retval = drnGetNedCoordinates();
+	retval = naviDRGetNedCoordinates();
 
 	return retval;
 }
 
-double drnNumIntegTrapezoidal (const double a, const double b, const double fa, const double fb)
+double naviDRNumIntegTrapezoidal (const double a, const double b, const double fa, const double fb)
 {
 	double integral;
 
@@ -124,6 +127,8 @@ double drnNumIntegTrapezoidal (const double a, const double b, const double fa, 
 
 	return integral;
 }
+
+// Local (static) function definitions ---------------------------------------------------------------------------------
 
 /*static void drn_UpdateOrientation (const double omega, const double time)
 {
@@ -150,7 +155,7 @@ static void drnUpdateOrientation (const double omega, const double dt)
 	volatile double dtheta;
 
 	// Calculate the derivative of the new theta form the current and the last omega value
-	dtheta = drnNumIntegTrapezoidal(0, dt, prevMeasure.omega, omega);
+	dtheta = naviDRNumIntegTrapezoidal(0, dt, prevMeasure.omega, omega);
 
 	// Determine the current theta value
 	naviState.theta = prevNaviState.theta + dtheta;
@@ -187,7 +192,5 @@ static void drnCalculateNedParameters (const double dt)
 	prevNedPosition.e = coords.e;
 
 	// Save the new result
-	drnSetNedCoordinates(coords);
+	naviDRSetNedCoordinates(coords);
 }
-
-// --------------------------------------------------------------------------//

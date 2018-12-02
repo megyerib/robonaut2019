@@ -1,8 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file		servo.h
+//!  \file		naviDeadReckoning.h
 //!  \brief
-//!  \details  	This module controls the rotation of the servo.
+//!  \details  	This module is responsible for the navigation of the car. This module implements the simple Dead
+//! 			Reckoning algorithm.
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -10,24 +11,46 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "bsp_servo.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
+
+typedef struct
+{
+	double x;
+	double y;
+} cVelocityVector;
+
+//TODO _Joci_ needs update
+typedef struct
+{
+	double omega;
+	double time;
+} cAngularVelocity;
+
+typedef struct
+{
+	double n;
+	double e;
+} cNedParameters;
+
 // Variables -----------------------------------------------------------------------------------------------------------
+
+SemaphoreHandle_t semDrNavi;
+
 // Function prototypes -------------------------------------------------------------------------------------------------
 
+void naviDRInit (void);
 
-//! @brief	Initializes the module and the servo.
-//! @retval	Result of the initialization (OK, FAIL).
-eBSP_SrvInitStat servoInit(void);
+cNedParameters naviDRGetNedCoordinates (void);
 
-//! @brief	Gets the servo position in radian.
-//! @retval	Servo angle.
-double servoGetAngle(void);
+void naviDRSetNedCoordinates (const cNedParameters coords);
 
-//! @brief	Rotates the servo to a given angle.
-//! @param	_theta_ : The desired servo angle.
-void servoSetAngle(const double theta);
+//									[m/s]							[rad/s]					[ms]
+cNedParameters naviDRNavigate (const cVelocityVector v, const cAngularVelocity w, const uint32_t dt);
+
+double naviDRNumIntegTrapezoidal (const double a, const double b, const double fa, const double fb);
 
 
