@@ -13,59 +13,48 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define 	M_1			1.0/33.0		// [(1/cm)/V]
-#define 	B_1			-0.0242424		// [1/cm]
-#define 	M_2			4.0/225.0		// [(1/cm)/V]
-#define 	B_2			-0.000444444	// [1/cm]
-#define		VERTEX		1.9 			// [V]
+#define 	M_1					1.0/33.0		//!< [(1/cm)/V]
+#define 	B_1					-0.0242424		//!< [1/cm]
+#define 	M_2					4.0/225.0		//!< [(1/cm)/V]
+#define 	B_2					-0.000444444	//!< [1/cm]
+#define		VERTEX				1.9 			//!< [V]
+
+#define		WAIT_SEMAPHORE		100				//!< Ticks [ms]
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
-// Function prototypes -------------------------------------------------------------------------------------------------
 
-/**
- * @brief 	Implements the inverse characteristics of the sensor and returns a
- * 			distance from an adc value.
- * @param	ADC converted value from a voltage.
- * @retval	Calculated distance.
- */
-uint16_t sds_CalculateDistance (uint32_t adcValue);
+//! Common resource that stores the actual measured distance.
+static uint16_t sharpDistance = 0;
 
-/**
- * @brief	This function is called after the adc conversion and IT handling.
- * 			Here the result of the conversion is ready to be used/saved.
- * 			Equation used: d = 1/y, where y = x * m + b
- * @param	Pointer to the handler of the ADC.
- */
+// Local (static) function prototypes ----------------------------------------------------------------------------------
+
+static uint16_t sharpCharacteristic (const uint32_t adcValue);
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc);
 
-// --------------------------------------------------------------------------//
+// Global function definitions -----------------------------------------------------------------------------------------
 
-// ------------------------------- Variables --------------------------------//
-
-// Common resource that stores the actual measured distance.
-static uint16_t sds_distance = 0;
-
-// --------------------------------------------------------------------------//
-
-// ------------------------------- Functions --------------------------------//
-
-const uint16_t sharpGetDistance ()
+uint16_t sharpGetDistance ()
 {
 	uint16_t distance;
 
-	xSemaphoreTake(semSharp, portMAX_DELAY);
-	distance = sds_distance;
-	xSemaphoreGive(semSharp);
+	if ( xSemaphoreTake(semSharp, WAIT_SEMAPHORE) == pdTRUE )
+	{
+		distance = sharpDistance;
+		xSemaphoreGive(semSharp);
+	}
 
 	return distance;
 }
 
 void sharpSetDistance(const uint16_t distance)
 {
-	xSemaphoreTake(semSharp, portMAX_DELAY);
-	sds_distance = distance;
-	xSemaphoreGive(semSharp);
+	if ( xSemaphoreTake(semSharp, WAIT_SEMAPHORE) == pdTRUE )
+	{
+		sharpDistance = distance;
+		xSemaphoreGive(semSharp);
+	}
 }
 
 void sharpTriggerAdc ()
@@ -73,7 +62,13 @@ void sharpTriggerAdc ()
 	HAL_ADC_Start_IT(&BSP_SHARP_HADC);
 }
 
-uint16_t sds_CalculateDistance (uint32_t adcValue)
+// Local (static) function definitions ---------------------------------------------------------------------------------
+
+//! @brief 	Implements the inverse characteristics of the sensor and returns a
+//!			distance from an adc value.
+//! @param	ADC converted value from a voltage.
+//! @retval	Calculated distance.
+static uint16_t sharpCharacteristic (const uint32_t adcValue)
 {
 	float measured_voltage = 0.0;
 	float calculated_distance = 0.0;
@@ -94,17 +89,19 @@ uint16_t sds_CalculateDistance (uint32_t adcValue)
 	return (uint16_t)calculated_distance;
 }
 
+//! @brief	This function is called after the adc conversion and IT handling.
+//!			Here the result of the conversion is ready to be used/saved.
+//! 			Equation used: d = 1/y, where y = x * m + b
+//! @param	Pointer to the handler of the ADC.
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 {
 	if (hadc->Instance == ADC1)
 	{
-		BaseType_t *taskWoken = pdFALSE;
 		uint32_t adcValue = HAL_ADC_GetValue(&BSP_SHARP_HADC);
-		uint16_t distance = sds_CalculateDistance(adcValue);
+		uint16_t distance = sharpCharacteristic(adcValue);
 
-		xSemaphoreTakeFromISR(semSharp, taskWoken);
-		sds_distance = distance;
-		xSemaphoreGiveFromISR(semSharp, taskWoken);
+		//TODO Do we need semaphore?
+		sharpDistance = distance;
 	}
 }
 
