@@ -1,14 +1,20 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      bsp_sharp.h
-//!  \brief     Manages the sharp sensor.
-//!  \details
-//!
+//!  \file		sharp.h
+//!  \brief
+//!  \details  	This module handles the sharp distance measurements.
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 // Includes ------------------------------------------------------------------------------------------------------------
+
+#include "FreeRTOS.h"
+#include "semphr.h"
+
+#include "adc.h"
+
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define  	BSP_SHARP_HADC					hadc1
@@ -17,5 +23,22 @@
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Variables -----------------------------------------------------------------------------------------------------------
+
+//! @brief	Semaphore to the module's sds_distance private variable.
+SemaphoreHandle_t semSharp;
+
 // Function prototypes -------------------------------------------------------------------------------------------------
+
+//! @brief  Gets the calculated distance of the SHARP sensor safely.
+//! @retval Distance.
+const uint16_t sharpGetDistance ();
+
+
+//! @brief  Sets the calculated distance of the SHARP sensor safely
+//! @param  Distance to be stored.
+void sharpSetDistance(const uint16_t distance);
+
+
+//! @brief  Starts the ADC conversion and will generate an IT when it is ready.
+void sharpTriggerAdc ();
 

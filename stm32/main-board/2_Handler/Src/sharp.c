@@ -1,20 +1,17 @@
-/*
- * sds_SharpDistanceSensor.c
- *
- *  Created on: 2018. okt. 27.
- *      Author: Joci
- */
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//!
+//!  \file		sharp.h
+//!  \brief
+//!  \details	This module handles the sharp distance measurements.
+//!
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// ------------------------------- Includes -------------------------------- //
+// Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../2_Handler/Inc/sds_SharpDistanceSensor.h"
+#include "sharp.h"
+#include "bsp_common.h"
 
-#include "../../3_BSP/Inc/bsp_common.h"
-#include "../../3_BSP/Inc/bsp_sharp.h"
-
-// --------------------------------------------------------------------------//
-
-// -------------------------------- Defines ---------------------------------//
+// Defines -------------------------------------------------------------------------------------------------------------
 
 #define 	M_1			1.0/33.0		// [(1/cm)/V]
 #define 	B_1			-0.0242424		// [1/cm]
@@ -22,9 +19,9 @@
 #define 	B_2			-0.000444444	// [1/cm]
 #define		VERTEX		1.9 			// [V]
 
-// --------------------------------------------------------------------------//
-
-// ------------------------------ Declarations ------------------------------//
+// Typedefs ------------------------------------------------------------------------------------------------------------
+// Local (static) & extern variables -----------------------------------------------------------------------------------
+// Function prototypes -------------------------------------------------------------------------------------------------
 
 /**
  * @brief 	Implements the inverse characteristics of the sensor and returns a
@@ -53,7 +50,7 @@ static uint16_t sds_distance = 0;
 
 // ------------------------------- Functions --------------------------------//
 
-const uint16_t sds_GetDistance ()
+const uint16_t sharpGetDistance ()
 {
 	uint16_t distance;
 
@@ -64,14 +61,14 @@ const uint16_t sds_GetDistance ()
 	return distance;
 }
 
-void sds_SetDistance(const uint16_t distance)
+void sharpSetDistance(const uint16_t distance)
 {
 	xSemaphoreTake(semSharp, portMAX_DELAY);
 	sds_distance = distance;
 	xSemaphoreGive(semSharp);
 }
 
-void sds_ADC_Conversion ()
+void sharpTriggerAdc ()
 {
 	HAL_ADC_Start_IT(&BSP_SHARP_HADC);
 }
