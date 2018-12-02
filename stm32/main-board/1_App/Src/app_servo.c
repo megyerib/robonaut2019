@@ -9,13 +9,13 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../1_App/Inc/app_servo.h"
+#include "app_servo.h"
 
 #include "event_groups.h"
 
-#include "../../2_Handler/Inc/sch_ServoControlHandler.h"
-#include "../../2_Handler/Inc/trace.h"
-#include "../../3_BSP/Inc/bsp_common.h"
+#include "trace.h"
+#include "servo.h"
+#include "bsp_common.h"
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ extern QueueHandle_t qServoAngle_d;
 
 void TaskInit_Servo(void)
 {
-	sch_Servo_Init();
+	servoInit();
 
 	xTaskCreate(Task_Servo,
 				"TASK_SERVO",
@@ -57,14 +57,14 @@ void Task_Servo(void* p)
 
 		if(bits == 1)
 		{
-			sch_Set_Servo_Angle(2*PI/3);
+			servoSetAngle(2*PI/3);
 		}
 		else
 		{
-			sch_Set_Servo_Angle(PI/3);
+			servoSetAngle(PI/3);
 		}
 
-		theta = sch_Get_Servo_Angle();
+		theta = servoGetAngle();
 
 		// Angle in degree
 		degree = theta * 180 /PI;

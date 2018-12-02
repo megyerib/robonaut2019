@@ -8,15 +8,17 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../1_App/Inc/app_navigation.h"
-
 #include "FreeRTOS.h"
 #include "task.h"
-#include "../../1_App/Inc/app_common.h"
-#include "../../2_Handler/Inc/drn_DeadReckoningNavigation.h"
-#include "../../2_Handler/Inc/inert.h"
-#include "../../2_Handler/Inc/trace.h"
-#include "../../3_BSP/Inc/bsp_servo.h"
+
+#include "app_navigation.h"
+#include "app_common.h"
+
+#include "inert.h"
+#include "trace.h"
+#include "naviDeadReckoning.h"
+
+#include "bsp_servo.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -32,7 +34,7 @@ void TaskInit_Navigation(void)
 	if(semDrNavi != NULL)
 	{
 		xSemaphoreGive(semDrNavi);
-		drnInit();
+		naviDRInit();
 		inertInit();
 
 		inertTriggerMeasurement();
@@ -76,10 +78,10 @@ void Task_Navigation(void* p)
 
 		w_drn.omega = w.omega_z;
 
-		v.x = drnNumIntegTrapezoidal(0, TASK_DELAY_16_MS, prev_a.a_x, a.a_x);
-		v.y = drnNumIntegTrapezoidal(0, TASK_DELAY_16_MS, prev_a.a_y, a.a_y);
+		v.x = naviDRNumIntegTrapezoidal(0, TASK_DELAY_16_MS, prev_a.a_x, a.a_x);
+		v.y = naviDRNumIntegTrapezoidal(0, TASK_DELAY_16_MS, prev_a.a_y, a.a_y);
 
-		ned = drnReckonNavigation(v, w_drn, TASK_DELAY_16_MS);
+		ned = naviDRNavigate(v, w_drn, TASK_DELAY_16_MS);
 
 		traceBluetooth(BCM_LOG_NAVI_N, &ned.n);
 		traceBluetooth(BCM_LOG_NAVI_E, &ned.e);

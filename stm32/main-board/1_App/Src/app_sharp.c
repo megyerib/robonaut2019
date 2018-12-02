@@ -8,12 +8,12 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "../../1_App/Inc/app_sharp.h"
+#include "sharp.h"
+#include "app_sharp.h"
 
-#include "../../1_App/Inc/app_common.h"
-#include "../../2_Handler/Inc/sds_SharpDistanceSensor.h"
-#include "../../2_Handler/Inc/trace.h"
-#include "../../3_BSP/Inc/bsp_servo.h"
+#include "app_common.h"
+#include "trace.h"
+#include "bsp_servo.h"
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -51,8 +51,8 @@ void Task_Sharp (void* p)
 
 	while(1)
 	{
-		sds_ADC_Conversion();
-		sharp_distance = sds_GetDistance();
+		sharpTriggerAdc();
+		sharp_distance = sharpGetDistance();
 		if(sharp_distance > 40)
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);

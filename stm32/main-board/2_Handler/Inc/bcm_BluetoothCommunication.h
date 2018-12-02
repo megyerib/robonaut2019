@@ -13,7 +13,7 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 
-#include "../../2_Handler/Inc/hndlCommon.h"
+#include "hndlCommon.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 

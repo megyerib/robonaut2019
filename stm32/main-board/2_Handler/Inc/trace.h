@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file      trace.h
-//!  \brief     Send diagnostics data
-//!  \details
+//!  \brief     Send diagnostics data.
+//!  \details   This module collects data and send them through a communication port.
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -14,9 +14,8 @@
 #include "task.h"
 #include "queue.h"
 
-#include "stm32f4xx_hal.h"
-
-#include "../../2_Handler/Inc/bcm_BluetoothCommunication.h"
+#include "hndlCommon.h"
+#include "bcm_BluetoothCommunication.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 

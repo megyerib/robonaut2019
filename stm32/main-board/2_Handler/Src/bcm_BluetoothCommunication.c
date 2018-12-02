@@ -8,13 +8,10 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../2_Handler/Inc/bcm_BluetoothCommunication.h"
-
-#include "FreeRTOS.h"
-#include "semphr.h"
+#include "bcm_BluetoothCommunication.h"
 
 #include "usart.h"
-#include "../../3_BSP/Inc/bsp_uart.h"
+#include "bsp_uart.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
