@@ -16,7 +16,7 @@
 
 typedef struct
 {
-    int16_t d; // TODO Originally uint
+    uint16_t d;
     float theta; // Radian
 }
 LINE;

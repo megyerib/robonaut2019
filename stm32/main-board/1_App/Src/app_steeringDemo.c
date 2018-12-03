@@ -48,6 +48,7 @@ void Task_steeringDemo(void* p)
 {
 	LINE l;
 	double angle;
+	int16_t linepos;
 
 	motorSetDutyCycle(10);
 	servoSetAngle(0);
@@ -56,7 +57,16 @@ void Task_steeringDemo(void* p)
     {
 		l = lineGet();
 
-		angle = -1.0 * (l.d / 150.0) * (PI/3);
+		if (l.theta > 0)
+		{
+			linepos = -1 * l.d;
+		}
+		else
+		{
+			linepos = l.d;
+		}
+
+		angle = -1.0 * (linepos / 150.0) * (PI/3);
 
 		servoSetAngle(angle);
 
