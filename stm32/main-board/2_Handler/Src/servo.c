@@ -13,7 +13,7 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define 	SERVO_ACTUAL_TYPE	 	SRV_FUTABAS3003   // Choose from SCH_ServoModel
+#define 	SERVO_ACTUAL_TYPE	 	SRV_SRT_CH6012   // Choose from SCH_ServoModel
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -97,15 +97,15 @@ eBSP_SrvInitStat servoConfig()
 	switch(SERVO_ACTUAL_TYPE)
 	{
 		case SRV_FUTABAS3003  :
-			hsrv.PWM_freq = 50;
+			hsrv.PWM_freq = 50;						// 20 ms
 			hsrv.PWM_cntr_freq = 62500;
 			hsrv.PWM_prescaler = 1343;
 			hsrv.PWM_period = 1249;
 
 			hsrv.Right_End = 68;
-			//hsrv.Deg_30 = 74;
+			hsrv.Deg_30 = 74;
 			hsrv.Deg_90 = 91;
-			//hsrv.Deg_150 = 113;
+			hsrv.Deg_150 = 113;
 			hsrv.Left_End = 114;
 
 			hsrv.CV_compensation = -1;
@@ -117,7 +117,25 @@ eBSP_SrvInitStat servoConfig()
 			break;
 
 	   case SRV_SRT_CH6012:
+		   // Calculated with known equations (bsp_servo.h)
+		   hsrv.PWM_freq = 250;						// 4 ms
+		   hsrv.PWM_cntr_freq = 62500;
+		   hsrv.PWM_prescaler = 1343;
+		   hsrv.PWM_period = 249;
 		   // TODO Measure servo propeties.
+		   hsrv.Left_End = 75;
+		   hsrv.Deg_30 = 81;
+		   hsrv.Deg_90 = 95;
+		   hsrv.Deg_150 = 106;
+		   hsrv.Right_End = 113;
+		   // Characteristics
+		   // m = pi/180 * (180 - 90)/(x_180 - x_90)
+		   hsrv.Gradient = PI/180 * (90-30)/(hsrv.Deg_90-hsrv.Deg_30);
+		   // y = m*x + b => b = y_90 - x_90 * m
+		   hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;
+		   // Compensating the car installation error.
+		   hsrv.CV_compensation = 0;
+
 		   break;
 
 		default :
