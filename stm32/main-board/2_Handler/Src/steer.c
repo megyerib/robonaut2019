@@ -2,7 +2,7 @@
 //!
 //!  \file      steer.c
 //!  \brief
-//!  \details
+//!  \details	This module controls the steering wheel through the servo.
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,8 +19,8 @@
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static double steerCalculateServoAngle ( int8_t steerAngle );
-static int8_t steerCalculateSteerAngle ( double srvAgnel );
+static double steerCalculateServoAngle ( double steerAngle );
+static double steerCalculateSteerAngle ( double servoAngle );
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -29,16 +29,37 @@ void steerInit()
 	servoInit();
 }
 
-void steerSetAngle(int8_t steerAngle)
+//TODO
+void steerSetAngle(double steerAngle)
 {
 	double servoAngle = PI/2;
 	int8_t correctedAnlge = steerAngle * wheelTransmission;
 
 	servoAngle = steerCalculateServoAngle(correctedAnlge);
 
+	// Saturation
+	if (servoAngle > PI/2)
+	{
+		servoAngle = PI/2;
+	}
+	else if (servoAngle < -PI/2)
+	{
+		servoAngle = -PI/2;
+	}
+
 	servoSetAngle(servoAngle);
 }
 
+//! Steering wheel:
+//!
+//!                0°
+//!         +30°   |   -30°
+//!            \   |   /
+//!             \  |  /
+//!              \ | /
+//!    +90________\|/________-90°
+//!  Left end              Right end
+//!
 int8_t steerGetAngle()
 {
 	int8_t steerAngle = 0;
@@ -55,8 +76,8 @@ int8_t steerGetAngle()
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-												// DEG
-static double steerCalculateServoAngle ( int8_t steerAngle )
+												// DEG TODO
+static double steerCalculateServoAngle ( double steerAngle )
 {
 	double srvAngle = PI/2;
 
@@ -65,12 +86,12 @@ static double steerCalculateServoAngle ( int8_t steerAngle )
 	return srvAngle;
 }
 												// GRAD
-static int8_t steerCalculateSteerAngle ( double srvAgnel )
+static double steerCalculateSteerAngle ( double servoAngle )
 {
-	int8_t steerAngle = 90;
+	double steerAngle = 90;
 
-	steerAngle = (int8_t)(180/PI * (-1 * srvAgnel + PI/2));
+	steerAngle = (double)(180/PI * (-1 * servoAngle + PI/2));
 
-			// DEG
+			// DEG TODO
 	return steerAngle;
 }

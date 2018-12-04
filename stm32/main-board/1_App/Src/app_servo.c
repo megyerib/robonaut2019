@@ -15,6 +15,7 @@
 
 #include "trace.h"
 #include "servo.h"
+#include "steer.h"
 #include "bsp_common.h"
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -46,11 +47,12 @@ void Task_Servo(void* p)
 {
 	(void)p;
 
-	EventBits_t bits;
+	//EventBits_t bits;
 	double theta;
 	double degree;
 	uint32_t rate = LOG_RATE;
 	GPIO_PinState btn;
+	int enab = 0;
 
 	while(1)
 	{
@@ -67,14 +69,29 @@ void Task_Servo(void* p)
 
 		btn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
 
-		if (btn == GPIO_PIN_RESET)
+		if (enab == 0)
 		{
-			servoSetAngle(2*PI/3);
+			if (btn == GPIO_PIN_RESET)
+			{
+				servoSetAngle(2*PI/3);
+			}
+			else
+			{
+				servoSetAngle(PI/2);
+			}
 		}
 		else
 		{
-			servoSetAngle(PI/2);
+			if (btn == GPIO_PIN_RESET)
+			{
+				steerSetAngle(30*PI/180);
+			}
+			else
+			{
+				steerSetAngle(-30*PI/180);
+			}
 		}
+
 
 		theta = servoGetAngle();
 
