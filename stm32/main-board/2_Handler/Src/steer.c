@@ -13,7 +13,9 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define	 wheelTransmission			2
+#define	 wheelTransmission				2
+#define  STEERING_WHEEL_RIGHT_END		PI/3		// -30° kormány,  60° szervo
+#define  STEERING_WHEEL_LEFT_END		2*PI/3		// +30° kormány, 120° szervo
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -29,22 +31,21 @@ void steerInit()
 	servoInit();
 }
 
-//TODO
 void steerSetAngle(double steerAngle)
 {
 	double servoAngle = PI/2;
-	int8_t correctedAnlge = steerAngle * wheelTransmission;
+	double correctedAnlge = steerAngle * wheelTransmission;
 
 	servoAngle = steerCalculateServoAngle(correctedAnlge);
 
-	// Saturation
-	if (servoAngle > PI/2)
+	// Saturation TODO nem jó  a szaturálás
+	if (servoAngle > STEERING_WHEEL_LEFT_END)
 	{
-		servoAngle = PI/2;
+		servoAngle = STEERING_WHEEL_LEFT_END;
 	}
-	else if (servoAngle < -PI/2)
+	else if (servoAngle < STEERING_WHEEL_RIGHT_END)
 	{
-		servoAngle = -PI/2;
+		servoAngle = STEERING_WHEEL_RIGHT_END;
 	}
 
 	servoSetAngle(servoAngle);
@@ -62,8 +63,8 @@ void steerSetAngle(double steerAngle)
 //!
 int8_t steerGetAngle()
 {
-	int8_t steerAngle = 0;
-	int8_t correctedAngle = 0;
+	double steerAngle = 0;
+	double correctedAngle = 0;
 	double servoAngle = PI/2;
 
 	servoAngle = servoGetAngle();
@@ -76,22 +77,21 @@ int8_t steerGetAngle()
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-												// DEG TODO
+//! @brief Converts rad to rad.
 static double steerCalculateServoAngle ( double steerAngle )
 {
 	double srvAngle = PI/2;
 
-	srvAngle = PI/180 * ( -1 * (double)steerAngle + PI/2 );
-			// GRAD
+	srvAngle = steerAngle + PI/2;
+
 	return srvAngle;
 }
-												// GRAD
+
 static double steerCalculateSteerAngle ( double servoAngle )
 {
 	double steerAngle = 90;
 
-	steerAngle = (double)(180/PI * (-1 * servoAngle + PI/2));
+	steerAngle = (double)(servoAngle + PI/2);
 
-			// DEG TODO
 	return steerAngle;
 }
