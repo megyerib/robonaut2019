@@ -30,12 +30,14 @@
 void Init()
 {
 	// Wait for the PSU init
+	//TODO ez itt jó? a perifériák már inicializálva vannak, nem veszélyes az?
 	HAL_Delay(1000);
 
 	bspInit();
 
-	TaskInit_steeringDemo();
+	//TaskInit_steeringDemo();
 	TaskInit_CarDiagnosticsTool();
+	TaskInit_Servo();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
