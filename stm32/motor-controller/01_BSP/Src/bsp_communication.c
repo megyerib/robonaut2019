@@ -43,24 +43,24 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 	if (huart == MAIN_BOARD_UART)
 	{
-		if (ReceiveBufferUART[CharCount] == '\n')
+		if (ReceiveBufferUART[CharCount] == '\n' || ReceiveBufferUART[CharCount] == '\r')
 		{
-
-			CharCount = 0;
-
-			int32_t Converted = 0;
-			while(ReceiveBufferUART[i] != '\r' && ReceiveBufferUART[i] != '\n')
+			if (CharCount > 0)
 			{
+				int32_t Converted = 0;
+
+				while(ReceiveBufferUART[i] != '\r' && ReceiveBufferUART[i] != '\n')
+				{
 				if (ReceiveBufferUART[i] < '0' || ReceiveBufferUART[i] > '9')
 				{
 					valid = 0;
 					break;
 				}
 
-				Converted *= 10;
-				Converted += ReceiveBufferUART[i] - '0';
-				i++;
-			}
+					Converted *= 10;
+					Converted += ReceiveBufferUART[i] - '0';
+					i++;
+				}
 
 			if (valid)
 			{
@@ -69,6 +69,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 				BSP_SetDutyCycle(&ConvertedDutyCycle);
 				HAL_UART_Transmit_IT(MAIN_BOARD_UART, response, 5);
+			}
+				CharCount = 0;
 			}
 		}
 		else
