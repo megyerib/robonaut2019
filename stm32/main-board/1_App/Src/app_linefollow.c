@@ -83,6 +83,7 @@ static void Task_LineFollow (void* p)
 {
     (void)p;
 
+    // TODO Constant duty cycle.
     uint8_t pwm = 20;
 
     while (1)
@@ -92,20 +93,19 @@ static void Task_LineFollow (void* p)
     	p_meas = -0.1;
     	traceBluetooth(BCM_LOG_LINE_D, &p_meas);
 
-    	// Calculate control error.
+    	// PD controller: Calculate control error. Give the error to the controller and receive new control variable.
     	e = p_a - p_meas;
-
-    	// Give the error to the controller and receive new
     	phi_a = controllerTransferFunction(&contrPD, e);
 
+    	// Give the control variable to the actuator.
     	steerSetAngle(3.14159265359/180 * phi_a);
     	traceBluetooth(BCM_LOG_SERVO_ANGLE, &phi_a);
 
+    	// TODO Give constant speed.
     	motorSetDutyCycle(pwm);
     	traceBluetooth(BCM_LOG_CTR_MTR_CURR, &pwm);
 
-    	//TODO const to define
-    	vTaskDelay(5);
+    	vTaskDelay(TASK_DELAY_5_MS);
     }
 }
 

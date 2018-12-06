@@ -79,12 +79,14 @@ void buttonTriggerRead()
 
 uint8_t buttonGetState(BTN button)
 {
-
+	//TODO Eliminating warning.
+	return 0;
 }
 
 uint8_t buttonGetEdge(BTN button, EDGE edge)
 {
-
+	//TODO Eliminating warning.
+	return 0;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
