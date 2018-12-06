@@ -8,14 +8,14 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "servo.h"
 #include "bsp_common.h"
+#include "steer.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define	 wheelTransmission				2
-#define  STEERING_WHEEL_RIGHT_END		PI/3		// -30° kormány,  60° szervo
-#define  STEERING_WHEEL_LEFT_END		2*PI/3		// +30° kormány, 120° szervo
+#define  STEERING_WHEEL_RIGHT_END		-PI/6		// -30° kormány,  60° szervo
+#define  STEERING_WHEEL_LEFT_END		PI/6		// +30° kormány, 120° szervo
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -26,27 +26,29 @@ static double steerCalculateSteerAngle ( double servoAngle );
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void steerInit()
+void steerInit(eServoModel myServo)
 {
-	servoInit();
+	servoInit(myServo);
 }
 
 void steerSetAngle(double steerAngle)
 {
 	double servoAngle = PI/2;
-	double correctedAnlge = steerAngle * wheelTransmission;
-
-	servoAngle = steerCalculateServoAngle(correctedAnlge);
+	double locSteerAngle = steerAngle;
+	double correctedservoAnlge;
 
 	// Saturation TODO nem jó  a szaturálás
-	if (servoAngle > STEERING_WHEEL_LEFT_END)
+	if (locSteerAngle > STEERING_WHEEL_LEFT_END)
 	{
-		servoAngle = STEERING_WHEEL_LEFT_END;
+		locSteerAngle = STEERING_WHEEL_LEFT_END;
 	}
-	else if (servoAngle < STEERING_WHEEL_RIGHT_END)
+	else if (locSteerAngle < STEERING_WHEEL_RIGHT_END)
 	{
-		servoAngle = STEERING_WHEEL_RIGHT_END;
+		locSteerAngle = STEERING_WHEEL_RIGHT_END;
 	}
+
+	correctedservoAnlge = locSteerAngle * wheelTransmission;
+	servoAngle = steerCalculateServoAngle(correctedservoAnlge);
 
 	servoSetAngle(servoAngle);
 }
@@ -61,7 +63,7 @@ void steerSetAngle(double steerAngle)
 //!    +90________\|/________-90°
 //!  Left end              Right end
 //!
-int8_t steerGetAngle()
+double steerGetAngle()
 {
 	double steerAngle = 0;
 	double correctedAngle = 0;

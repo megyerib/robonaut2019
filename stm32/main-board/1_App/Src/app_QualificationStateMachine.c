@@ -49,7 +49,7 @@ void TaskInit_QSM (void)
 
 	motorInit();
 	lineInit();
-	steerInit();
+	steerInit(SRV_SRT_CH6012);
 	traceInit();
 	scmInitControllerPI();
 

@@ -29,7 +29,7 @@
 
 void TaskInit_steeringDemo(void)
 {
-    servoInit();
+    servoInit(SRV_MAVERICK_MS22);
 
     lineInit();
 

@@ -16,6 +16,9 @@
 #include "task.h"
 #include "queue.h"
 
+// TODO it is here becasue of the servo model types are needed
+#include "servo.h"
+
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define 	DEFAULT_STACK_SIZE 				128
@@ -28,7 +31,7 @@
 
 #define 	TASK_QSM_PRIO					tskIDLE_PRIORITY+5
 
-
+#define 	TASK_DELAY_5_MS					5
 #define		TASK_DELAY_16_MS				16		// Depends on the Tick
 #define		TASK_DELAY_20_MS				20
 #define		TASK_DELAY_40_MS				40
