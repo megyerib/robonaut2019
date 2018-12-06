@@ -1,18 +1,46 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      app_linefollow.h
-//!  \brief    
+//!  \file      button.h
+//!  \brief
 //!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #pragma once
-
 // Includes ------------------------------------------------------------------------------------------------------------
+
 // Defines -------------------------------------------------------------------------------------------------------------
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
+
+typedef enum
+{
+	btnBlue = 0,
+
+	btnCount
+}
+BTN;
+
+typedef enum
+{
+	edgeRising,
+	edgeFalling,
+	edgeBoth
+}
+EDGE;
+
 // Variables -----------------------------------------------------------------------------------------------------------
+
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-//! @brief	Initializes the Task_LineFollow task.
-void TaskInit_LineFollow(void);
+void buttonInit();
+
+//! @brief Triggers button state reading (for debouncing)
+void buttonTriggerRead();
+
+//! @returns True if the button is pushed down.
+uint8_t buttonGetState(BTN button);
+
+//! @returns True if the button stat has changed since the last query or the initilization.
+uint8_t buttonGetEdge(BTN button, EDGE edge);
+
+// END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

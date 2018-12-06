@@ -38,8 +38,8 @@ static LINE_SENSOR_OUT rear_tmp;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
-static LINE DummyFront(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+static LINE CalcFrom2Sensors(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+static LINE CalcFromFrontSensor(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -87,7 +87,7 @@ LINE lineGet()
     x_rear /= rear.cnt;
 
     //return Descartes2Polar(x_rear, Y_REAR, x_front, Y_FRONT);
-    return DummyFront(x_rear, Y_REAR, x_front, Y_FRONT);
+    return CalcFromFrontSensor(x_rear, Y_REAR, x_front, Y_FRONT);
 }
 
 Arc lineGetArc(uint16_t r_mm, ArcDir dir)
@@ -172,7 +172,7 @@ void bspLineRearRxCpltCallback (void)
                 |           */
 
 // TODO FULL REWRITE!!!
-static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
+static LINE CalcFrom2Sensors(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
     LINE ret;
     float x, y;
@@ -203,7 +203,7 @@ static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
     return ret;
 }
 
-static LINE DummyFront(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
+static LINE CalcFromFrontSensor(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
 	LINE ret;
 

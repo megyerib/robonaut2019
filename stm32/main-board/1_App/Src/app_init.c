@@ -14,6 +14,7 @@
 
 #include "app_cdt.h"
 #include "app_steeringDemo.h"
+#include "app_linefollow.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -37,7 +38,10 @@ void Init()
 
 	//TaskInit_steeringDemo();
 	TaskInit_CarDiagnosticsTool();
+	// TODO DEBUG	WARNING: Don't enable boh of them at the same time!
 	TaskInit_Servo();
+	//TaskInit_LineFollow();
+	// END_DEBUG
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

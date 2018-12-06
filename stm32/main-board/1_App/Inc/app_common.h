@@ -16,8 +16,6 @@
 #include "task.h"
 #include "queue.h"
 
-#include "bcm_BluetoothCommunication.h"
-
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define 	DEFAULT_STACK_SIZE 				128
