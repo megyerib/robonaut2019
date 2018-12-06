@@ -14,13 +14,24 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//! @brief	Available types of servos.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+typedef enum
+{
+	SRV_FUTABAS3003 		= 0,		// Joci's servo.		Analog
+	SRV_MAVERICK_MS22,					// Car' basic servo.	Analog
+	SRV_SRT_CH6012						// From model shop.		Digital
+} eServoModel;
+
 // Variables -----------------------------------------------------------------------------------------------------------
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 //TODO
 //! @brief	Initializes the module and the servo.
 //! @retval	Result of the initialization (OK, FAIL).
-eBSP_SrvTimInitStat servoInit(void);
+eBSP_SrvTimInitStat servoInit(eServoModel myServoModel);
 
 //! @brief	Gets the servo position in radian.
 //! @retval	Servo angle.

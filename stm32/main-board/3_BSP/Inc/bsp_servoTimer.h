@@ -31,9 +31,10 @@ typedef enum
 //! @brief	Servo module init status. Init must check the selected type of the servo and the timer configuration.
 typedef enum
 {
-	SRV_INIT_OK 					= 0,
+	SRV_INIT_OK 					  = 0,
 	SRV_INIT_FAIL_SRV_MODELL,
 	SRV_INIT_FAIL_SRV_PWM,
+	SRV_INIT_FAIL_SRV_ALREADY_RUNNING
 } eBSP_SrvTimInitStat;
 
 //! @brief	Informations and configuration according to the given servo motor
