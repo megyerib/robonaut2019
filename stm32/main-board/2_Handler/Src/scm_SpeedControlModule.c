@@ -10,6 +10,7 @@
 
 #include "hndlCommon.h"
 #include "scm_SpeedControlModule.h"
+#include "controller.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -32,20 +33,6 @@
 #define     SCM_TF_ORDER		   1
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
-
-//! @brief	Discrete transfer function first order in normal form.
-typedef struct
-{
-	double   b0;
-	double   b1;
-	double   a0;		//!< Equals with 1 in normal form
-	double   a1;
-	uint32_t ts;		//!< Sampling time
-
-	double	 bn_past;	//!< b n-1 previous value
-	double   an_past;	//!< a n-1 previous value
-} cFirstOrderTF;
-
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 cFirstOrderTF piController;
@@ -56,23 +43,20 @@ double u_prev[SCM_TF_ORDER+1];
 double y_prev[SCM_TF_ORDER+1];
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
-
-static double scmTransferFunction (cFirstOrderTF* tf, double an);
-
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void scmInitControllerPI (void)
 {
 	process.b0      = SCM_PROCESS_B0 * SCM_PROCESS_K;
 	process.b1      = SCM_PROCESS_B1 * SCM_PROCESS_K;
-	process.a0      = SCM_PROCESS_A0;
+	//process.a0      = SCM_PROCESS_A0;
 	process.a1      = SCM_PROCESS_A1;
 	process.bn_past = 0;
 	process.an_past = 0;
 
 	piController.b0      = SCM_PI_B0 * SCM_PI_K;
 	piController.b1      = SCM_PI_B1 * SCM_PI_K;
-	piController.a0      = SCM_PI_A0;
+	//piController.a0      = SCM_PI_A0;
 	piController.a1      = SCM_PI_A1;
 	piController.bn_past = 0;
 	piController.an_past = 0;
@@ -100,20 +84,3 @@ double scmControlLoop (double rn)
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-//! @param tf
-//! @param an
-//! @return
-//!
-//! @example
-static double scmTransferFunction (cFirstOrderTF* tf, double an)
-{
-	double bn;
-
-	bn = tf->b0 * an + tf->b1 * tf->an_past - tf->a1 * tf->bn_past;
-
-	tf->bn_past = bn;
-	tf->an_past = an;
-
-	return bn;
-}

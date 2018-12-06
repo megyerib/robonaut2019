@@ -80,10 +80,12 @@ void Task_Servo(void* p)
 		{
 			if (btn == GPIO_PIN_RESET)
 			{
+				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 				steerSetAngle(-30*PI/180);
 			}
 			else
 			{
+				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 				steerSetAngle(30*PI/180);
 			}
 		}
