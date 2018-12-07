@@ -1,87 +1,64 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      app_steeringDemo.c
-//!  \brief     
-//!  \details   
+//!  \file      remote.c
+//!  \brief
+//!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "app_common.h"
-#include "app_steeringDemo.h"
-#include "trace.h"
-#include "servo.h"
-#include "motor.h"
-#include "line.h"
-#include "bsp_common.h"
-#include "bsp_uart.h"
+#include "tim.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
+
+  #define PERIOD 16320 /* us */
+  #define MIDDLE  1495 /* us */
+//#define MIN      995 /* us */
+//#define MAX     2080 /* us */
+
+  #define MARGIN   200 /* us */
+
+  #define HIGH_THR (MIDDLE + MARGIN)
+  #define LOW_THR  (PERIOD - MIDDLE - MARGIN)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
+static int input_capture = 0;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void TaskInit_steeringDemo(void)
+void remoteInit()
 {
-    servoInit(SRV_MAVERICK_MS22);
-
-    lineInit();
-
-    remoteInit();
-
-    xTaskCreate(Task_steeringDemo,
-                "TASK_DEMO",
-                DEFAULT_STACK_SIZE,
-                NULL,
-                TASK_SRV_PRIO,
-                NULL);
+	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_4);
 }
 
-#define LEFT  0
-#define RIGHT 1
-
-int remote;
-
-void Task_steeringDemo(void* p)
+int remoteGetState()
 {
-	LINE l;
-	double angle;
-	int16_t linepos;
+	if (input_capture > HIGH_THR && input_capture < LOW_THR)
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
 
-	motorSetDutyCycle(10);
-	servoSetAngle(0);
-
-	while(1)
-    {
-		l = lineGet();
-
-		// Remote
-		remote = remoteGetState();
-		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, remote);
-
-		if (l.theta > 0)
-		{
-			linepos = -1 * l.d;
-		}
-		else
-		{
-			linepos = l.d;
-		}
-
-		angle = -1.0 * (linepos / 150.0) * (PI/3);
-
-		servoSetAngle(angle);
-
-		//traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
-
-		vTaskDelay(100);
-    }
+// Interrupt callback
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+	if (htim->Instance == TIM1)
+	{
+		input_capture = __HAL_TIM_GET_COMPARE(&htim1, TIM_CHANNEL_4);
+		__HAL_TIM_SetCounter(&htim1, 0);
+	}
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+// END -----------------------------------------------------------------------------------------------------------------
