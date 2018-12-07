@@ -30,16 +30,13 @@
 
 static uint8_t rxbuf_front[30];
 static uint8_t rxcnt_front;
-static uint8_t rxbuf_rear[30];
-static uint8_t rxcnt_rear;
 
 static LINE_SENSOR_OUT front_tmp;
 static LINE_SENSOR_OUT rear_tmp;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static LINE CalcFrom2Sensors(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
-static LINE CalcFromFrontSensor(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -87,7 +84,14 @@ LINE lineGet()
     x_rear /= rear.cnt;
 
     //return Descartes2Polar(x_rear, Y_REAR, x_front, Y_FRONT);
-    return CalcFromFrontSensor(x_rear, Y_REAR, x_front, Y_FRONT);
+
+    LINE ret =
+    {
+        .d = x_front,
+        .theta = 0
+    };
+
+    return ret;
 }
 
 Arc lineGetArc(uint16_t r_mm, ArcDir dir)
@@ -133,33 +137,13 @@ void bspLineFrontRxCpltCallback (void)
 
 void bspLineRearRxCpltCallback (void)
 {
-	uint8_t tmp[30];
-	int tmplen;
 
-	if (isUartFrameEnded(rxbuf_rear, rxcnt_rear))
-	{
-		convertFromUartFrame(rxbuf_rear, tmp, rxcnt_rear, &tmplen);
-
-		if (tmplen == sizeof(LINE_SENSOR_OUT))
-		{
-			memcpy((uint8_t*) &rear_tmp, tmp, sizeof(LINE_SENSOR_OUT));
-			rxcnt_rear = 0;
-		}
-		else
-		{
-			// Error
-		}
-	}
-
-	rxcnt_rear++;
-
-	bspUartReceive_IT(Uart_LineRear, &rxbuf_rear[rxcnt_rear], 1);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 /*              ^
-                | x (x2;y2)
+                | x (y1;y2)
                 |/
                 /- b
                /|
@@ -171,18 +155,17 @@ void bspLineRearRxCpltCallback (void)
  (x1;x2) x----- |
                 |           */
 
-// TODO FULL REWRITE!!!
-static LINE CalcFrom2Sensors(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
+static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
     LINE ret;
     float x, y;
     float a, b; // y = ax + b
     float alpha;
 
-    x = x2 - x1;
-    y = y2 - y1;
+    x = (float)x2 - (float)x1;
+    y = (float)y2 - (float)y1;
 
-    a = (float)y / (float)x; // tg alpha
+    a = y / x; // tg alpha
 
     b = (-1 * x1 * a);
 
@@ -190,35 +173,18 @@ static LINE CalcFrom2Sensors(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 
     alpha = atanf(a);
 
-    // TODO over/under origo??
     if (alpha >= 0.0)
     {
-        ret.theta = alpha + (PI/2);
+        ret.theta = alpha - 90.0;
     }
     else
     {
-        ret.theta = alpha - (PI/2);
+        ret.theta = alpha + 90.0;
     }
 
+    ret.theta *= 180 / PI; // ° -> rad
+
     return ret;
-}
-
-static LINE CalcFromFrontSensor(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
-{
-	LINE ret;
-
-	if (x2 >= 0)
-	{
-		ret.d = x2;
-		ret.theta = -PI/2;
-	}
-	else // (x2 < 0)
-	{
-		ret.d = -x2;
-		ret.theta = PI/2;
-	}
-
-	return ret;
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
