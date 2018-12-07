@@ -93,11 +93,11 @@ void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* p
             if (end)
                 break;
         }
-        else
+        else if (begin)
         {
-            // Ordinary character
-            payload[j] = frame[i];
-            j++;
+			// Ordinary character
+			payload[j] = frame[i];
+			j++;
         }
     }
 
@@ -105,6 +105,11 @@ void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* p
 }
 
 int isUartFrameEnded(uint8_t* frame, int framelen)
+{
+	return (frame[framelen-2] == ESCAPE_CHAR && frame[framelen-1] == frameEnd);
+}
+
+int isUartFrameValid(uint8_t* frame, int framelen)
 {
 	int begin = 0;
 	int end   = 0;
