@@ -38,13 +38,14 @@ void Init()
 	bspInit();
 
 	// Must-Have
-	TaskInit_CarDiagnosticsTool();
+	//TaskInit_CarDiagnosticsTool();
 
 
 	// TODO DEBUG	WARNING: Don't enable all of them at the same time!
 	//TaskInit_Servo();
-	TaskInit_LineFollow();
+	//TaskInit_LineFollow();
 	//TaskInit_steeringDemo();
+	TaskInit_steeringDemo();
 	// END_DEBUG
 }
 

@@ -53,6 +53,10 @@ void TaskInit_LineFollow (void)
 	//Tsrv = 0.007;
 	//Ksrv = 60;
 
+	lineInit();
+	steerInit(SRV_SRT_CH6012);
+
+
 	p_a   = 0;
 	e 	  = 0;
 	p 	  = -0.1;
@@ -87,11 +91,12 @@ static void Task_LineFollow (void* p)
 
     // TODO Constant duty cycle.
     uint8_t pwm = 10;
+    uint8_t i = -30;
 
     while (1)
     {
     	// TODO
-    	recBtData = traceReceiveBluetooth();
+    	//recBtData = traceReceiveBluetooth();
     	/*if (recBtData.RecCmdPdKp_x == true)
     	{
         	controllerPdConfigure(&contrPD, recBtData.RecDataPdKp_d, Td, T);
@@ -103,8 +108,8 @@ static void Task_LineFollow (void* p)
     	}*/
 
     	// Get new measurements of the line p distance.
-    	p_meas = lineGet().d;
-    	traceBluetooth(BCM_LOG_LINE_D, &p_meas);
+    	p_meas = -lineGet().d;
+    	//traceBluetooth(BCM_LOG_LINE_D, &p_meas);
 
     	// PD controller: Calculate control error. Give the error to the controller and receive new control variable.
     	e = p_a - p_meas;
@@ -113,6 +118,7 @@ static void Task_LineFollow (void* p)
     	//TODO
     	// Give the control variable to the actuator.
     	steerSetAngle(3.14159265359/180 * phi_a);
+    	i++;
     	/*if (recBtData.RecCmdSteer == true)
     	{
     		steerSetAngle(3.14159265359/180 * recBtData.RecDataSteer);
@@ -121,7 +127,7 @@ static void Task_LineFollow (void* p)
     	{
     		steerSetAngle(3.14159265359/180 * phi_a);
     	}*/
-    	traceBluetooth(BCM_LOG_SERVO_ANGLE, &phi_a);
+    	//traceBluetooth(BCM_LOG_SERVO_ANGLE, &phi_a);
 
     	// TODO Give constant speed.
     	motorSetDutyCycle(pwm);
@@ -143,9 +149,9 @@ static void Task_LineFollow (void* p)
 
         	motorSetDutyCycle(duty);
     	}*/
-    	traceBluetooth(BCM_LOG_CTR_MTR_CURR, &pwm);
+    	//traceBluetooth(BCM_LOG_CTR_MTR_CURR, &pwm);
 
-    	vTaskDelay(TASK_DELAY_5_MS);
+    	vTaskDelay(TASK_DELAY_100_MS );
     }
 }
 
