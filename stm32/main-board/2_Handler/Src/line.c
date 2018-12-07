@@ -122,15 +122,18 @@ void bspLineFrontRxCpltCallback (void)
 		if (tmplen == sizeof(LINE_SENSOR_OUT))
 		{
 			memcpy((uint8_t*) &front_tmp, tmp, sizeof(LINE_SENSOR_OUT));
-			rxcnt_front = 0;
 		}
 		else
 		{
 			// Error
 		}
-	}
 
-	rxcnt_front++;
+		rxcnt_front = 0;
+	}
+	else
+	{
+		rxcnt_front++;
+	}
 
 	bspUartReceive_IT(Uart_LineFront, &rxbuf_front[rxcnt_front], 1);
 }
