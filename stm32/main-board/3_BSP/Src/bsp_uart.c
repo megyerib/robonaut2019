@@ -362,7 +362,7 @@ void HAL_UART_TxCpltCallback (UART_HandleTypeDef *huart)
 	}
 	else if (huart->Instance == usart_usb)
 	{
-		bspUartUsbTxCpltCallback();
+		bspUsbTxCpltCallback();
 	}
 	else if (huart->Instance == usart_line_front)
 	{
@@ -391,7 +391,7 @@ void HAL_UART_RxCpltCallback (UART_HandleTypeDef *huart)
 	}
 	else if(huart->Instance == usart_usb)
 	{
-		bspUartUsbRxCpltCallback();
+		bspUsbRxCpltCallback();
 	}
 	else if(huart->Instance == usart_line_front)
 	{
@@ -606,7 +606,7 @@ static void bspUartAssignDevices(void)
 
 // RxCpltCallbacks -----------------------------
 
-__weak void bspUartUsbRxCpltCallback   (void) {} // Fix
+__weak void bspUsbRxCpltCallback   (void) {} // Fix
 __weak void bspBluetoothRxCpltCallback (void) {}
 __weak void bspRadioRxCpltCallback     (void) {}
 
@@ -617,7 +617,7 @@ __weak void bspLineRearRxCpltCallback  (void) {}
 
 // TxCpltCallbacks -----------------------------
 
-__weak void bspUartUsbTxCpltCallback   (void) {} // Fix
+__weak void bspUsbTxCpltCallback   (void) {} // Fix
 __weak void bspBluetoothTxCpltCallback (void) {}
 __weak void bspRadioTxCpltCallback     (void) {}
 

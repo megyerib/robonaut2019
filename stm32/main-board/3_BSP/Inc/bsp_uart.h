@@ -101,7 +101,7 @@ void bspMotorRxCpltCallback (void);
 
 //! @brief	You can implement this callback function in other parts of the code.
 //!			This function will be called if the USB RX interrupt is present.
-void bspUartUsbRxCpltCallback (void);
+void bspUsbRxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.
@@ -133,7 +133,7 @@ void bspMotorTxCpltCallback (void);
 
 //! @brief	You can implement this callback function in other parts of the code.
 //! 		This function will be called if the USB TX interrupt is present.
-void bspUartUsbTxCpltCallback (void);
+void bspUsbTxCpltCallback (void);
 
 
 //! @brief	You can implement this callback function in other parts of the code.

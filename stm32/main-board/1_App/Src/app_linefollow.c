@@ -40,6 +40,8 @@ static double T;		// sec
 
 static cFirstOrderTF contrPD;
 
+static cTraceRxBluetoothStruct recBtData;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void Task_LineFollow (void* p);
@@ -84,25 +86,63 @@ static void Task_LineFollow (void* p)
     (void)p;
 
     // TODO Constant duty cycle.
-    uint8_t pwm = 20;
+    uint8_t pwm = 10;
 
     while (1)
     {
+    	// TODO
+    	recBtData = traceReceiveBluetooth();
+    	/*if (recBtData.RecCmdPdKp_x == true)
+    	{
+        	controllerPdConfigure(&contrPD, recBtData.RecDataPdKp_d, Td, T);
+    	}
+
+    	if (recBtData.RecCmdPdTd == true)
+    	{
+        	controllerPdConfigure(&contrPD, Kp, recBtData.RecDataPdTd_d, recBtData.RecDataPdTd_d*10);
+    	}*/
+
     	// Get new measurements of the line p distance.
-    	//p_meas = lineGet().d;
-    	p_meas = -0.1;
+    	p_meas = lineGet().d;
     	traceBluetooth(BCM_LOG_LINE_D, &p_meas);
 
     	// PD controller: Calculate control error. Give the error to the controller and receive new control variable.
     	e = p_a - p_meas;
     	phi_a = controllerTransferFunction(&contrPD, e);
 
+    	//TODO
     	// Give the control variable to the actuator.
     	steerSetAngle(3.14159265359/180 * phi_a);
+    	/*if (recBtData.RecCmdSteer == true)
+    	{
+    		steerSetAngle(3.14159265359/180 * recBtData.RecDataSteer);
+    	}
+    	else
+    	{
+    		steerSetAngle(3.14159265359/180 * phi_a);
+    	}*/
     	traceBluetooth(BCM_LOG_SERVO_ANGLE, &phi_a);
 
     	// TODO Give constant speed.
     	motorSetDutyCycle(pwm);
+    	/*if (recBtData.RecCmdAccelerate == true)
+    	{
+    		uint8_t duty = 0;
+    		if (recBtData.RecDataAccelerate > 100)
+    		{
+    			duty = 100;
+    		}
+    		else if (recBtData.RecDataAccelerate < 0)
+    		{
+    			duty = 0;
+    		}
+    		else
+    		{
+    			duty = recBtData.RecDataAccelerate;
+    		}
+
+        	motorSetDutyCycle(duty);
+    	}*/
     	traceBluetooth(BCM_LOG_CTR_MTR_CURR, &pwm);
 
     	vTaskDelay(TASK_DELAY_5_MS);
