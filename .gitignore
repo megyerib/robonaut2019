@@ -1,2 +1,8 @@
 *.lnk
 *.url
+Debug/
+Release/
+
+
+*.o
+*.map

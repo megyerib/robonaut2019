@@ -58,15 +58,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "FreeRTOS.h"
-
-#include "app_sharp.h"
-#include "app_servo.h"
-#include "app_navigation.h"
-#include "app_cdt.h"
-#include "app_SpeedControl.h"
-
-#include "trace.h"
+#include "app_init.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -82,21 +74,11 @@ void MX_FREERTOS_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void InitTasks();
+
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void InitTasks()
-{
-	TaskInit_CarDiagnosticsTool();
-	TaskInit_Sharp();
-	TaskInit_Servo();
-	TaskInit_Navigation();
-	TaskInit_SControl();
 
-
-	vTaskStartScheduler();
-}
 /* USER CODE END 0 */
 
 /**
@@ -123,8 +105,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  // Wait for the PSU init
-  HAL_Delay(1000);
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -142,33 +123,7 @@ int main(void)
   MX_UART4_Init();
   MX_I2C3_Init();
   /* USER CODE BEGIN 2 */
-  InitTasks();
-
-  //TODO DEBUG
-	traceBluetooth(BCM_LOG_SHARP_DISTANCE, 0);
-	traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, 0);
-	traceBluetooth(BCM_LOG_SERVO_ANGLE, 0);
-	traceBluetooth(BCM_LOG_INERT_ACCEL_X, 0);
-	traceBluetooth(BCM_LOG_INERT_ACCEL_Y, 0);
-	traceBluetooth(BCM_LOG_INERT_ACCEL_Z, 0);
-	traceBluetooth(BCM_LOG_INERT_ANG_VEL_X, 0);
-	traceBluetooth(BCM_LOG_INERT_ANG_VEL_Y, 0);
-	traceBluetooth(BCM_LOG_INERT_ANG_VEL_Z, 0);
-	traceBluetooth(BCM_LOG_NAVI_N, 0);
-	traceBluetooth(BCM_LOG_NAVI_E, 0);
-	traceBluetooth(BCM_LOG_NAVI_THETA, 0);
-	traceBluetooth(BCM_LOG_ENC_VEL, 0);
-	traceBluetooth(BCM_LOG_TOF_1_DISTANCE, 0);
-	traceBluetooth(BCM_LOG_TOF_2_DISTANCE, 0);
-	traceBluetooth(BCM_LOG_TOF_3_DISTANCE, 0);
-	traceBluetooth(BCM_LOG_MTR_MAIN_BAT_VOLT, 0);
-	traceBluetooth(BCM_LOG_MTR_SEC_BAT_VOLT, 0);
-	traceBluetooth(BCM_LOG_MTR_CURR, 0);
-	traceBluetooth(BCM_LOG_MTR_SYS_CURR, 0);
-	traceBluetooth(BCM_LOG_MTR_SRV_CURR, 0);
-	traceBluetooth(BCM_LOG_MTR_CMD_STOP_ENGINE, 0);
-	traceBluetooth(BCM_LOG_CTR_MTR_CURR, 0);
-	//end_DEBUG
+  Init();
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -181,6 +136,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+
   while (1)
   {
 

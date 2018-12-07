@@ -3,7 +3,6 @@
 	<name>main-board</name>
 	<comment></comment>
 	<projects>
-		<project>_common</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -71,4 +70,11 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>Common</name>
+			<type>2</type>
+			<locationURI>WORKSPACE_LOC/common/Common</locationURI>
+		</link>
+	</linkedResources>
 </projectDescription>
