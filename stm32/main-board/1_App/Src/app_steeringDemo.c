@@ -25,6 +25,8 @@
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
+static int printInt(int x, uint8_t* buf);
+
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void TaskInit_steeringDemo(void)
@@ -32,8 +34,6 @@ void TaskInit_steeringDemo(void)
     servoInit(SRV_SRT_CH6012);
 
     lineInit();
-
-    bspUartInit();
 
     xTaskCreate(Task_steeringDemo,
                 "TASK_DEMO",
@@ -49,12 +49,15 @@ void TaskInit_steeringDemo(void)
 bool enab = true;
 int8_t t = 0;
 
+LINE l;
+double angle;
+int16_t linepos;
+
+uint8_t buf[10];
+uint8_t cnt;
+
 void Task_steeringDemo(void* p)
 {
-	LINE l;
-	double angle;
-	int16_t linepos;
-
 	motorSetDutyCycle(10);
 	steerSetAngle(3.1415/180 * 0);
 
@@ -79,28 +82,11 @@ void Task_steeringDemo(void* p)
 
 		angle = -1.0 * (linepos / 150.0) * (PI/3);
 
-		//steerSetAngle(angle);
+		steerSetAngle(angle);
 
-		uint8_t p[6];
-		if (l.d > 0)
-		{
-			p[0] = l.d % 100 + 0x30;
-			p[1] = l.d % 10 + 0x30;
-			p[2] = l.d + 0x30;
-			p[3] = '\r';
-			p[4] = '\n';
-		}
-		else
-		{
-			p[0] = '-';
-			p[1] = l.d % 100 + 0x30;
-			p[2] = l.d % 10 + 0x30;
-			p[3] = l.d + 0x30;
-			p[4] = '\r';
-			p[5] = '\n';
-		}
+		cnt = printInt(linepos, buf);
 
-		if( enab == true )
+		/*if( enab == true )
 		{
 			t++;
 			steerSetAngle(t * 3.14/180);
@@ -109,13 +95,33 @@ void Task_steeringDemo(void* p)
 			{
 				t = -15;
 			}
-		}
+		}*/
 
 		//traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
-		bspUartTransmit_IT(Uart_USB, p, sizeof(p));
+		bspUartTransmit_IT(Uart_USB, buf, cnt);
 
-		vTaskDelay(100);
+		vTaskDelay(1000);
     }
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+static int printInt(int x, uint8_t* buf)
+{
+	int i = 0;
+
+	if (x < 0)
+	{
+		buf[0] = '-';
+		x *= -1;
+		i++;
+	}
+
+	buf[i+0] = x / 100 + '0';
+	buf[i+1] = (x % 100) / 10 + '0';
+	buf[i+2] = (x %  10) + '0';
+	buf[i+3] = '\r';
+	buf[i+4] = '\n';
+
+	return i + 5;
+}

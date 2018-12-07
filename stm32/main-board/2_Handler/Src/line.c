@@ -42,7 +42,8 @@ static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 
 void lineInit()
 {
-    bspUartReceive_IT(Uart_LineFront, &rxbuf_front[rxcnt_front], 1);
+	rxcnt_front = 0;
+	bspUartReceive_IT(Uart_LineFront, &rxbuf_front[rxcnt_front], 1);
 }
 
 LINE lineGet()
@@ -69,19 +70,17 @@ LINE lineGet()
     }*/
 
     // Get temporary data
-    __disable_irq();
-        front = front_tmp;
-        rear  = rear_tmp;
-    __enable_irq();
+	front = front_tmp;
+	//rear  = rear_tmp;
 
     // Get center line position
     for (i = 0; i < front.cnt; i++)
         x_front += front.lines[i];
     x_front /= front.cnt;
 
-    for (i = 0; i < rear.cnt; i++)
+    /*for (i = 0; i < rear.cnt; i++)
         x_rear += rear.lines[i];
-    x_rear /= rear.cnt;
+    x_rear /= rear.cnt;*/
 
     //return Descartes2Polar(x_rear, Y_REAR, x_front, Y_FRONT);
 
@@ -121,7 +120,9 @@ void bspLineFrontRxCpltCallback (void)
 
 		if (tmplen == sizeof(LINE_SENSOR_OUT))
 		{
-			memcpy((uint8_t*) &front_tmp, tmp, sizeof(LINE_SENSOR_OUT));
+			//memcpy((uint8_t*) &front_tmp, tmp, sizeof(LINE_SENSOR_OUT));
+
+			front_tmp = *((LINE_SENSOR_OUT*) &tmp);
 		}
 		else
 		{
