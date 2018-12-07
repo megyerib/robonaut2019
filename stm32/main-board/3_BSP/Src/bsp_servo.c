@@ -93,11 +93,11 @@ void bspServoSetCompare(const uint32_t value)
 	uint32_t valid_value = value;
 
 	// Makes sure that the value is in the valid interval
-	if(value < hsrv.Right_End)
+	if(value > hsrv.Right_End)
 	{
 		valid_value = hsrv.Right_End;
 	}
-	else if(value > hsrv.Left_End)
+	else if(value < hsrv.Left_End)
 	{
 		valid_value = hsrv.Left_End;
 	}

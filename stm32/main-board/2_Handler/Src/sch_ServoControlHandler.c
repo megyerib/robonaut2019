@@ -15,7 +15,7 @@
 
 // -------------------------------- Defines ---------------------------------//
 
-#define 	SCH_ACTUAL_SERVO	 SRV_FUTABAS3003   // Choose from SCH_ServoModel
+#define 	SCH_ACTUAL_SERVO	 SRV_SRT_CH6012   // Choose from SCH_ServoModel
 
 // --------------------------------------------------------------------------//
 
@@ -26,7 +26,8 @@
  */
 typedef enum SCH_ServoModel
 {
-	SRV_FUTABAS3003 		= 0
+	SRV_FUTABAS3003 		= 0,
+	SRV_SRT_CH6012
 } SCH_ServoModel;
 
 // --------------------------------------------------------------------------//
@@ -142,6 +143,39 @@ const eBSP_SrvInitStat sch_Configure_Servo()
 	  //   statement(s);
 	  //    break; /* optional */
 
+		   case SRV_SRT_CH6012:
+		   {
+			   // Chosen frequency of the servo.
+			   hsrv.PWM_freq 			= 250;						// [Hz] ~ (4 ms)
+
+			   // Calculated with known equations (bsp_servo.h)
+			   hsrv.PWM_cntr_freq 		= 62500;					// [Hz]
+			   hsrv.PWM_prescaler 		= 1343;
+			   hsrv.PWM_period 			= 249;
+
+			   // Measured  servo properties.
+			   hsrv.Left_End 			= 70;						// Defined by car 	(30° 0.846ms 53)
+			   hsrv.Deg_30 				= 76;						// 1.214ms	60° 	(60° 1.214ms 76)
+			   hsrv.Deg_90 				= 95;						// 1.52ms	90°		(90° 1.52ms  95)
+			   hsrv.Deg_150 			= 114;						// 1.82ms	120°	(120° 1.82ms 114)
+			   hsrv.Right_End 			= 118;						// Defined by car	(150° 2.17ms 136)
+
+			   // Characteristics:  y = m*x + b
+			   //
+			   //      pi     y_150 - y_90
+			   // m = ---- * --------------
+			   //     180     x_150 - x_90
+			   //
+			   // b = y_90 - x_90 * m
+			   //
+			   hsrv.Gradient = PI/180 * (120 - 90) / (hsrv.Deg_150 - hsrv.Deg_90);	// [rad/compare increment]
+			   hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;				// [rad]
+
+			   // Compensating the car installation error (offset).
+			   hsrv.CV_compensation = -1;
+
+			   break;
+		   }
 		default :
 			ret_val = SRV_INIT_FAIL_SRV_MODELL;
 	}
