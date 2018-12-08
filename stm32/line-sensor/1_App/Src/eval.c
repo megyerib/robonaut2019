@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file      eval.c
-//!  \brief
+//!  \brief		Evaluation of the ADC measuring. (Voltages -> Line positions)
 //!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ static  int     evalIsCross(uint32_t* arr, uint32_t threshold);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-LINE_SENSOR_OUT getLine(uint32_t measData[SENSOR_NUM])
+LINE_SENSOR_OUT getLine(uint32_t* measData)
 {
     uint32_t filtered[32];
     uint32_t i;
@@ -60,6 +60,16 @@ LINE_SENSOR_OUT getLine(uint32_t measData[SENSOR_NUM])
             ret.lines[ret.cnt] = evalWeightedMean(filtered, i);
             ret.cnt++;
         }
+        else if (ret.cnt >= MAXLINES)
+        {
+        	ret.cross = 1;
+        }
+    }
+
+    // Cross
+    if (evalIsCross(measData, avg + stdDev))
+    {
+    	ret.cross = 1;
     }
 
     // Return
