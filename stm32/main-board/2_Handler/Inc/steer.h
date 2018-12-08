@@ -18,5 +18,6 @@
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-void steeringInit();
-void steeringSetAngle(int8_t angle);
+void steerInit();
+void steerSetAngle(int8_t steerAngle);
+int8_t steerGetAngle();

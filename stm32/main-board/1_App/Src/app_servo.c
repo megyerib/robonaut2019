@@ -50,18 +50,30 @@ void Task_Servo(void* p)
 	double theta;
 	double degree;
 	uint32_t rate = LOG_RATE;
+	GPIO_PinState btn;
 
 	while(1)
 	{
-		bits = xEventGroupGetBits(event_sharp);
+//		bits = xEventGroupGetBits(event_sharp);
 
-		if(bits == 1)
+		/*if(bits == 1)
 		{
 			servoSetAngle(2*PI/3);
 		}
 		else
 		{
 			servoSetAngle(PI/3);
+		}*/
+
+		btn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+
+		if (btn == GPIO_PIN_RESET)
+		{
+			servoSetAngle(2*PI/3);
+		}
+		else
+		{
+			servoSetAngle(PI/2);
 		}
 
 		theta = servoGetAngle();
