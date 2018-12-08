@@ -86,7 +86,7 @@ void TaskInit_steeringDemo(void)
 
 void Task_steeringDemo(void* p)
 {
-	sch_Set_Servo_Angle(0);
+	servoSetAngle(0);
 
 	/*for (int i = 95; i >= 88; i--)
 	{
@@ -130,7 +130,7 @@ void Task_steeringDemo(void* p)
 
 		phi_a = e * Kp;
 
-		sch_Set_Servo_Angle(3.14159265359/180 * phi_a *2);
+		servoSetAngle(3.14159265359/180 * phi_a *2);
 
 		// END DELAY _______________________________________
 
