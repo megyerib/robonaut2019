@@ -72,6 +72,9 @@ LINE_SENSOR_OUT getLine(uint32_t* measData)
     	ret.cross = 1;
     }
 
+    // TODO Cross evaluation removed until further tuning
+    ret.cross = 0;
+
     // Return
     return ret;
 }
