@@ -56,6 +56,8 @@ void buttonInit()
 
 void buttonTriggerRead()
 {
+	int i;
+
 	for (i = 0; i < btnCount; i++)
 	{
 		// Read

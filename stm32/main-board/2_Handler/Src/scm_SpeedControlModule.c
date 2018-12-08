@@ -73,8 +73,8 @@ double scmControlLoop (double rn)
     double yn;
 
 	en = rn - y_prev[0];
-	un = scmTransferFunction(&piController, e_prev[0]);
-	yn = scmTransferFunction(&process, 	    u_prev[0]);
+	un = controllerTransferFunction(&piController, e_prev[0]);
+	yn = controllerTransferFunction(&process, 	    u_prev[0]);
 
 	e_prev[0] = en;
 	u_prev[0] = un;
