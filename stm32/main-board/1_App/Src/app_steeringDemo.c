@@ -10,7 +10,8 @@
 
 #include "app_common.h"
 #include "app_steeringDemo.h"
-#include "sch_ServoControlHandler.h"
+#include "trace.h"
+#include "servo.h"
 #include "motor.h"
 #include "line.h"
 #include "bsp_common.h"
@@ -48,7 +49,7 @@ static cFirstOrderTF contrPD;
 
 void TaskInit_steeringDemo(void)
 {
-    sch_Servo_Init();
+    servoInit();
 
     lineInit();
 
