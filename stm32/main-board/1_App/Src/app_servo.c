@@ -18,9 +18,15 @@
 #include "steer.h"
 #include "bsp_common.h"
 
+//TODO
+#include "tim.h"
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 #define LOG_RATE 	4
+#define		BSP_SRV_HTIM2			 	htim2
+#define		BSP_SRV_TIM_INSATNCE	 	TIM2
+#define		BSP_SRV_TIM_CHANNEL		 	TIM_CHANNEL_1
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
@@ -53,6 +59,7 @@ void Task_Servo(void* p)
 	uint32_t rate = LOG_RATE;
 	GPIO_PinState btn;
 	int enab = 0;
+	uint8_t comp = 114;
 
 	while(1)
 	{
@@ -73,22 +80,22 @@ void Task_Servo(void* p)
 		{
 			if (btn == GPIO_PIN_RESET)
 			{
-				servoSetAngle(2*PI/3);
+				steerSetAngle(-30*PI/180);
 			}
 			else
 			{
-				servoSetAngle(PI/2);
+				steerSetAngle(30*PI/180);
 			}
 		}
 		else
 		{
 			if (btn == GPIO_PIN_RESET)
 			{
-				steerSetAngle(30*PI/180);
+				steerSetAngle(-15*PI/180);
 			}
 			else
 			{
-				steerSetAngle(-30*PI/180);
+				steerSetAngle(15*PI/180);
 			}
 		}
 
