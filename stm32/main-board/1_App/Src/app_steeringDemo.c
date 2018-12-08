@@ -97,11 +97,11 @@ void Task_steeringDemo(void* p)
     {
 		// REMOTE CONTROL __________________________________
 
-		if (remoteGetState())
+		if (remoteGetState())      // ENABLED
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 		}
-		else
+		else                       // DISABLED
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			vTaskDelay(STTERINGDEMO_TASK_DELAY);
