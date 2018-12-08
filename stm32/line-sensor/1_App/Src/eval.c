@@ -15,7 +15,9 @@
 
 #define THRESHOLD         200
 #define SENSOR_NUM         32
+
 #define CROSS_MIN_HIGHCNT   5
+#define CROSS_MIN_LINECNT   4
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -38,10 +40,10 @@ LINE_SENSOR_OUT getLine(uint32_t* measData)
     uint32_t i;
     uint32_t avg;
     uint32_t stdDev;
+    int lineCnt = 0;
 
     LINE_SENSOR_OUT ret =
     {
-        .cnt   = 0,
         .cross = 0
     };
 
@@ -55,25 +57,28 @@ LINE_SENSOR_OUT getLine(uint32_t* measData)
     // Sensor line
     for (i = 0; i < 32; i++)
     {
-        if (ret.cnt < MAXLINES && evalIsPeak(filtered, i, avg, stdDev))
+        if (evalIsPeak(filtered, i, avg, stdDev))
         {
-            ret.lines[ret.cnt] = evalWeightedMean(filtered, i);
-            ret.cnt++;
-        }
-        else if (ret.cnt >= MAXLINES)
-        {
-        	ret.cross = 1;
+        	if (lineCnt < MAXLINES)
+			{
+				ret.lines[lineCnt] = evalWeightedMean(filtered, i);
+			}
+
+        	lineCnt++;
         }
     }
 
+    // Count
+    ret.cnt = lineCnt > MAXLINES ? MAXLINES : lineCnt;
+
     // Cross
-    if (evalIsCross(measData, avg + stdDev))
+    if (evalIsCross(filtered, avg + stdDev) || lineCnt > CROSS_MIN_LINECNT)
     {
     	ret.cross = 1;
     }
 
     // TODO Cross evaluation removed until further tuning
-    ret.cross = 0;
+    //ret.cross = 0;
 
     // Return
     return ret;
