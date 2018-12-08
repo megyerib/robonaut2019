@@ -94,6 +94,10 @@ void Task_steeringDemo(void* p)
 
 	while(1)
     {
+		// REMOTE CONTROL __________________________________
+
+		// STEERING ________________________________________
+
 		/*l = lineGet();
 
 		angle = -1.0 * (l.d / 150.0) * (PI/3);
@@ -111,6 +115,8 @@ void Task_steeringDemo(void* p)
 		phi_a = e * -5;
 
 		sch_Set_Servo_Angle(3.14159265359/180 * phi_a *2);
+
+		// END DELAY _______________________________________
 
 		vTaskDelay(5);
     }
