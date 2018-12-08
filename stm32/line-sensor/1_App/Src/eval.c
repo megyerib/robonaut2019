@@ -8,14 +8,14 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../1_App/Inc/eval.h"
-
-#include "../../2_BSP/Inc/math_common.h"
+#include "eval.h"
+#include "math_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define THRESHOLD 200
-#define SENSOR_NUM 32
+#define THRESHOLD         200
+#define SENSOR_NUM         32
+#define CROSS_MIN_HIGHCNT   5
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -24,10 +24,11 @@
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static uint32_t max4_pos(int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static void     magicDiff(uint32_t* src, uint32_t* dst);
-static int16_t  ledPosToMm(uint8_t ledPos);
-static int32_t evalWeightedMean(uint32_t* arr, uint32_t i);
+static     void magicDiff(uint32_t* src, uint32_t* dst);
+static  int16_t ledPosToMm(uint8_t ledPos);
+static  int32_t evalWeightedMean(uint32_t* arr, uint32_t i);
 static uint32_t evalIsPeak(uint32_t* arr, uint32_t i, uint32_t mean, uint32_t stdDev);
+static  int     evalIsCross(uint32_t* arr, uint32_t threshold);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -51,7 +52,7 @@ LINE_SENSOR_OUT getLine(uint32_t measData[SENSOR_NUM])
     avg = mean(filtered, 32);
     stdDev = standardDeviation(filtered, 32, avg);
 
-    // Szenzorsor
+    // Sensor line
     for (i = 0; i < 32; i++)
     {
         if (ret.cnt < MAXLINES && evalIsPeak(filtered, i, avg, stdDev))
@@ -61,7 +62,7 @@ LINE_SENSOR_OUT getLine(uint32_t measData[SENSOR_NUM])
         }
     }
 
-    // Visszatérés
+    // Return
     return ret;
 }
 
@@ -188,6 +189,29 @@ static uint32_t evalIsPeak(uint32_t* arr, uint32_t i, uint32_t mean, uint32_t st
             ||
             ( ((arr[i+1] + THRESHOLD) < arr[i]) && (arr[i-1] < arr[i]) );
     }
+}
+
+static int evalIsCross(uint32_t* arr, uint32_t threshold)
+{
+	int highCount = 0;
+	int ret = 0;
+
+	for (int i = 0; i < SENSOR_NUM; i++)
+	{
+		if (arr[i] < threshold)
+		{
+			highCount = 0;
+		}
+		else
+		{
+			highCount++;
+
+			if (highCount >= CROSS_MIN_HIGHCNT)
+				ret = 1;
+		}
+	}
+
+	return ret;
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
