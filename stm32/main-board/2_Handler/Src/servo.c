@@ -82,7 +82,7 @@ void servoSetAngle(const double theta)
 	uint32_t compare;
 	double theta2 = theta + PI/2;
 
-	// Calculate the position from the angle
+	// Calculate the position from the angle	TODO compensation corrupts the max angle of the servo in one direction
 	compare = (uint32_t)(((theta2 - hsrv.Y_intercept) / hsrv.Gradient) + hsrv.CV_compensation);
 
 	bspServoSetCompare(compare);
@@ -110,9 +110,9 @@ eBSP_SrvInitStat servoConfig()
 
 			hsrv.CV_compensation = -1;
 
-			// 3°/inc = PI/60 rad/inc
+			// 3ï¿½/inc = PI/60 rad/inc
 			hsrv.Gradient = PI/180 * (90-30)/(hsrv.Deg_90-hsrv.Deg_30);
-			// -192° = -PI*16/15 rad
+			// -192ï¿½ = -PI*16/15 rad
 			hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;
 			break;
 
