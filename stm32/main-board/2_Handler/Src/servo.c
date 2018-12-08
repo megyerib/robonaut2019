@@ -127,11 +127,11 @@ eBSP_SrvInitStat servoConfig()
 		   hsrv.PWM_period 			= 249;
 
 		   // Measured  servo properties.
-		   hsrv.Left_End 			= 62;						// Defined by car 	(30° 0.846ms 53)
-		   hsrv.Deg_30 				= 76;						// 1.214ms	60° 	(60° 1.214ms 76)
-		   hsrv.Deg_90 				= 95;						// 1.52ms	90°		(90° 1.52ms  95)
-		   hsrv.Deg_150 			= 114;						// 1.82ms	120°	(120° 1.82ms 114)
-		   hsrv.Right_End 			= 118;						// Defined by car	(150° 2.17ms 136)
+		   hsrv.Left_End 			= 62;						// Defined by car 	(30ï¿½ 0.846ms 53)
+		   hsrv.Deg_30 				= 76;						// 1.214ms	60ï¿½ 	(60ï¿½ 1.214ms 76)
+		   hsrv.Deg_90 				= 95;						// 1.52ms	90ï¿½		(90ï¿½ 1.52ms  95)
+		   hsrv.Deg_150 			= 114;						// 1.82ms	120ï¿½	(120ï¿½ 1.82ms 114)
+		   hsrv.Right_End 			= 118;						// Defined by car	(150ï¿½ 2.17ms 136)
 
 		   // Characteristics:  y = m*x + b
 		   //

@@ -118,7 +118,7 @@ void Task_steeringDemo(void* p)
 
 		angle = -1.0 * (l.d / 150.0) * (PI/3);
 
-		sch_Set_Servo_Angle(angle*2);
+		servoSetAngle(angle*2);
 
 		traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);*/
 
