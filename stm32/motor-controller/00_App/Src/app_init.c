@@ -12,6 +12,7 @@
 #include "bsp_pwm.h"
 #include "app_init.h"
 #include "bsp_communication.h"
+#include "bsp_emergency_stop.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -30,6 +31,7 @@ void APP_Init(void)
 	//BSP_ADCStart();
 	BSP_InitUART();
 	BSP_PWMStart();
+	//BSP_emergency_stop_init();
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
