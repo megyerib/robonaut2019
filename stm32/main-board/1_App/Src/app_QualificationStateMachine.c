@@ -11,11 +11,13 @@
 #include "app_common.h"
 #include "app_QualificationStateMachine.h"
 
-#include "trace.h"
-#include "servo.h"
-#include "sharp.h"
-#include "line.h"
 #include "motor.h"
+#include "line.h"
+#include "steer.h"
+#include "trace.h"
+#include "sharp.h"
+
+#include "servo.h"
 #include "scm_SpeedControlModule.h"
 #include "sharp.h"
 
@@ -48,9 +50,10 @@ void TaskInit_QSM (void)
 {
 	state = RobotCarState_Reset;
 
-	lineInit();
 	motorInit();
-	servoInit();
+	lineInit();
+	steerInit();
+	traceInit();
 	scmInitControllerPI();
 
 	xTaskCreate(Task_QSM,
