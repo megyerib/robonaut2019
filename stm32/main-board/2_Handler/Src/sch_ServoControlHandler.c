@@ -154,7 +154,7 @@ const eBSP_SrvInitStat sch_Configure_Servo()
 			   hsrv.PWM_period 			= 249;
 
 			   // Measured  servo properties.
-			   hsrv.Left_End 			= 70;						// Defined by car 	(30° 0.846ms 53)
+			   hsrv.Left_End 			= 62;						// Defined by car 	(30° 0.846ms 53)
 			   hsrv.Deg_30 				= 76;						// 1.214ms	60° 	(60° 1.214ms 76)
 			   hsrv.Deg_90 				= 95;						// 1.52ms	90°		(90° 1.52ms  95)
 			   hsrv.Deg_150 			= 114;						// 1.82ms	120°	(120° 1.82ms 114)
@@ -172,7 +172,7 @@ const eBSP_SrvInitStat sch_Configure_Servo()
 			   hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;				// [rad]
 
 			   // Compensating the car installation error (offset).
-			   hsrv.CV_compensation = -1;
+			   hsrv.CV_compensation = -4;
 
 			   break;
 		   }

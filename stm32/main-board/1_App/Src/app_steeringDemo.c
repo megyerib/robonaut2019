@@ -16,8 +16,11 @@
 #include "bsp_common.h"
 #include "bsp_uart.h"
 #include "controller.h"
+#include "remote.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define STTERINGDEMO_TASK_DELAY 5
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -48,6 +51,8 @@ void TaskInit_steeringDemo(void)
     sch_Servo_Init();
 
     lineInit();
+
+    remoteInit();
 
 	p_a   = 0;
 	e 	  = 0;
@@ -82,15 +87,25 @@ void Task_steeringDemo(void* p)
 {
 	sch_Set_Servo_Angle(0);
 
-	sch_Set_Servo_Angle(3.14/180*10);
-	sch_Set_Servo_Angle(3.14/180*20);
-	sch_Set_Servo_Angle(3.14/180*30);
-	sch_Set_Servo_Angle(3.14/180*40);
-	sch_Set_Servo_Angle(3.14/180*40);
+	/*for (int i = 95; i >= 88; i--)
+	{
+		bspServoSetCompare(i);
+	}*/
 
 	while(1)
     {
 		// REMOTE CONTROL __________________________________
+
+		if (remoteGetState())
+		{
+			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+		}
+		else
+		{
+			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+			vTaskDelay(STTERINGDEMO_TASK_DELAY);
+			continue; // Skip the loop iteration
+		}
 
 		// TRACTION ________________________________________
 
@@ -112,13 +127,13 @@ void Task_steeringDemo(void* p)
 
 		//phi_a = controllerTransferFunction(&contrPD, e);
 
-		phi_a = e * -5;
+		phi_a = e * Kp;
 
 		sch_Set_Servo_Angle(3.14159265359/180 * phi_a *2);
 
 		// END DELAY _______________________________________
 
-		vTaskDelay(5);
+		vTaskDelay(STTERINGDEMO_TASK_DELAY);
     }
 }
 
