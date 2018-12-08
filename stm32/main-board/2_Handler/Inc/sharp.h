@@ -31,7 +31,7 @@ SemaphoreHandle_t semSharp;
 
 //! @brief  Gets the calculated distance of the SHARP sensor safely.
 //! @retval Distance.
-const uint16_t sharpGetDistance ();
+uint16_t sharpGetDistance ();
 
 
 //! @brief  Sets the calculated distance of the SHARP sensor safely
