@@ -80,10 +80,6 @@ void TaskInit_steeringDemo(void)
 
 void Task_steeringDemo(void* p)
 {
-	LINE l;
-	double angle;
-
-	motorSetDutyCycle(10);
 	sch_Set_Servo_Angle(0);
 
 	sch_Set_Servo_Angle(3.14/180*10);
@@ -95,6 +91,10 @@ void Task_steeringDemo(void* p)
 	while(1)
     {
 		// REMOTE CONTROL __________________________________
+
+		// TRACTION ________________________________________
+
+		motorSetDutyCycle(10);
 
 		// STEERING ________________________________________
 

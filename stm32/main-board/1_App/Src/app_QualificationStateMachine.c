@@ -16,7 +16,7 @@
 #include "motor.h"
 #include "sch_ServoControlHandler.h"
 #include "scm_SpeedControlModule.h"
-#include "sds_SharpDistanceSensor.h"
+#include "sharp.h"
 
 //TODO: move to motor.h
 #include "bsp_uart.h"
@@ -82,7 +82,7 @@ void Task_QSM (void* p)
 	{
 		switch (state)
 		{
-			sharpDist = sds_GetDistance();
+			sharpDist = sharpGetDistance();
 
 			if (sharpDist < 20)
 			{
