@@ -31,7 +31,7 @@ void APP_Init(void)
 	//BSP_ADCStart();
 	BSP_InitUART();
 	BSP_PWMStart();
-	//BSP_emergency_stop_init();
+	BSP_emergency_stop_init();
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
