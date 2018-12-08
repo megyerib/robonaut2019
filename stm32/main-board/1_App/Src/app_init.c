@@ -14,6 +14,7 @@
 
 #include "app_cdt.h"
 #include "app_steeringDemo.h"
+#include "app_linefollow.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
