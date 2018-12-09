@@ -10,19 +10,16 @@
 
 #include "line.h"
 #include "bsp_uart.h"
-#include "math.h"
-
 #include "line_common.h"
 #include "uart_frame.h"
-
-#include <string.h> // Memcpy
+#include <math.h>
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define Y_FRONT (120) /* mm */
 #define Y_REAR  (-20) /* mm */
 
-#define BUFMAXLEN 256
+#define BUFMAXLEN 32
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -112,6 +109,9 @@ RoadSignal lineGetRoadSignal()
 
 // Interrupt handler callbacks -----------------------------
 
+int frameEnded = 0;
+int frameSuccess = 0;
+
 void bspLineFrontRxCpltCallback (void)
 {
 	uint8_t tmp[BUFMAXLEN];
@@ -124,6 +124,8 @@ void bspLineFrontRxCpltCallback (void)
 	}
 	else if (isUartFrameEnded(rxbuf_front, rxcnt_front))
 	{
+		frameEnded++;
+
 		convertFromUartFrame(rxbuf_front, tmp, rxcnt_front, &tmplen);
 
 		if (tmplen == sizeof(LINE_SENSOR_OUT))
@@ -134,6 +136,8 @@ void bspLineFrontRxCpltCallback (void)
 			{
 				front_tmp = *recentLine;
 			}
+
+			frameSuccess++;
 		}
 		else
 		{

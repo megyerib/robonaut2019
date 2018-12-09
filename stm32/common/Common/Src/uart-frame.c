@@ -12,7 +12,7 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define RX_BUF_MAX 256 /* for safety reasons */
+#define RX_BUF_MAX 20 /* for safety reasons */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -68,17 +68,29 @@ void convertToUartFrame(uint8_t* payload, uint8_t* frame, int payloadLen, int* f
 
 void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* payloadLen)
 {
-    int i, j = 0, end = 0, begin = 0;
+    int i;
+    int j     = 0;
+    int end   = 0;
 
-    for (i = 0; i < framelen; i++)
+    *payloadLen = 0;
+
+    // For safety reasons
+	if (framelen >= RX_BUF_MAX)
+		return;
+
+    // Search for frame begin
+    for (i = 0; i < framelen - 1; i++)
     {
-    	// Safety
-		if (i >= RX_BUF_MAX)
-		{
-			*payloadLen = 0;
-			return;
-		}
+    	if (frame[i] == ESCAPE_CHAR && frame[i+1] == frameBegin)
+    	{
+    		i += 2;
+    		break;
+    	}
+    }
 
+    // Process message
+    for (/* i is set */; i < framelen; i++)
+    {
     	if (frame[i] == ESCAPE_CHAR)
         {
             switch (frame[i+1])
@@ -91,15 +103,12 @@ void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* p
                 }
                 case frameBegin:
                 {
-                    begin = 1;
                 	j = 0;
                     break;
                 }
                 case frameEnd:
                 {
-                    if (begin)
-                    	end = 1;
-
+                    end = 1;
                     break;
                 }
             }
@@ -109,7 +118,7 @@ void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* p
             if (end)
                 break;
         }
-        else if (begin)
+        else
         {
 			// Ordinary character
 			payload[j] = frame[i];
@@ -117,12 +126,28 @@ void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* p
         }
     }
 
-    *payloadLen = j;
+    if (end)
+    	*payloadLen = j;
 }
 
 int isUartFrameEnded(uint8_t* frame, int framelen)
 {
-	return (frame[framelen-2] == ESCAPE_CHAR && frame[framelen-1] == frameEnd);
+	int ret = 0;
+
+	if (frame[framelen-2] == ESCAPE_CHAR && frame[framelen-1] == frameEnd)
+	{
+		// Has frame began?
+		for (int i = 0; i < framelen - 1; i++)
+		{
+			if (frame[i] == ESCAPE_CHAR && frame[i+1] == frameBegin)
+			{
+				ret = 1;
+				break;
+			}
+		}
+	}
+
+	return ret;
 }
 
 int isUartFrameValid(uint8_t* frame, int framelen)

@@ -72,12 +72,7 @@ float P, D;
 
 void Task_steeringDemo(void* p)
 {
-	servoSetAngle(0);
-
-	for (float i = 0.0f; i > -PI/2.0f; i -= 0.01)
-	{
-		servoSetAngle(i);
-	}
+	//servoSetAngle(0);
 
 	while(1)
     {
@@ -106,9 +101,9 @@ void Task_steeringDemo(void* p)
 
 		line_diff = line_pos - prevline;
 
-		P = line_pos  * (1.0 / 100.0f);
+		P = line_pos  * (1.0 / 90.0f);
 
-		D = line_diff * 1.8f;
+		D = line_diff * 1.6f;
 
 		angle = -0.75f * (P + D);
 
