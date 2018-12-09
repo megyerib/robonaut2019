@@ -36,9 +36,6 @@
 #define TRACE_DECIMALS_MTR_CURR					3
 #define TRACE_DECIMALS_CTRL_MTR_CURR			2
 
-//TODO
-#define TRACE_REC_HEADER						2
-#define TRACE_REC_SIZE							2
 #define TRACE_REC_ACCEL_SIZE					3
 #define TRACE_REC_STEER_SIZE					3
 #define TRACE_REC_PD_TD_SIZE    				8
@@ -46,19 +43,8 @@
 #define TRACE_REC_PD_KP_SIZE					8
 #define TRACE_REC_PD_KP_DECIMALS				4
 
-#define TRACE_REC_MSG_SIZE					(	TRACE_REC_HEADER +		\
-												TRACE_REC_SIZE +		\
-												1 +						\
-												1 +				 		\
-												1 +						\
-												1 +						\
-												TRACE_REC_ACCEL_SIZE +	\
-												1 +						\
-												TRACE_REC_STEER_SIZE +	\
-												1 +						\
-												TRACE_REC_PD_TD_SIZE +	\
-												TRACE_REC_PD_KP_SIZE	\
-											)
+#define TRACE_REC_MSG_SIZE						4 + 7 + 3+3+8+4+8+4 //TODO
+
 
 
 // Typedefs ------------------------------------------------------------------------------------------------------------

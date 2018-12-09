@@ -12,6 +12,8 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
+#define RX_BUF_MAX 256 /* for safety reasons */
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -34,7 +36,14 @@ void convertToUartFrame(uint8_t* payload, uint8_t* frame, int payloadLen, int* f
     // Payload
     for (i = 0; i < payloadLen; i++)
     {
-        if (payload[i] == ESCAPE_CHAR)
+    	// Safety
+		if (i >= RX_BUF_MAX)
+		{
+			*framelen = 0;
+			return;
+		}
+
+    	if (payload[i] == ESCAPE_CHAR)
         {
             frame[j] = ESCAPE_CHAR;
             j++;
@@ -63,7 +72,14 @@ void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* p
 
     for (i = 0; i < framelen; i++)
     {
-        if (frame[i] == ESCAPE_CHAR)
+    	// Safety
+		if (i >= RX_BUF_MAX)
+		{
+			*payloadLen = 0;
+			return;
+		}
+
+    	if (frame[i] == ESCAPE_CHAR)
         {
             switch (frame[i+1])
             {
@@ -118,6 +134,10 @@ int isUartFrameValid(uint8_t* frame, int framelen)
 
 	for (i = 0; i < framelen; i++)
 	{
+		// Safety
+		if (i >= RX_BUF_MAX)
+			return 0;
+
 		if (frame[i] == ESCAPE_CHAR)
 		{
 			if (frame[i+1] == frameBegin)

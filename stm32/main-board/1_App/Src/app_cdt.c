@@ -45,14 +45,8 @@ QueueHandle_t qLineD_u32;
 QueueHandle_t qLineTheta_u32;
 
 uint8_t btRxBuffer[TRACE_REC_MSG_SIZE];
-uint8_t tempTxBuffer[TRACE_REC_MSG_SIZE];
 
 QueueHandle_t qRecData;
-
-bool btReceived = false;
-
-cTraceRxBluetoothStruct recData;
-
 
 /* TODO BT extra feature
 uint8_t	txBtMsg0[16] = "AT+AB FWVersion\r";
@@ -74,7 +68,9 @@ uint8_t txEnter[2] = "\r\n";*/
 uint8_t sent = 0;
 uint8_t flag = 0;
 
-uint8_t usbTxBuffer[TRACE_REC_MSG_SIZE];
+//TODO delete this
+extern UART_HandleTypeDef huart5;
+uint8_t usbTxBuffer[15];
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -169,14 +165,14 @@ void Task_CarDiagnosticsTool(void* p)
 		if (bcmBluetoothConnected())
 		{
 			//TODO DEBUG
-			if(sent == 10)
+			/*if(sent == 10)
 			{
 				bcmSend(helloMsg, sizeof(helloMsg));
 				vTaskDelay(10);
 
 				sent = 0;
 			}
-			sent++;
+			sent++;*/
 			// END_DEBUG
 
 			if (btReceived == true)
@@ -189,6 +185,9 @@ void Task_CarDiagnosticsTool(void* p)
 			}
 
 			traceFlushData();
+
+			// TODO debug?
+			bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, 15);
 		}
 
 		vTaskDelay(200);
@@ -201,22 +200,27 @@ void Task_CarDiagnosticsTool(void* p)
 
 void bspUsbRxCpltCallback ()
 {
-	uint8_t len = TRACE_REC_MSG_SIZE;
+	uint8_t len = 15;
+	uint8_t buff[len];
 
-	memcpy(tempTxBuffer, usbTxBuffer, len);
+	memcpy(btRxBuffer, buff, len);
 
-	bspUartReceive_IT(Uart_USB, usbTxBuffer, 15);
+	bspUartReceive_IT(Uart_USB, buff, 15);
 }
 
 void bspBluetoothRxCpltCallback ()
 {
-	memcpy(tempTxBuffer, btRxBuffer, TRACE_REC_MSG_SIZE);
+	uint8_t len = 15;
+	cTraceRxBluetoothStruct recData;
 
-	//TODO
+	memcpy(usbTxBuffer, btRxBuffer, len);
+
 	//bspUartReceive_IT(Uart_Bluetooth, rxBuffer, 15);
-	bspUartTransmit_IT(Uart_USB, tempTxBuffer, TRACE_REC_MSG_SIZE);
+	bspUartTransmit_IT(Uart_USB, usbTxBuffer, len);
 
-	btReceived = true;
+	recData = traceProcessRxData(btRxBuffer);
+
+	xQueueOverwrite(qRecData, (void*) &recData);
 }
 
 // THIS ONE WORKS!!!

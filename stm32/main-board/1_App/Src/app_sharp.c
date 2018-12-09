@@ -8,10 +8,10 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include "sharp.h"
 #include "app_sharp.h"
 
 #include "app_common.h"
+#include "sharp.h"
 #include "trace.h"
 
 #include "bsp_servoTimer.h"

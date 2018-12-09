@@ -15,7 +15,6 @@
 #include "app_cdt.h"
 #include "app_steeringDemo.h"
 #include "app_linefollow.h"
-#include "app_servo.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -32,21 +31,13 @@
 void Init()
 {
 	// Wait for the PSU init
-	//TODO ez itt jó? a perifériák már inicializálva vannak, nem veszélyes az?
+	//TODO ez itt jï¿½? a perifï¿½riï¿½k mï¿½r inicializï¿½lva vannak, nem veszï¿½lyes az?
 	HAL_Delay(2000);
 
 	bspInit();
 
-	// Must-Have
-	//TaskInit_CarDiagnosticsTool();
-
-
-	// TODO DEBUG	WARNING: Don't enable all of them at the same time!
-	//TaskInit_Servo();
-	//TaskInit_LineFollow();
-	//TaskInit_steeringDemo();
+	TaskInit_CarDiagnosticsTool();
 	TaskInit_steeringDemo();
-	// END_DEBUG
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
