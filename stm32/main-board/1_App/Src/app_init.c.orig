@@ -14,6 +14,7 @@
 
 #include "app_cdt.h"
 #include "app_steeringDemo.h"
+#include "app_linefollow.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -30,12 +31,18 @@
 void Init()
 {
 	// Wait for the PSU init
-	HAL_Delay(1000);
+	//TODO ez itt j�? a perif�ri�k m�r inicializ�lva vannak, nem vesz�lyes az?
+	HAL_Delay(2000);
 
 	bspInit();
 
+<<<<<<< HEAD
 	TaskInit_steeringDemo();
 	//TaskInit_CarDiagnosticsTool();
+=======
+	TaskInit_CarDiagnosticsTool();
+	TaskInit_steeringDemo();
+>>>>>>> joci
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

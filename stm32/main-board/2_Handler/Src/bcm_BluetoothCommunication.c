@@ -87,13 +87,13 @@ bool bcmTryConnectToCar (void)
 		//bspUartTransmit(Uart_USB, crLfMsg,    sizeof(crLfMsg), 	  1000);
 		bspUartTransmit(Uart_USB, connectMsg, sizeof(connectMsg), 1000);
 
-		bspUartTransmit_IT(Uart_Bluetooth, namingMsg,  sizeof(namingMsg));
-		bspUartReceive(Uart_Bluetooth, 	   connectRx,  sizeof(connectRx), 1000);
+		bspUartReceive_IT(Uart_Bluetooth, 	   connectRx,  sizeof(connectRx));
+		bspUartTransmit(Uart_Bluetooth, namingMsg,  sizeof(namingMsg), 1000);
 		bspUartTransmit(Uart_USB, namingMsg, sizeof(namingMsg), 1000);
 		bspUartTransmit(Uart_USB, connectRx,  sizeof(connectRx),  1000);
 
-		bspUartTransmit_IT(Uart_Bluetooth, sppConnectMsg, sizeof(sppConnectMsg));
-		bspUartReceive(Uart_Bluetooth,     sppConnectRx,  sizeof(sppConnectRx), 2000);
+		bspUartReceive_IT(Uart_Bluetooth, sppConnectRx,  sizeof(sppConnectRx));
+		bspUartTransmit(Uart_Bluetooth, sppConnectMsg, sizeof(sppConnectMsg), 1000);
 		bspUartTransmit(Uart_USB, sppConnectMsg, sizeof(sppConnectMsg), 1000);
 		bspUartTransmit(Uart_USB, sppConnectRx, sizeof(sppConnectRx),   1000);
 	}

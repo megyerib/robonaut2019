@@ -493,7 +493,11 @@ static eBspStatus bspUartLineFrontInit (void)
 
 	HAL_UART_MspInit(&huart3);
 
+<<<<<<< HEAD
 	HAL_NVIC_SetPriority(USART3_IRQn, 0, 1);
+=======
+	HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
+>>>>>>> joci
 	NVIC_EnableIRQ(USART3_IRQn);
 
 	return status;

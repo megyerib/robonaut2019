@@ -24,4 +24,4 @@
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-LINE_SENSOR_OUT getLine(uint32_t measData[SENSOR_NUM]);
+LINE_SENSOR_OUT getLine(uint32_t* measData);

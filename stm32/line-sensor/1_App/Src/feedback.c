@@ -8,9 +8,8 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../1_App/Inc/feedback.h"
-
-#include "../../2_BSP/Inc/ldriver.h"
+#include "feedback.h"
+#include "ldriver.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -34,6 +33,12 @@ void ledFeedback(LINE_SENSOR_OUT* line)
 
         ledval |= 1 << ledpos;
         ledval |= 1 << (ledpos + 1);
+    }
+
+    // Cross
+    if (line->cross)
+    {
+    	ledval = 0xFFFFFFFF; // Full line
     }
 
     writeLed(ledval);

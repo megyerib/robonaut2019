@@ -31,10 +31,9 @@ typedef enum
 //! @brief	Servo module init status. Init must check the selected type of the servo and the timer configuration.
 typedef enum
 {
-	SRV_INIT_OK 					  = 0,
+	SRV_INIT_OK 					= 0,
 	SRV_INIT_FAIL_SRV_MODELL,
 	SRV_INIT_FAIL_SRV_PWM,
-	SRV_INIT_FAIL_SRV_ALREADY_RUNNING
 } eBSP_SrvTimInitStat;
 
 //! @brief	Informations and configuration according to the given servo motor
@@ -57,11 +56,11 @@ typedef struct
 	uint16_t PWM_period;		//! 16 bit
 
 	//! Rotational properties
-	uint16_t Left_End;			//! element of [0°;90°] interval. IMPORTANT: Needed for compare value saturation!
+	uint16_t Left_End;			//! element of [0ï¿½;90ï¿½] interval. IMPORTANT: Needed for compare value saturation!
 	uint16_t Deg_30;
-	uint16_t Deg_90;			//! 1,5 ms ~ 90°
+	uint16_t Deg_90;			//! 1,5 ms ~ 90ï¿½
 	uint16_t Deg_150;
-	uint16_t Right_End;			//! element of [90°;180°] interval. IMPORTANT: Needed for compare value saturation!
+	uint16_t Right_End;			//! element of [90ï¿½;180ï¿½] interval. IMPORTANT: Needed for compare value saturation!
 
 	int16_t CV_compensation;   	//! Compare value compensation (most be set after every settings).
 
@@ -74,21 +73,21 @@ typedef struct
 //!
 //!     <-------------->
 //!     ____        T    ____
-//!    |    |           |         0°
+//!    |    |           |         0ï¿½
 //! ___|    |___________|
 //!     <-->
 //!      1ms
 //!
 //!     <-------------->
 //!     ______      T    ____
-//!    |      |         |         90°
+//!    |      |         |         90ï¿½
 //! ___|      |_________|
 //!     <---->
 //!      1.5ms
 //!
 //!     <-------------->
 //!     ________    T    ____
-//!    |        |       |        180°
+//!    |        |       |        180ï¿½
 //! ___|        |_______|
 //!     <------>
 //!        2ms

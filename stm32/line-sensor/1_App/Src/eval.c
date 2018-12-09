@@ -1,21 +1,23 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file      eval.c
-//!  \brief
+//!  \brief		Evaluation of the ADC measuring. (Voltages -> Line positions)
 //!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../1_App/Inc/eval.h"
-
-#include "../../2_BSP/Inc/math_common.h"
+#include "eval.h"
+#include "math_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define THRESHOLD 200
-#define SENSOR_NUM 32
+#define THRESHOLD         200
+#define SENSOR_NUM         32
+
+#define CROSS_MIN_HIGHCNT   5
+#define CROSS_MIN_LINECNT   4
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -24,23 +26,24 @@
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static uint32_t max4_pos(int32_t arg1, int32_t arg2, int32_t arg3, int32_t arg4);
-static void     magicDiff(uint32_t* src, uint32_t* dst);
-static int16_t  ledPosToMm(uint8_t ledPos);
-static int32_t evalWeightedMean(uint32_t* arr, uint32_t i);
+static     void magicDiff(uint32_t* src, uint32_t* dst);
+static  int16_t ledPosToMm(uint8_t ledPos);
+static  int32_t evalWeightedMean(uint32_t* arr, uint32_t i);
 static uint32_t evalIsPeak(uint32_t* arr, uint32_t i, uint32_t mean, uint32_t stdDev);
+static  int     evalIsCross(uint32_t* arr, uint32_t threshold);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-LINE_SENSOR_OUT getLine(uint32_t measData[SENSOR_NUM])
+LINE_SENSOR_OUT getLine(uint32_t* measData)
 {
     uint32_t filtered[32];
     uint32_t i;
     uint32_t avg;
     uint32_t stdDev;
+    int lineCnt = 0;
 
     LINE_SENSOR_OUT ret =
     {
-        .cnt   = 0,
         .cross = 0
     };
 
@@ -51,17 +54,33 @@ LINE_SENSOR_OUT getLine(uint32_t measData[SENSOR_NUM])
     avg = mean(filtered, 32);
     stdDev = standardDeviation(filtered, 32, avg);
 
-    // Szenzorsor
+    // Sensor line
     for (i = 0; i < 32; i++)
     {
-        if (ret.cnt < MAXLINES && evalIsPeak(filtered, i, avg, stdDev))
+        if (evalIsPeak(filtered, i, avg, stdDev))
         {
-            ret.lines[ret.cnt] = evalWeightedMean(filtered, i);
-            ret.cnt++;
+        	if (lineCnt < MAXLINES)
+			{
+				ret.lines[lineCnt] = evalWeightedMean(filtered, i);
+			}
+
+        	lineCnt++;
         }
     }
 
-    // Visszatérés
+    // Count
+    ret.cnt = lineCnt > MAXLINES ? MAXLINES : lineCnt;
+
+    // Cross
+    if (evalIsCross(filtered, avg + stdDev) || lineCnt > CROSS_MIN_LINECNT)
+    {
+    	ret.cross = 1;
+    }
+
+    // TODO Cross evaluation removed until further tuning
+    //ret.cross = 0;
+
+    // Return
     return ret;
 }
 
@@ -188,6 +207,29 @@ static uint32_t evalIsPeak(uint32_t* arr, uint32_t i, uint32_t mean, uint32_t st
             ||
             ( ((arr[i+1] + THRESHOLD) < arr[i]) && (arr[i-1] < arr[i]) );
     }
+}
+
+static int evalIsCross(uint32_t* arr, uint32_t threshold)
+{
+	int highCount = 0;
+	int ret = 0;
+
+	for (int i = 0; i < SENSOR_NUM; i++)
+	{
+		if (arr[i] < threshold)
+		{
+			highCount = 0;
+		}
+		else
+		{
+			highCount++;
+
+			if (highCount >= CROSS_MIN_HIGHCNT)
+				ret = 1;
+		}
+	}
+
+	return ret;
 }
 
 // END -----------------------------------------------------------------------------------------------------------------

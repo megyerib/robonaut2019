@@ -36,8 +36,33 @@
 #define TRACE_DECIMALS_MTR_CURR					3
 #define TRACE_DECIMALS_CTRL_MTR_CURR			2
 
+#define TRACE_REC_ACCEL_SIZE					3
+#define TRACE_REC_STEER_SIZE					3
+#define TRACE_REC_PD_TD_SIZE    				8
+#define TRACE_REC_PD_TD_DECIMALS				4
+#define TRACE_REC_PD_KP_SIZE					8
+#define TRACE_REC_PD_KP_DECIMALS				4
+
+#define TRACE_REC_MSG_SIZE						4 + 7 + 3+3+8+4+8+4 //TODO
+
+
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
+
+typedef struct
+{
+	bool    RecCmdStop;			// 1
+	bool    RecCmdFollowLine;
+	bool    RecCmdSelfTest;
+	bool    RecCmdAccelerate;
+	uint8_t RecDataAccelerate;	// 5
+	bool    RecCmdSteer;
+	uint8_t RecDataSteer;
+	bool    RecCmdPdTd;
+	double  RecDataPdTd_d;
+	bool    RecCmdPdKp_x;
+	double  RecDataPdKp_d;
+} cTraceRxBluetoothStruct;
 
 // Variables -----------------------------------------------------------------------------------------------------------
 
@@ -55,3 +80,8 @@ void traceBluetooth (const eBluetoothLogMember destination, void* const data);
 
 //! Sends out the bluetooth log message. The latest data in the queues will be sent out.
 void traceFlushData (void);
+
+cTraceRxBluetoothStruct traceReceiveBluetooth (void);
+
+//! TODO
+cTraceRxBluetoothStruct traceProcessRxData (uint8_t* const buffer);

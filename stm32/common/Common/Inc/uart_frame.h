@@ -13,6 +13,7 @@
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define ESCAPE_CHAR (0xFF)
+#define UFRAME_BUFMAX     (  32)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -22,6 +23,31 @@ typedef enum
     frameEnd
 }
 SPECIAL_CHAR;
+
+typedef enum
+{
+	init,
+	out_resetbuf,
+	out_rx,
+	out_begincheck,
+	out_ovrcheck,
+	in_resetbuf,
+	in_rx,
+	in_endcheck,
+	in_ovrcheck,
+	in_process
+}
+UARTFRAME_STATE;
+
+/*typedef struct
+{
+	UARTFRAME_STATE state;
+	uint8_t         rxBuf[BUFSIZE];
+	uint8_t         rxBufSize;
+	uint8_t         payloadBuf[BUFSIZE];
+	uint8_t         payloadBufSize;
+}
+UART_FRAME_PROCESSOR;*/
 
 // Variables -----------------------------------------------------------------------------------------------------------
 
