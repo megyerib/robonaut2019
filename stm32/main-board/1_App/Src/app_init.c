@@ -32,7 +32,7 @@ void Init()
 {
 	// Wait for the PSU init
 	//TODO ez itt j�? a perif�ri�k m�r inicializ�lva vannak, nem vesz�lyes az?
-	HAL_Delay(1000);
+	HAL_Delay(2000);
 
 	bspInit();
 

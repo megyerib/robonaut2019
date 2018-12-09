@@ -33,4 +33,11 @@ double controllerTransferFunction (cFirstOrderTF* tf, double an)
 	return bn;
 }
 
+void controllerPdConfigure (cFirstOrderTF* const tf, const double Kp, const double Td, const double T)
+{
+	tf->a1 = T;
+	tf->b0 = Kp;
+	tf->b1 = Kp*Td;
+}
+
 // Local (static) function definitions ---------------------------------------------------------------------------------

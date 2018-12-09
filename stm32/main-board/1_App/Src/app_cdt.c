@@ -8,17 +8,17 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../1_App/Inc/app_cdt.h"
+#include "app_cdt.h"
 
-#include "../../1_App/Inc/app_common.h"
-#include "../../2_Handler/Inc/trace.h"
-#include "../../3_BSP/Inc/bsp_uart.h"
+#include "app_common.h"
+#include "trace.h"
+#include "bsp_uart.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-QueueHandle_t qSharpDistance_u32;	// 1
+QueueHandle_t qSharpDistance_u32;		// 1
 QueueHandle_t qSharpCollWarn_x;
 QueueHandle_t qServoAngle_d;
 QueueHandle_t qInertAccelX_d;
@@ -27,7 +27,7 @@ QueueHandle_t qInertAccelZ_d;
 QueueHandle_t qInertAngVelX_d;
 QueueHandle_t qInertAngVelY_d;
 QueueHandle_t qInertAngVelZ_d;
-QueueHandle_t qNaviN_d;				// 10
+QueueHandle_t qNaviN_d;					// 10
 QueueHandle_t qNaviE_d;
 QueueHandle_t qNaviTheta_d;
 QueueHandle_t qEncVel_d;
@@ -37,14 +37,19 @@ QueueHandle_t qTof3Distance_u32;
 QueueHandle_t qMtrMainBatVolt_d;
 QueueHandle_t qMtrSecBatVolt_d;
 QueueHandle_t qMtrCurr_d;
-QueueHandle_t qMtrSysCurr_u32;		// 20
+QueueHandle_t qMtrSysCurr_u32;			// 20
 QueueHandle_t qMtrSrvCurr_u32;
 QueueHandle_t qMtrCmdStopEngine_x;
 QueueHandle_t qCtrlMtrCurr_d;
 QueueHandle_t qLineD_u32;
 QueueHandle_t qLineTheta_u32;
 
-/*uint8_t	txBtMsg0[16] = "AT+AB FWVersion\r";
+uint8_t btRxBuffer[TRACE_REC_MSG_SIZE];
+
+QueueHandle_t qRecData;
+
+/* TODO BT extra feature
+uint8_t	txBtMsg0[16] = "AT+AB FWVersion\r";
 uint8_t txBtMsg1[25] = "AT+AB LocalName Override\r";
 uint8_t txBtMsg2[19] = "AT+AB GetBDAddress\r";
 uint8_t txBtMsg3[16] = "AT+AB Discovery\r";
@@ -63,6 +68,10 @@ uint8_t txEnter[2] = "\r\n";*/
 uint8_t sent = 0;
 uint8_t flag = 0;
 
+//TODO delete this
+extern UART_HandleTypeDef huart5;
+uint8_t usbTxBuffer[15];
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -70,7 +79,7 @@ uint8_t flag = 0;
 //! @brief	Initializes the Task_CarDiagnosticsTool task.
 void TaskInit_CarDiagnosticsTool(void)
 {
-	bcmInit();
+	traceInit();
 
 	qSharpDistance_u32  = xQueueCreate( 1, sizeof( uint32_t ) );	// 1
 	qSharpCollWarn_x    = xQueueCreate( 1, sizeof( bool ) );
@@ -100,13 +109,17 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	// Atollic debug queues
 	vQueueAddToRegistry(qSharpDistance_u32, "SharpDistance");
-	vQueueAddToRegistry(qSharpCollWarn_x, "SharpColWarn");
-	vQueueAddToRegistry(qEncVel_d, "EncVel");
-	vQueueAddToRegistry(qTof1Distance_u32, "Tof1Dist");
-	vQueueAddToRegistry(qTof2Distance_u32, "Tof2Dist");
-	vQueueAddToRegistry(qTof3Distance_u32, "Tof3Dist");
-	vQueueAddToRegistry(qMtrSrvCurr_u32, "MtrSrvCurr");
-	vQueueAddToRegistry(qCtrlMtrCurr_d, "CtrlMtrCurr");
+	vQueueAddToRegistry(qSharpCollWarn_x,   "SharpColWarn");
+	vQueueAddToRegistry(qEncVel_d, 		    "EncVel");
+	vQueueAddToRegistry(qTof1Distance_u32,  "Tof1Dist");
+	vQueueAddToRegistry(qTof2Distance_u32,  "Tof2Dist");
+	vQueueAddToRegistry(qTof3Distance_u32,  "Tof3Dist");
+	vQueueAddToRegistry(qMtrSrvCurr_u32,    "MtrSrvCurr");
+	vQueueAddToRegistry(qCtrlMtrCurr_d,     "CtrlMtrCurr");
+
+	qRecData = xQueueCreate( 1, sizeof( cTraceRxBluetoothStruct ) );
+
+	vQueueAddToRegistry(qRecData, "RecData");
 
 	xTaskCreate(Task_CarDiagnosticsTool,
 				"TASK_CAR_DIAGNOSTICS_TOOL",
@@ -141,6 +154,9 @@ void Task_CarDiagnosticsTool(void* p)
 
 	uint8_t helloMsg[18] = "Hello Override\r\n";
 
+
+	bspUartReceive_IT(Uart_USB, btRxBuffer, 15);
+	bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, 15);
 //	UBaseType_t cdtStackUsage;
 //	cdtStackUsage = uxTaskGetStackHighWaterMark(NULL);
 
@@ -164,6 +180,9 @@ void Task_CarDiagnosticsTool(void* p)
 			// END_DEBUG
 
 			traceFlushData();
+
+			// TODO debug?
+			bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, 15);
 		}
 
 		vTaskDelay(200);
@@ -172,6 +191,32 @@ void Task_CarDiagnosticsTool(void* p)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
+
+
+void bspUsbRxCpltCallback ()
+{
+	uint8_t len = 15;
+	uint8_t buff[len];
+
+	memcpy(btRxBuffer, buff, len);
+
+	bspUartReceive_IT(Uart_USB, buff, 15);
+}
+
+void bspBluetoothRxCpltCallback ()
+{
+	uint8_t len = 15;
+	cTraceRxBluetoothStruct recData;
+
+	memcpy(usbTxBuffer, btRxBuffer, len);
+
+	//bspUartReceive_IT(Uart_Bluetooth, rxBuffer, 15);
+	bspUartTransmit_IT(Uart_USB, usbTxBuffer, len);
+
+	recData = traceProcessRxData(btRxBuffer);
+
+	xQueueOverwrite(qRecData, (void*) &recData);
+}
 
 // THIS ONE WORKS!!!
 /*uint8_t uzenet[19] = "AT+AB GetBDAddress\r";

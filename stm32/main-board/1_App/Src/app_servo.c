@@ -20,6 +20,8 @@
 
 //TODO
 #include "tim.h"
+#include "motor.h"
+
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -63,9 +65,9 @@ void Task_Servo(void* p)
 
 	while(1)
 	{
-//		bits = xEventGroupGetBits(event_sharp);
+		/*bits = xEventGroupGetBits(event_sharp);
 
-		/*if(bits == 1)
+		if(bits == 1)
 		{
 			servoSetAngle(2*PI/3);
 		}
@@ -81,24 +83,24 @@ void Task_Servo(void* p)
 			if (btn == GPIO_PIN_RESET)
 			{
 				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-				steerSetAngle(-30*PI/180);
+				steerSetAngle(15*PI/180);
 			}
 			else
 			{
 				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-				steerSetAngle(30*PI/180);
+				steerSetAngle(0*PI/180);
 			}
 		}
 		else
 		{
-			if (btn == GPIO_PIN_RESET)
-			{
-				steerSetAngle(-15*PI/180);
-			}
-			else
+			/*if (btn == GPIO_PIN_RESET)
 			{
 				steerSetAngle(15*PI/180);
 			}
+			else
+			{
+				steerSetAngle(0*PI/180);
+			}*/
 		}
 
 
