@@ -175,14 +175,14 @@ void Task_CarDiagnosticsTool(void* p)
 			sent++;*/
 			// END_DEBUG
 
-			if (btReceived == true)
+			/*if (btReceived == true)
 			{
 				recData = traceProcessRxData(btRxBuffer);
 				//xQueueOverwrite(qRecData, (void*) &recData);
 
 				// TODO debug?
 				bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);
-			}
+			}*/
 
 			traceFlushData();
 

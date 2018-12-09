@@ -88,10 +88,10 @@ double servoGetAngle()
 void servoSetAngle(const double theta)
 {
 	uint32_t compare;
-	//TODO double theta2 = theta + PI/2;
+	double theta2 = theta + PI/2;
 
 	// Calculate the position from the angle	TODO compensation corrupts the max angle of the servo in one direction
-	compare = (uint32_t)( ((theta - hsrv.Y_intercept - hsrv.CV_compensation) / hsrv.Gradient) );
+	compare = (uint32_t)(((theta2 - hsrv.Y_intercept) / hsrv.Gradient) + hsrv.CV_compensation);
 
 	bspServoTimSetCompare(compare);
 }
