@@ -43,7 +43,12 @@ uint8_t pwm = 10;
 
 static cFirstOrderTF contrPD;*/
 
+double prev_p;
+static double Kd;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
+
+static int printInt(int x, uint8_t* buf);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -55,6 +60,29 @@ void TaskInit_steeringDemo(void)
 
     remoteInit();
 
+<<<<<<< HEAD
+=======
+	p_a   = 0;
+	e 	  = 0;
+	p 	  = -0.1;
+	phi_a = 0;
+	v 	  = 2.5;
+	L 	  = 0.275;
+
+	Kp = -4/(v*L);
+	Td = 0.001; //0.0217;
+	T  = 10*Td;
+
+	contrPD.an_past = 0;
+	contrPD.bn_past = 0;
+	contrPD.a1 = T;
+	contrPD.b0 = Kp;
+	contrPD.b1 = Kp*Td;
+
+
+	Kd = 10;
+
+>>>>>>> da0801dbf91969c4b057c3bbb31d9223cf674917
     xTaskCreate(Task_steeringDemo,
                 "TASK_DEMO",
                 DEFAULT_STACK_SIZE,
@@ -68,24 +96,49 @@ float line_pos  = 0;
 float line_diff = 0;
 float prevline = 0;
 
+<<<<<<< HEAD
 int actuateEnabled;
 
 int motor_d;
+=======
+bool enab = true;
+int8_t t = 0;
 
-float P, D;
+LINE l;
+double angle;
+int16_t linepos;
+
+uint8_t buf[10];
+uint8_t cnt;
 
 void Task_steeringDemo(void* p)
 {
+	servoSetAngle(0);
+>>>>>>> da0801dbf91969c4b057c3bbb31d9223cf674917
+
+float P, D;
+
+<<<<<<< HEAD
+void Task_steeringDemo(void* p)
+{
+=======
+	HAL_Delay(2000);
+
+	steerSetAngle(3.1415/180 * 30);
+
+
+
+>>>>>>> da0801dbf91969c4b057c3bbb31d9223cf674917
 	while(1)
     {
 		// REMOTE CONTROL __________________________________
 
-		if (remoteGetState())
+		if (remoteGetState())      // ENABLED
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			actuateEnabled = 1;
 		}
-		else
+		else                       // DISABLED
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			vTaskDelay(STTERINGDEMO_TASK_DELAY);
@@ -94,7 +147,12 @@ void Task_steeringDemo(void* p)
 
 		// TRACTION ________________________________________
 
+<<<<<<< HEAD
 		motor_d = 12;
+=======
+		motorSetDutyCycle(10);
+		traceBluetooth(BCM_LOG_ENC_VEL, 10);
+>>>>>>> da0801dbf91969c4b057c3bbb31d9223cf674917
 
 		// STEERING ________________________________________
 
@@ -104,13 +162,27 @@ void Task_steeringDemo(void* p)
 
 		line_diff = line_pos - prevline;
 
+<<<<<<< HEAD
 		P = line_pos  * (1.0 / 90.0f);
+=======
+		servoSetAngle(angle*2);
+>>>>>>> da0801dbf91969c4b057c3bbb31d9223cf674917
 
 		D = line_diff * 1.6f;
 
+<<<<<<< HEAD
 		angle = -0.75f * (P + D);
 
 		// ACTUATE _________________________________________
+=======
+
+		prev_p = p_meas;
+
+		p_meas = lineGet().d;
+		traceBluetooth(BCM_LOG_LINE_D, &p_meas);
+
+		//e = p_a - p_meas;
+>>>>>>> da0801dbf91969c4b057c3bbb31d9223cf674917
 
 		if (actuateEnabled)
 		{
@@ -118,11 +190,18 @@ void Task_steeringDemo(void* p)
 			servoSetAngle(angle);
 		}
 
+<<<<<<< HEAD
 		// TRACE ___________________________________________
 
 		//traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
 		//traceBluetooth(BCM_LOG_LINE_D, &linepos);
 		//traceBluetooth(BCM_LOG_ENC_VEL, 10);
+=======
+		phi_a = -1 * p_meas / 120 * 0.75 + Kd * (prev_p - p_meas);
+
+		servoSetAngle(phi_a);
+		traceBluetooth(BCM_LOG_SERVO_ANGLE, &phi_a);
+>>>>>>> da0801dbf91969c4b057c3bbb31d9223cf674917
 
 		// END DELAY _______________________________________
 
@@ -131,3 +210,23 @@ void Task_steeringDemo(void* p)
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+static int printInt(int x, uint8_t* buf)
+{
+	int i = 0;
+
+	if (x < 0)
+	{
+		buf[0] = '-';
+		x *= -1;
+		i++;
+	}
+
+	buf[i+0] = x / 100 + '0';
+	buf[i+1] = (x % 100) / 10 + '0';
+	buf[i+2] = (x %  10) + '0';
+	buf[i+3] = '\r';
+	buf[i+4] = '\n';
+
+	return i + 5;
+}

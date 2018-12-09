@@ -19,6 +19,9 @@
 
 #include "servo.h"
 #include "scm_SpeedControlModule.h"
+#include "sharp.h"
+
+//TODO: move to motor.h
 #include "bsp_uart.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -49,7 +52,7 @@ void TaskInit_QSM (void)
 
 	motorInit();
 	lineInit();
-	steerInit(SRV_SRT_CH6012);
+	steerInit();
 	traceInit();
 	scmInitControllerPI();
 

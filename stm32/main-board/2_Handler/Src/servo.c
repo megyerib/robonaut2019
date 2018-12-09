@@ -12,14 +12,24 @@
 #include "bsp_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define 	SERVO_ACTUAL_TYPE	 	SRV_SRT_CH6012   // Choose from eServoModel
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//! @brief	Available types of servos.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+typedef enum
+{
+	SRV_FUTABAS3003 		= 0,		// Joci's servo.		Analog
+	SRV_MAVERICK_MS22,					// Car' basic servo.	Analog
+	SRV_SRT_CH6012						// From model shop.		Digital
+} eServoModel;
+
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 extern cBSP_SrvHandleTypeDef hsrv;
-
-static eServoModel actualServo;
-
-static uint8_t alreadyInited = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -30,36 +40,25 @@ eBSP_SrvTimInitStat servoConfig();
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-eBSP_SrvTimInitStat servoInit(eServoModel myServoModel)
+eBSP_SrvTimInitStat servoInit(void)
 {
 	eBSP_SrvTimInitStat ret_val = SRV_INIT_OK;
 
-	if (alreadyInited == 0)
+	ret_val = servoConfig();
+
+	if(ret_val == SRV_INIT_OK)
 	{
-		actualServo = myServoModel;
+		// Valid servo model was chosen.
 
-		ret_val = servoConfig();
-
-		if(ret_val == SRV_INIT_OK)
-		{
-			// Valid servo model was chosen.
-
-			// Configure the TIM PWM, if error occurs TIM clk is disabled.
-			bspServoTimInit();
-		}
-		else
-		{
-			// Error: No valid servo motor was selected.
-
-			// Disable CLK
-			bspServoTimDisable();
-		}
-
-		alreadyInited = 1;
+		// Configure the TIM PWM, if error occurs TIM clk is disabled.
+		bspServoTimInit();
 	}
 	else
 	{
-		ret_val = SRV_INIT_FAIL_SRV_ALREADY_RUNNING;
+		// Error: No valid servo motor was selected.
+
+		// Disable CLK
+		bspServoTimDisable();
 	}
 
 	return ret_val;
@@ -73,25 +72,26 @@ double servoGetAngle()
 	// Actual position.
 	compare = bspServoTimGetCompare();
 
+//TODO
 	// angle = m*compare + b + compensation
 	return angle = compare * hsrv.Gradient + hsrv.Y_intercept + hsrv.CV_compensation;
 }
 
 //! Servo Anlge:
 //!
-//!           120°  90°  60°
+//!           60ï¿½  90ï¿½  120ï¿½
 //!              \  |  /
 //!               \ | /
-//!     180°_______\|/________0°
+//!       0ï¿½_______\|/________180ï¿½
 //!   Left end               Right end
 //!
 void servoSetAngle(const double theta)
 {
 	uint32_t compare;
-	//TODO double theta2 = theta + PI/2;
+	double theta2 = theta + PI/2;
 
-	// Calculate the position from the angle:  compare = (angle - b - compensation) / m
-	compare = (uint32_t)( ((theta - hsrv.Y_intercept - hsrv.CV_compensation) / hsrv.Gradient) );
+	// Calculate the position from the angle	TODO compensation corrupts the max angle of the servo in one direction
+	compare = (uint32_t)(((theta2 - hsrv.Y_intercept) / hsrv.Gradient) + hsrv.CV_compensation);
 
 	bspServoTimSetCompare(compare);
 }
@@ -102,7 +102,7 @@ eBSP_SrvTimInitStat servoConfig()
 {
 	eBSP_SrvTimInitStat ret_val = SRV_INIT_OK;
 
-	switch(actualServo)
+	switch(SERVO_ACTUAL_TYPE)
 	{
 		case SRV_MAVERICK_MS22:
 		{
@@ -114,12 +114,12 @@ eBSP_SrvTimInitStat servoConfig()
 
 			hsrv.Left_End  			= 68;							// TODO
 			hsrv.Deg_30    			= 74;							// TODO
-			hsrv.Deg_90    			= 70;							// TODO
+			hsrv.Deg_90    			= 91;							// TODO
 			hsrv.Deg_150   			= 113;							// TODO
-			hsrv.Right_End 			= 112;							// TODO
+			hsrv.Right_End 			= 114;							// TODO
 
-			hsrv.Gradient = PI/180 * (90-30)/(hsrv.Deg_90-hsrv.Deg_30); 		// 3°/inc = PI/60 rad/inc
-			hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;				// -192° = -PI*16/15 rad
+			hsrv.Gradient = PI/180 * (90-30)/(hsrv.Deg_90-hsrv.Deg_30); 		// 3ï¿½/inc = PI/60 rad/inc
+			hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;				// -192ï¿½ = -PI*16/15 rad
 
 			hsrv.CV_compensation 	= -1;
 			break;
@@ -135,11 +135,11 @@ eBSP_SrvTimInitStat servoConfig()
 		   hsrv.PWM_period 			= 249;
 
 		   // Measured  servo properties.
-		   hsrv.Left_End 			= 53;						// Defined by car 	(30° 0.846ms 53)
-		   hsrv.Deg_30 				= 76;						// 1.214ms	60° 	(60° 1.214ms 76)
-		   hsrv.Deg_90 				= 95;						// 1.52ms	90°		(90° 1.52ms  95)
-		   hsrv.Deg_150 			= 114;						// 1.82ms	120°	(120° 1.82ms 114)
-		   hsrv.Right_End 			= 136;						// Defined by car	(150° 2.17ms 136)
+		   hsrv.Left_End 			= 62;						// Defined by car 	(30ï¿½ 0.846ms 53)
+		   hsrv.Deg_30 				= 76;						// 1.214ms	60ï¿½ 	(60ï¿½ 1.214ms 76)
+		   hsrv.Deg_90 				= 95;						// 1.52ms	90ï¿½		(90ï¿½ 1.52ms  95)
+		   hsrv.Deg_150 			= 114;						// 1.82ms	120ï¿½	(120ï¿½ 1.82ms 114)
+		   hsrv.Right_End 			= 118;						// Defined by car	(150ï¿½ 2.17ms 136)
 
 		   // Characteristics:  y = m*x + b
 		   //
@@ -153,30 +153,9 @@ eBSP_SrvTimInitStat servoConfig()
 		   hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;				// [rad]
 
 		   // Compensating the car installation error (offset).
-		   hsrv.CV_compensation = 0;
+		   hsrv.CV_compensation = -4;
 
 		   break;
-	   }
-		case SRV_FUTABAS3003:
-		{
-/////////////////////////////////////////////// FUTBABA ////////////////////////////////////////////////////////////////
-			hsrv.PWM_freq 			= 50;							// [Hz] ~ (20ms)
-			hsrv.PWM_cntr_freq		= 50000;						// [Hz] from marLab homework
-			hsrv.PWM_prescaler 		= 1679;							// from marLab homework
-			hsrv.PWM_period    		= 999;							// from marLab homework
-
-			hsrv.Left_End  			= 28;							// from marLab homework 0°
-			hsrv.Deg_30    			= 42;							// measured
-			hsrv.Deg_90    			= 70;							// from marLab homework
-			hsrv.Deg_150   			= 97;							// measured
-			hsrv.Right_End 			= 112;							// from marLab homework 180°
-
-			hsrv.Gradient = PI/180 * (90-0)/(hsrv.Deg_90-hsrv.Left_End);
-			hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;
-
-			hsrv.CV_compensation 	= 0;
-/////////////////////////////////////////////// FUTBABA ////////////////////////////////////////////////////////////////
-			break;
 	   }
 		default :
 			ret_val = SRV_INIT_FAIL_SRV_MODELL;

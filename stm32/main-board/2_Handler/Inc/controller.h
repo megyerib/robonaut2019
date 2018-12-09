@@ -37,3 +37,5 @@ typedef struct
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 double controllerTransferFunction (cFirstOrderTF* tf, double an);
+
+void controllerPdConfigure (cFirstOrderTF* const tf, const double Kp, const double Td, const double T);

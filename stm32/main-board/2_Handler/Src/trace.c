@@ -41,6 +41,9 @@ extern QueueHandle_t qCtrlMtrCurr_d;
 extern QueueHandle_t qLineD_u32;
 extern QueueHandle_t qLineTheta_u32;
 
+extern QueueHandle_t qRecData;
+static cTraceRxBluetoothStruct btRxData;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 //! Converts a integer value to a unit8_t array so it can be sent out on bluetooth.
@@ -79,14 +82,27 @@ static bool traceWrapDouble (
 //! @return				the calculated bound
 static uint32_t traceGetBoundCharNum (const uint32_t digits);
 
+static uint32_t traceUnwrapInteger (uint8_t* const buffer, uint32_t begin, uint32_t size);
+
+static bool traceUnwrapBool (uint8_t* const buffer, uint32_t begin);
+
+static double traceUnwrapDouble (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals);
+
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void traceInit (void)
 {
 	bcmInit();
+
+	/* TODO DEBUG
+	uint8_t buff[12] = "0010-1053809";
+
+	uint32_t i = traceUnwrapInteger(buff, 1, 3);
+	bool x = traceUnwrapBool(buff, 0);
+	double d = traceUnwrapDouble(buff, 4, 8, 4);*/
 }
 
-void traceBluetooth(const eBluetoothLogMember destination, void* const data)
+void traceBluetooth (const eBluetoothLogMember destination, void* const data)
 {
 	// Select who sent the log request.
 	switch (destination)
@@ -279,6 +295,60 @@ void traceFlushData (void)
 	bcmBtBufferFlush();
 }
 
+cTraceRxBluetoothStruct traceProcessRxData (uint8_t* const buffer)
+{
+	cTraceRxBluetoothStruct dataSruct;
+	uint8_t rxDataSize = 0;
+	uint8_t index = 0;
+
+	rxDataSize = traceUnwrapInteger(buffer, 2, 2);
+	index = 4;
+
+	if (rxDataSize == TRACE_REC_MSG_SIZE)
+	{
+		dataSruct.RecCmdStop = traceUnwrapBool(buffer, index);
+		index++;
+
+		dataSruct.RecCmdFollowLine = traceUnwrapBool(buffer, index);
+		index++;
+
+		dataSruct.RecCmdSelfTest = traceUnwrapBool(buffer, index);
+		index++;
+
+		dataSruct.RecCmdAccelerate = traceUnwrapBool(buffer, index);
+		index++;
+
+		dataSruct.RecDataAccelerate = traceUnwrapInteger(buffer, index, TRACE_REC_ACCEL_SIZE);
+		index += TRACE_REC_ACCEL_SIZE;
+
+		dataSruct.RecCmdSteer = traceUnwrapBool(buffer, index);
+		index++;
+
+		dataSruct.RecDataSteer = traceUnwrapInteger(buffer, index, TRACE_REC_STEER_SIZE);
+		index += TRACE_REC_STEER_SIZE;
+
+		dataSruct.RecCmdPdTd = traceUnwrapBool(buffer, index);
+		index++;
+
+		dataSruct.RecDataPdTd_d = traceUnwrapDouble(buffer, index, TRACE_REC_PD_TD_SIZE, TRACE_REC_PD_TD_DECIMALS);
+		index += TRACE_REC_PD_TD_SIZE;
+
+		dataSruct.RecCmdPdKp_x = traceUnwrapBool(buffer, index);
+		index++;
+
+		dataSruct.RecDataPdKp_d = traceUnwrapDouble(buffer, index, TRACE_REC_PD_KP_SIZE, TRACE_REC_PD_KP_DECIMALS);
+		index += TRACE_REC_PD_KP_SIZE;
+	}
+
+	return dataSruct;
+}
+
+cTraceRxBluetoothStruct traceReceiveBluetooth (void)
+{
+	xQueueReceive(qRecData, &btRxData, 0);
+
+	return btRxData;
+}
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
@@ -425,4 +495,73 @@ static uint32_t traceGetBoundCharNum (const uint32_t digits)
 	}
 
 	return upBound;
+}
+
+static uint32_t traceUnwrapInteger (uint8_t* const buffer, uint32_t begin, uint32_t size)
+{
+	uint32_t retVal = 0;
+	uint8_t i = 0;
+
+	for (i = 0; i < size; i++)
+	{
+		retVal *= 10;
+		retVal += buffer[begin+i] - 0x30;
+	}
+
+	return retVal;
+}
+
+static bool traceUnwrapBool (uint8_t* const buffer, uint32_t begin)
+{
+	bool retVal = false;
+	uint8_t value;
+
+	value = buffer[begin] - 0x30;
+	if (value == 0)
+	{
+		retVal = false;
+	}
+	else
+	{
+		retVal = true;
+	}
+
+	return retVal;
+}
+
+static double traceUnwrapDouble (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals)
+{
+	uint32_t digits;
+	uint32_t decims;
+	double retVal;
+	uint8_t i = 0;
+	bool isNegative = false;
+
+	if (buffer[begin] == '-')
+	{
+		isNegative = true;
+		digits = traceUnwrapInteger(buffer, begin+1, size-decimals-1);
+	}
+	else
+	{
+		digits = traceUnwrapInteger(buffer, begin, size-decimals);
+	}
+
+	decims = traceUnwrapInteger(buffer, begin+size-decimals, decimals);
+
+	retVal = (double)decims;
+
+	for (i = 0; i < decimals; i++)
+	{
+		retVal /= 10;
+	}
+
+	retVal += digits;
+
+	if (isNegative == true)
+	{
+		retVal *= -1;
+	}
+
+	return retVal;
 }
