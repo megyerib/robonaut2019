@@ -13,20 +13,15 @@
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define PERIOD							500
-#define DEADTIME 						8
-#define DUTY_CYCLE_HALF_BRIDGE_MAX		0.95
+#define DEADTIME_HIGH					-10
+#define DEADTIME_LOW					-10
+
+#define DUTY_CYCLE_HALF_BRIDGE_MAX		0.85f
+#define DUTY_CYCLE_HALF_BRIDGE_MIN		(1.0f - DUTY_CYCLE_HALF_BRIDGE_MAX)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Variables -----------------------------------------------------------------------------------------------------------
-
-float DutyCycleHalfBridge1;
-float DutyCycleHalfBridge2;
-
-int32_t CompareValueHigh2;		//Transistor 3	(because PCB)
-int32_t CompareValueLow2;		//Transistor 4	(because PCB)
-int32_t CompareValueHigh1;		//Transistor 1	(because PCB)
-int32_t CompareValueLow1;
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 

@@ -11,11 +11,20 @@
 #include "bsp_pwm.h"
 #include "tim.h"
 
+#include "bsp_leds.h"
 // Defines -------------------------------------------------------------------------------------------------------------
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
+
+float DutyCycleHalfBridge1;
+float DutyCycleHalfBridge2;
+
+int32_t CompareValueHigh2;		//Transistor 3	(because PCB)
+int32_t CompareValueLow2;		//Transistor 4	(because PCB)
+int32_t CompareValueHigh1;		//Transistor 1	(because PCB)
+int32_t CompareValueLow1;		//Transistor 2	(because PCB)
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -25,15 +34,15 @@ void BSP_PWMStart()
 {
 	HAL_TIM_Base_Start(&htim1);
 
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PERIOD/2);	//to prevent any impulse on the output by starting
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, PERIOD/2);	//to prevent any impulse on the output by starting
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PERIOD/2);	//to prevent any impulse on the output by starting
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, PERIOD/2);	//to prevent any impulse on the output by starting
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, PERIOD+1);	//to prevent any impulse on the output by starting
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, PERIOD+1);	//to prevent any impulse on the output by starting
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PERIOD+1);	//to prevent any impulse on the output by starting
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, PERIOD+1);	//to prevent any impulse on the output by starting
 
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+	//HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	//HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+	//HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+	//HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
 }
 
 void BSP_CreateDutyCycle(float DutyCycle, float* DutyCycleHalfBridge1, float* DutyCycleHalfBridge2)
@@ -44,16 +53,20 @@ void BSP_CreateDutyCycle(float DutyCycle, float* DutyCycleHalfBridge1, float* Du
 
 void BSP_CreateCompareValue(float* DutyCycleHalfBridge, int32_t* CompareValueHigh, int32_t* CompareValueLow)
 {
-	if( *DutyCycleHalfBridge < DUTY_CYCLE_HALF_BRIDGE_MAX)		//If the duty cycle of the half-bridge is "normal"
+	float dutyCycle = *DutyCycleHalfBridge;
+
+	if (dutyCycle > DUTY_CYCLE_HALF_BRIDGE_MAX)
 	{
-		*CompareValueHigh	= *DutyCycleHalfBridge 		* PERIOD	+ DEADTIME;
-		*CompareValueLow	= (1 - *DutyCycleHalfBridge)	* PERIOD	- DEADTIME;
+		dutyCycle = DUTY_CYCLE_HALF_BRIDGE_MAX;
 	}
-	else	//If the duty cycle of the half - bridge would be to big
+
+	if (dutyCycle < DUTY_CYCLE_HALF_BRIDGE_MIN)
 	{
-		*CompareValueHigh	= DUTY_CYCLE_HALF_BRIDGE_MAX 		* PERIOD	+ DEADTIME;
-		*CompareValueLow	= (1 - DUTY_CYCLE_HALF_BRIDGE_MAX)	* PERIOD	- DEADTIME;
+		dutyCycle = DUTY_CYCLE_HALF_BRIDGE_MIN;
 	}
+
+	*CompareValueHigh	= dutyCycle * PERIOD + DEADTIME_HIGH;
+	*CompareValueLow	= dutyCycle	* PERIOD - DEADTIME_LOW;
 }
 
 void BSP_PWMSetCompareRegisters	(
@@ -90,6 +103,8 @@ void BSP_SetDutyCycle(float* DutyCycle)
 								&CompareValueHigh1,
 								&CompareValueLow1
 						);
+	BSP_SetLEDHeartbeatBlinkingDutyCyle(&CompareValueHigh1);
+	BSP_SetLEDOrangeBlinkingDutyCyle(&CompareValueLow1);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

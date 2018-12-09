@@ -8,7 +8,6 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "stm32f0xx_hal.h"
 #include "bsp_leds.h"
 #include "gpio.h"
 #include "tim.h"
@@ -49,11 +48,11 @@ void BSP_SetLEDHeartbeatBlinking(void)
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 }
 
-void BSP_SetLEDHeartbeatBlinkingDutyCyle(float* DutyCyle)
+void BSP_SetLEDHeartbeatBlinkingDutyCyle(int32_t* CompareValue)
 {
-	int32_t CompareValue = 0;
+	//int32_t CompareValue = 0;
 
-	CompareValue = (*DutyCyle) * PERIOD_LED_HEARTBEAT;
+	//CompareValue = (*DutyCyle) * PERIOD_LED_HEARTBEAT;
 
 	HAL_TIM_Base_Start(&htim3);
 	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, CompareValue);
@@ -71,6 +70,17 @@ void BSP_SetLEDOrangeBlinking(void)
 {
 	HAL_TIM_Base_Start(&htim3);
 	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, PERIOD_LED_HEARTBEAT/2);
+	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
+}
+
+void BSP_SetLEDOrangeBlinkingDutyCyle(int32_t* CompareValue)
+{
+	//int32_t CompareValue = 0;
+
+	//CompareValue = (*DutyCyle) * PERIOD_LED_HEARTBEAT;
+
+	HAL_TIM_Base_Start(&htim3);
+	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, CompareValue);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 }
 
@@ -114,6 +124,9 @@ void BSP_LEDStart(void)
 {
 	BSP_SetLEDBurstOFF5V();
 	BSP_SetLEDBurtsOFF6V();
+	BSP_SetLEDHeartbeat();
+	BSP_SetLEDOrange();
+	BSP_SetLEDFault();
 }
 
 // END -----------------------------------------------------------------------------------------------------------------

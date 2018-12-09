@@ -27,10 +27,10 @@ void APP_SetDutyCycle(float* DutyCycle)
 	BSP_SetDutyCycle(DutyCycle);
 }
 
-void APP_SetLEDDutyClyeForTesting(float* ConvertedDutyCycle)
-{
-	BSP_SetLEDHeartbeatBlinkingDutyCyle(ConvertedDutyCycle);
-}
+//void APP_SetLEDDutyClyeForTesting(float* ConvertedDutyCycle)
+//{
+//	BSP_SetLEDHeartbeatBlinkingDutyCyle(ConvertedDutyCycle);
+//}
 
 void App_CurrentController()
 {
