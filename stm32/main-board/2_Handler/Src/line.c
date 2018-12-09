@@ -22,13 +22,15 @@
 #define Y_FRONT (120) /* mm */
 #define Y_REAR  (-20) /* mm */
 
+#define BUFMAXLEN 256
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static uint8_t rxbuf_front[30];
+static uint8_t rxbuf_front[BUFMAXLEN];
 static uint8_t rxcnt_front;
 
 static LINE_SENSOR_OUT front_tmp;
@@ -42,7 +44,7 @@ static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 
 void lineInit()
 {
-    bspUartReceive_IT(Uart_LineFront, &rxbuf_front[rxcnt_front], 1);
+    bspUartReceive_IT(Uart_LineFront, rxbuf_front, 1);
 }
 
 LINE lineGet()
@@ -112,25 +114,38 @@ RoadSignal lineGetRoadSignal()
 
 void bspLineFrontRxCpltCallback (void)
 {
-	uint8_t tmp[30];
+	uint8_t tmp[BUFMAXLEN];
+	LINE_SENSOR_OUT* recentLine;
 	int tmplen;
 
-	if (isUartFrameEnded(rxbuf_front, rxcnt_front))
+	if (rxcnt_front > BUFMAXLEN)
+	{
+		rxcnt_front = 0; // Something bad happened
+	}
+	else if (isUartFrameEnded(rxbuf_front, rxcnt_front))
 	{
 		convertFromUartFrame(rxbuf_front, tmp, rxcnt_front, &tmplen);
 
 		if (tmplen == sizeof(LINE_SENSOR_OUT))
 		{
-			memcpy((uint8_t*) &front_tmp, tmp, sizeof(LINE_SENSOR_OUT));
-			rxcnt_front = 0;
+			recentLine = (LINE_SENSOR_OUT*) tmp;
+
+			if (recentLine->cnt != 0)
+			{
+				front_tmp = *recentLine;
+			}
 		}
 		else
 		{
 			// Error
 		}
-	}
 
-	rxcnt_front++;
+		rxcnt_front = 0;
+	}
+	else
+	{
+		rxcnt_front++;
+	}
 
 	bspUartReceive_IT(Uart_LineFront, &rxbuf_front[rxcnt_front], 1);
 }

@@ -27,7 +27,7 @@
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static double p_a;		// m
+/*static double p_a;		// m
 static double p_meas;	// m
 static double e;		// m
 static double p;		// m
@@ -41,7 +41,7 @@ static double T;		// sec
 
 uint8_t pwm = 10;
 
-static cFirstOrderTF contrPD;
+static cFirstOrderTF contrPD;*/
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -55,24 +55,6 @@ void TaskInit_steeringDemo(void)
 
     remoteInit();
 
-	p_a   = 0;
-	e 	  = 0;
-	p 	  = -0.1;
-	phi_a = 0;
-	v 	  = 2.5;
-	L 	  = 0.275;
-
-	Kp = -4/(v*L);
-//	Kd = 23;
-	Td = 0.001; //0.0217;
-	T  = 10*Td;
-
-	contrPD.an_past = 0;
-	contrPD.bn_past = 0;
-	contrPD.a1 = T;
-	contrPD.b0 = Kp;
-	contrPD.b1 = Kp*Td;
-
     xTaskCreate(Task_steeringDemo,
                 "TASK_DEMO",
                 DEFAULT_STACK_SIZE,
@@ -81,17 +63,21 @@ void TaskInit_steeringDemo(void)
                 NULL);
 }
 
-#define LEFT  0
-#define RIGHT 1
+float angle;
+float line_pos  = 0;
+float line_diff = 0;
+float prevline = 0;
+
+float P, D;
 
 void Task_steeringDemo(void* p)
 {
 	servoSetAngle(0);
 
-	/*for (int i = 95; i >= 88; i--)
+	for (float i = 0.0f; i > -PI/2.0f; i -= 0.01)
 	{
-		bspServoSetCompare(i);
-	}*/
+		servoSetAngle(i);
+	}
 
 	while(1)
     {
@@ -110,27 +96,29 @@ void Task_steeringDemo(void* p)
 
 		// TRACTION ________________________________________
 
-		motorSetDutyCycle(10);
+		motorSetDutyCycle(12);
 
 		// STEERING ________________________________________
 
-		/*l = lineGet();
+		prevline = line_pos;
 
-		angle = -1.0 * (l.d / 150.0) * (PI/3);
+		line_pos = (float) lineGet().d;
 
-		sch_Set_Servo_Angle(angle*2);
+		line_diff = line_pos - prevline;
 
-		traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);*/
+		P = line_pos  * (1.0 / 100.0f);
 
-		p_meas = -lineGet().d;
+		D = line_diff * 1.8f;
 
-		e = p_a - p_meas;
+		angle = -0.75f * (P + D);
 
-		//phi_a = controllerTransferFunction(&contrPD, e);
+		servoSetAngle(angle);
+		traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
 
-		phi_a = e * Kp;
+		// TRACE ___________________________________________
 
-		servoSetAngle(3.14159265359/180 * phi_a *2);
+		//traceBluetooth(BCM_LOG_LINE_D, &linepos);
+		//traceBluetooth(BCM_LOG_ENC_VEL, 10);
 
 		// END DELAY _______________________________________
 
