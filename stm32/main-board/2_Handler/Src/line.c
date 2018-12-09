@@ -27,21 +27,19 @@
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static uint8_t rxbuf_front[BUFMAXLEN];
-static uint8_t rxcnt_front;
-
 static LINE_SENSOR_OUT front_tmp;
 static LINE_SENSOR_OUT rear_tmp;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
+static void lineRxStateMachine();
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void lineInit()
 {
-    bspUartReceive_IT(Uart_LineFront, rxbuf_front, 1);
+	lineRxStateMachine();
 }
 
 LINE lineGet()
@@ -114,44 +112,7 @@ int frameSuccess = 0;
 
 void bspLineFrontRxCpltCallback (void)
 {
-	uint8_t tmp[BUFMAXLEN];
-	LINE_SENSOR_OUT* recentLine;
-	int tmplen;
-
-	if (rxcnt_front > BUFMAXLEN)
-	{
-		rxcnt_front = 0; // Something bad happened
-	}
-	else if (isUartFrameEnded(rxbuf_front, rxcnt_front))
-	{
-		frameEnded++;
-
-		convertFromUartFrame(rxbuf_front, tmp, rxcnt_front, &tmplen);
-
-		if (tmplen == sizeof(LINE_SENSOR_OUT))
-		{
-			recentLine = (LINE_SENSOR_OUT*) tmp;
-
-			if (recentLine->cnt != 0)
-			{
-				front_tmp = *recentLine;
-			}
-
-			frameSuccess++;
-		}
-		else
-		{
-			// Error
-		}
-
-		rxcnt_front = 0;
-	}
-	else
-	{
-		rxcnt_front++;
-	}
-
-	bspUartReceive_IT(Uart_LineFront, &rxbuf_front[rxcnt_front], 1);
+	lineRxStateMachine();
 }
 
 void bspLineRearRxCpltCallback (void)
@@ -204,6 +165,133 @@ static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
     ret.theta *= 180 / PI; // ° -> rad
 
     return ret;
+}
+
+UARTFRAME_STATE lineRxState = init;
+uint8_t lineRxBuf[UFRAME_BUFMAX];
+int     lineRxBufSize;
+
+static void lineRxStateMachine()
+{
+	int breakLoop = 0;
+
+	while (!breakLoop)
+	{
+		switch (lineRxState)
+		{
+			case init:
+			{
+				lineRxState = out_resetbuf;
+
+				break;
+			}
+			case out_resetbuf:
+			{
+				lineRxBufSize = 0;
+
+				lineRxState = out_rx;
+				break;
+			}
+			case out_rx:
+			{
+				bspUartReceive_IT(Uart_LineFront, &lineRxBuf[lineRxBufSize], 1);
+				lineRxBufSize++;
+
+				lineRxState = out_begincheck;
+				breakLoop = 1;
+				break;
+			}
+			case out_begincheck:
+			{
+				if (
+					lineRxBufSize >= 2                          &&
+					lineRxBuf[lineRxBufSize - 2] == ESCAPE_CHAR &&
+					lineRxBuf[lineRxBufSize - 1] == frameBegin
+				)
+				{
+					lineRxState = in_resetbuf;
+				}
+				else
+				{
+					lineRxState = out_ovrcheck;
+				}
+
+				break;
+			}
+			case out_ovrcheck:
+			{
+				if (lineRxBufSize < UFRAME_BUFMAX)
+				{
+					lineRxState = out_rx;
+				}
+				else
+				{
+					lineRxState = out_resetbuf;
+				}
+
+				break;
+			}
+			case in_resetbuf:
+			{
+				lineRxBufSize = 0;
+
+				lineRxState = in_rx;
+				break;
+			}
+			case in_rx:
+			{
+				bspUartReceive_IT(Uart_LineFront, &lineRxBuf[lineRxBufSize], 1);
+				lineRxBufSize++;
+
+				lineRxState = in_endcheck;
+				breakLoop = 1;
+				break;
+			}
+			case in_endcheck:
+			{
+				if (
+					lineRxBufSize >= 2                          &&
+					lineRxBuf[lineRxBufSize - 2] == ESCAPE_CHAR &&
+					lineRxBuf[lineRxBufSize - 1] == frameEnd
+				)
+				{
+					lineRxState = in_process;
+				}
+				else
+				{
+					lineRxState = in_ovrcheck;
+				}
+
+				break;
+			}
+			case in_ovrcheck:
+			{
+				if (lineRxBufSize < UFRAME_BUFMAX)
+				{
+					lineRxState = in_rx;
+				}
+				else
+				{
+					lineRxState = out_resetbuf;
+				}
+
+				break;
+			}
+			case in_process:
+			{
+				// .....
+
+				lineRxState = out_resetbuf;
+
+				break;
+			}
+			default:
+			{
+				lineRxState = out_resetbuf;
+				break;
+			}
+		}
+	}
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
