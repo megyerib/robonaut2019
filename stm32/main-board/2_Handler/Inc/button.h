@@ -1,41 +1,46 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      controller.h
-//!  \brief    
+//!  \file      button.h
+//!  \brief
 //!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 #pragma once
-
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "stm32f4xx_hal.h"
-
 // Defines -------------------------------------------------------------------------------------------------------------
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
-//! @brief	Discrete transfer function first order in normal form.
-//!
-//!               B[z]    b0 + b1*z^-1
-//!       H[z]  = ---- = --------------
-//!               A[z]    1  + a1*z^-1
-//!
-typedef struct
+typedef enum
 {
-	double   b0;
-	double   b1;
-	//double   a0;		//!< Equals with 1 in normal form
-	double   a1;
-	uint32_t ts;		//!< Sampling time
+	btnBlue = 0,
 
-	double	 bn_past;	//!< b n-1 previous value
-	double   an_past;	//!< a n-1 previous value
-} cFirstOrderTF;
+	btnCount
+}
+BTN;
+
+typedef enum
+{
+	edgeRising,
+	edgeFalling,
+	edgeBoth
+}
+EDGE;
 
 // Variables -----------------------------------------------------------------------------------------------------------
+
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-double controllerTransferFunction (cFirstOrderTF* tf, double an);
+void buttonInit();
 
-void controllerPdConfigure (cFirstOrderTF* const tf, const double Kp, const double Td, const double T);
+//! @brief Triggers button state reading (for debouncing)
+void buttonTriggerRead();
+
+//! @returns True if the button is pushed down.
+uint8_t buttonGetState(BTN button);
+
+//! @returns True if the button stat has changed since the last query or the initilization.
+uint8_t buttonGetEdge(BTN button, EDGE edge);
+
+// END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

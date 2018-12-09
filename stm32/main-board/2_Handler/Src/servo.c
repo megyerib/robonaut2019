@@ -13,7 +13,7 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define 	SERVO_ACTUAL_TYPE	 	SRV_SRT_CH6012   // Choose from SCH_ServoModel
+#define 	SERVO_ACTUAL_TYPE	 	SRV_SRT_CH6012   // Choose from eServoModel
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -22,8 +22,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 typedef enum
 {
-	SRV_FUTABAS3003 		= 0,
-	SRV_SRT_CH6012
+	SRV_FUTABAS3003 		= 0,		// Joci's servo.		Analog
+	SRV_MAVERICK_MS22,					// Car' basic servo.	Analog
+	SRV_SRT_CH6012						// From model shop.		Digital
 } eServoModel;
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -32,35 +33,32 @@ extern cBSP_SrvHandleTypeDef hsrv;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-
-//! @brief	Determines if the SCH_ACTUAL_SERVO value is a valid SCH_ServoModel
-//! 		enum variable and if it is, then it loads a valid servo config into
-//! 		the hsrv module variable.
-//! @retval	Signals if the initialization of the servo was successful because
-//! 		the valid config was found and set
-eBSP_SrvInitStat servoConfig();
+//! @brief	Determines if the SERVO_ACTUAL_TYPE value is a valid eServoModel enum variable and if it is, then it loads
+//! 		a valid servo config into the hsrv module variable.
+//! @retval	Signals if the initialization of the servo was successful because the valid config was found and set.
+eBSP_SrvTimInitStat servoConfig();
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-eBSP_SrvInitStat servoInit(void)
+eBSP_SrvTimInitStat servoInit(void)
 {
-	eBSP_SrvInitStat ret_val = SRV_INIT_OK;
+	eBSP_SrvTimInitStat ret_val = SRV_INIT_OK;
 
 	ret_val = servoConfig();
 
 	if(ret_val == SRV_INIT_OK)
 	{
-		// Valid servo model is chosen.
+		// Valid servo model was chosen.
 
-		// Configure the TIM PWM, if error occurs TIM clk is disabled
-		bspServoInit();
+		// Configure the TIM PWM, if error occurs TIM clk is disabled.
+		bspServoTimInit();
 	}
 	else
 	{
 		// Error: No valid servo motor was selected.
 
 		// Disable CLK
-		bspServoTimerDisable();
+		bspServoTimDisable();
 	}
 
 	return ret_val;
@@ -72,50 +70,60 @@ double servoGetAngle()
 	double angle;
 
 	// Actual position.
-	compare = bspServoGetCompare();
+	compare = bspServoTimGetCompare();
 
-	return angle = compare * hsrv.Gradient + hsrv.Y_intercept;
+//TODO
+	// angle = m*compare + b + compensation
+	return angle = compare * hsrv.Gradient + hsrv.Y_intercept + hsrv.CV_compensation;
 }
 
+//! Servo Anlge:
+//!
+//!           60ï¿½  90ï¿½  120ï¿½
+//!              \  |  /
+//!               \ | /
+//!       0ï¿½_______\|/________180ï¿½
+//!   Left end               Right end
+//!
 void servoSetAngle(const double theta)
 {
 	uint32_t compare;
-	double theta2 = theta + PI/2;
+	//TODO double theta2 = theta + PI/2;
 
 	// Calculate the position from the angle	TODO compensation corrupts the max angle of the servo in one direction
-	compare = (uint32_t)(((theta2 - hsrv.Y_intercept) / hsrv.Gradient) + hsrv.CV_compensation);
+	compare = (uint32_t)( ((theta - hsrv.Y_intercept - hsrv.CV_compensation) / hsrv.Gradient) );
 
-	bspServoSetCompare(compare);
+	bspServoTimSetCompare(compare);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-eBSP_SrvInitStat servoConfig()
+eBSP_SrvTimInitStat servoConfig()
 {
-	eBSP_SrvInitStat ret_val = SRV_INIT_OK;
+	eBSP_SrvTimInitStat ret_val = SRV_INIT_OK;
 
 	switch(SERVO_ACTUAL_TYPE)
 	{
-		case SRV_FUTABAS3003  :
-			hsrv.PWM_freq = 50;
-			hsrv.PWM_cntr_freq = 62500;
-			hsrv.PWM_prescaler = 1343;
-			hsrv.PWM_period = 1249;
+		case SRV_MAVERICK_MS22:
+		{
+			hsrv.PWM_freq 			= 50;							// [Hz] ~ (20ms)
 
-			hsrv.Right_End = 68;
-			//hsrv.Deg_30 = 74;
-			hsrv.Deg_90 = 91;
-			//hsrv.Deg_150 = 113;
-			hsrv.Left_End = 114;
+			hsrv.PWM_cntr_freq		= 62500;						// [Hz]
+			hsrv.PWM_prescaler 		= 1343;
+			hsrv.PWM_period    		= 1249;
 
-			hsrv.CV_compensation = -1;
+			hsrv.Left_End  			= 68;							// TODO
+			hsrv.Deg_30    			= 74;							// TODO
+			hsrv.Deg_90    			= 91;							// TODO
+			hsrv.Deg_150   			= 113;							// TODO
+			hsrv.Right_End 			= 114;							// TODO
 
-			// 3ï¿½/inc = PI/60 rad/inc
-			hsrv.Gradient = PI/180 * (90-30)/(hsrv.Deg_90-hsrv.Deg_30);
-			// -192ï¿½ = -PI*16/15 rad
-			hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;
+			hsrv.Gradient = PI/180 * (90-30)/(hsrv.Deg_90-hsrv.Deg_30); 		// 3ï¿½/inc = PI/60 rad/inc
+			hsrv.Y_intercept = PI/2 - hsrv.Deg_90 * hsrv.Gradient;				// -192ï¿½ = -PI*16/15 rad
+
+			hsrv.CV_compensation 	= -1;
 			break;
-
+	   }
 	   case SRV_SRT_CH6012:
 	   {
 		   // Chosen frequency of the servo.
@@ -127,11 +135,11 @@ eBSP_SrvInitStat servoConfig()
 		   hsrv.PWM_period 			= 249;
 
 		   // Measured  servo properties.
-		   hsrv.Left_End 			= 62;						// Defined by car 	(30° 0.846ms 53)
-		   hsrv.Deg_30 				= 76;						// 1.214ms	60° 	(60° 1.214ms 76)
-		   hsrv.Deg_90 				= 95;						// 1.52ms	90°		(90° 1.52ms  95)
-		   hsrv.Deg_150 			= 114;						// 1.82ms	120°	(120° 1.82ms 114)
-		   hsrv.Right_End 			= 118;						// Defined by car	(150° 2.17ms 136)
+		   hsrv.Left_End 			= 62;						// Defined by car 	(30ï¿½ 0.846ms 53)
+		   hsrv.Deg_30 				= 76;						// 1.214ms	60ï¿½ 	(60ï¿½ 1.214ms 76)
+		   hsrv.Deg_90 				= 95;						// 1.52ms	90ï¿½		(90ï¿½ 1.52ms  95)
+		   hsrv.Deg_150 			= 114;						// 1.82ms	120ï¿½	(120ï¿½ 1.82ms 114)
+		   hsrv.Right_End 			= 118;						// Defined by car	(150ï¿½ 2.17ms 136)
 
 		   // Characteristics:  y = m*x + b
 		   //
@@ -149,7 +157,6 @@ eBSP_SrvInitStat servoConfig()
 
 		   break;
 	   }
-
 		default :
 			ret_val = SRV_INIT_FAIL_SRV_MODELL;
 	}
