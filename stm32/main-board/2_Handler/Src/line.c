@@ -72,6 +72,20 @@ RoadSignal lineGetRoadSignal()
 {
     RoadSignal ret = Nothing;
 
+    switch (front_tmp.cnt)
+    {
+    	case 2:
+    	{
+    		ret = DoubleLine;
+    		break;
+    	}
+    	case 3:
+    	{
+    		ret = TripleLine;
+    		break;
+    	}
+    }
+
     return ret;
 }
 

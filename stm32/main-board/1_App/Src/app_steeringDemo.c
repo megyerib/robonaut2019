@@ -76,6 +76,20 @@ float P, D;
 
 void Task_steeringDemo(void* p)
 {
+	float i;
+
+	// Bal
+	for (i = 0.5f; i < 0.8f; i += 0.01f)
+	{
+		servoSetAngle(i);
+	}
+
+	// Jobb
+	for (i = -0.5f; i >= -0.8f; i -= 0.01f)
+	{
+		servoSetAngle(i);
+	}
+
 	while(1)
     {
 		// REMOTE CONTROL __________________________________
@@ -108,7 +122,7 @@ void Task_steeringDemo(void* p)
 
 		D = line_diff * 1.6f;
 
-		angle = -0.75f * (P + D);
+		angle = -0.53f * (P + D);
 
 		// ACTUATE _________________________________________
 
