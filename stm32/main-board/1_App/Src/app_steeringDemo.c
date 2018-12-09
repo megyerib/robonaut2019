@@ -68,12 +68,14 @@ float line_pos  = 0;
 float line_diff = 0;
 float prevline = 0;
 
+int actuateEnabled;
+
+int motor_d;
+
 float P, D;
 
 void Task_steeringDemo(void* p)
 {
-	//servoSetAngle(0);
-
 	while(1)
     {
 		// REMOTE CONTROL __________________________________
@@ -81,17 +83,18 @@ void Task_steeringDemo(void* p)
 		if (remoteGetState())
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+			actuateEnabled = 1;
 		}
 		else
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			vTaskDelay(STTERINGDEMO_TASK_DELAY);
-			continue; // Skip the loop iteration
+			actuateEnabled = 0;
 		}
 
 		// TRACTION ________________________________________
 
-		motorSetDutyCycle(12);
+		motor_d = 12;
 
 		// STEERING ________________________________________
 
@@ -107,11 +110,17 @@ void Task_steeringDemo(void* p)
 
 		angle = -0.75f * (P + D);
 
-		servoSetAngle(angle);
-		traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
+		// ACTUATE _________________________________________
+
+		if (actuateEnabled)
+		{
+			motorSetDutyCycle(motor_d);
+			servoSetAngle(angle);
+		}
 
 		// TRACE ___________________________________________
 
+		//traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
 		//traceBluetooth(BCM_LOG_LINE_D, &linepos);
 		//traceBluetooth(BCM_LOG_ENC_VEL, 10);
 

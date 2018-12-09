@@ -54,7 +54,11 @@ void motorSetTorque(int16_t torqe)
 
 void motorSetDutyCycle(uint8_t d)
 {
-    sprintf(d_buf, "%02d\r\n", d);
+    // sprintf screws everything
+	d_buf[0] = '0' + ((d / 10) % 10);
+    d_buf[1] = '0' + d % 10;
+    d_buf[2] = '\r';
+    d_buf[3] = '\n';
 
     bspUartTransmit_IT(Uart_Motor, (uint8_t*) d_buf, 4);
 }
