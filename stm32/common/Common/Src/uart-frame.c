@@ -66,68 +66,30 @@ void convertToUartFrame(uint8_t* payload, uint8_t* frame, int payloadLen, int* f
     *framelen = j;
 }
 
+// Buffer length is ok
+// Begin flag no present as it was once split by the state machine.
+// Last 2 bytes are the end flag
 void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* payloadLen)
 {
     int i;
-    int j     = 0;
-    int end   = 0;
+    int j = 0;
 
-    *payloadLen = 0;
-
-    // For safety reasons
-	if (framelen >= RX_BUF_MAX)
-		return;
-
-    // Search for frame begin
-    for (i = 0; i < framelen - 1; i++)
+	for (i = 0; i < framelen - 2; i++)
     {
-    	if (frame[i] == ESCAPE_CHAR && frame[i+1] == frameBegin)
+    	if (frame[i] != ESCAPE_CHAR)
     	{
-    		i += 2;
-    		break;
+    		payload[j] = frame[i];
     	}
+    	else
+    	{
+    		payload[j] = ESCAPE_CHAR;
+    		i++;
+    	}
+
+    	j++;
     }
 
-    // Process message
-    for (/* i is set */; i < framelen; i++)
-    {
-    	if (frame[i] == ESCAPE_CHAR)
-        {
-            switch (frame[i+1])
-            {
-                case ESCAPE_CHAR:
-                {
-                    payload[j] = ESCAPE_CHAR;
-                    j++;
-                    break;
-                }
-                case frameBegin:
-                {
-                	j = 0;
-                    break;
-                }
-                case frameEnd:
-                {
-                    end = 1;
-                    break;
-                }
-            }
-
-            i++; // Skip 1 character
-
-            if (end)
-                break;
-        }
-        else
-        {
-			// Ordinary character
-			payload[j] = frame[i];
-			j++;
-        }
-    }
-
-    if (end)
-    	*payloadLen = j;
+	*payloadLen = j;
 }
 
 int isUartFrameEnded(uint8_t* frame, int framelen)

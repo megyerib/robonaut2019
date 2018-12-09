@@ -23,16 +23,12 @@
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
-
-
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 static LINE_SENSOR_OUT front_tmp;
-static LINE_SENSOR_OUT rear_tmp;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 static void lineRxStateMachine();
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -45,42 +41,16 @@ void lineInit()
 LINE lineGet()
 {
     LINE_SENSOR_OUT front;
-    LINE_SENSOR_OUT rear;
-
     int16_t x_front = 0;
-    int16_t x_rear  = 0;
-
     int i;
 
-    // ---------------------------------
-
-    /*if (valid[0] == 0 || valid[1] == 0)
-    {
-        LINE ret =
-        {
-            .d = 0,
-            .theta = 0.0f
-        };
-
-        return ret;
-    }*/
-
     // Get temporary data
-    __disable_irq();
-        front = front_tmp;
-        rear  = rear_tmp;
-    __enable_irq();
+	front = front_tmp;
 
     // Get center line position
     for (i = 0; i < front.cnt; i++)
         x_front += front.lines[i];
     x_front /= front.cnt;
-
-    for (i = 0; i < rear.cnt; i++)
-        x_rear += rear.lines[i];
-    x_rear /= rear.cnt;
-
-    //return Descartes2Polar(x_rear, Y_REAR, x_front, Y_FRONT);
 
     LINE ret =
     {
@@ -100,76 +70,29 @@ Arc lineGetArc(uint16_t r_mm, ArcDir dir)
 
 RoadSignal lineGetRoadSignal()
 {
-    RoadSignal ret = 0;
+    RoadSignal ret = Nothing;
 
     return ret;
 }
 
 // Interrupt handler callbacks -----------------------------
 
-int frameEnded = 0;
-int frameSuccess = 0;
-
 void bspLineFrontRxCpltCallback (void)
 {
 	lineRxStateMachine();
 }
 
-void bspLineRearRxCpltCallback (void)
-{
-
-}
-
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-/*              ^
-                | x (y1;y2)
-                |/
-                /- b
-               /|
-              /d|
-         |   / \|
- --------|th/---+---------->
-         | /    |
-         |/alpha|
- (x1;x2) x----- |
-                |           */
-
-static LINE Descartes2Polar(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
-{
-    LINE ret;
-    float x, y;
-    float a, b; // y = ax + b
-    float alpha;
-
-    x = (float)x2 - (float)x1;
-    y = (float)y2 - (float)y1;
-
-    a = y / x; // tg alpha
-
-    b = (-1 * x1 * a);
-
-    ret.d = ((b/2) * sqrt(1 + 1/(a*a)));
-
-    alpha = atanf(a);
-
-    if (alpha >= 0.0)
-    {
-        ret.theta = alpha - 90.0;
-    }
-    else
-    {
-        ret.theta = alpha + 90.0;
-    }
-
-    ret.theta *= 180 / PI; // ° -> rad
-
-    return ret;
-}
 
 UARTFRAME_STATE lineRxState = init;
 uint8_t lineRxBuf[UFRAME_BUFMAX];
 int     lineRxBufSize;
+uint8_t uframeBuf[UFRAME_BUFMAX];
+int     uframeBufSize;
+
+int overruns      = 0;
+int frameReceived = 0;
+int lineReceived  = 0;
 
 static void lineRxStateMachine()
 {
@@ -226,6 +149,7 @@ static void lineRxStateMachine()
 				}
 				else
 				{
+					overruns++;
 					lineRxState = out_resetbuf;
 				}
 
@@ -272,6 +196,7 @@ static void lineRxStateMachine()
 				}
 				else
 				{
+					overruns++;
 					lineRxState = out_resetbuf;
 				}
 
@@ -279,7 +204,24 @@ static void lineRxStateMachine()
 			}
 			case in_process:
 			{
-				// .....
+				LINE_SENSOR_OUT* receivedLine;
+
+				frameReceived++;
+
+				convertFromUartFrame(
+					lineRxBuf,
+					uframeBuf,
+					lineRxBufSize,
+					&uframeBufSize
+				);
+
+				if (uframeBufSize == sizeof(LINE_SENSOR_OUT))
+				{
+					receivedLine = (LINE_SENSOR_OUT*) uframeBuf;
+					front_tmp = *receivedLine;
+
+					lineReceived++;
+				}
 
 				lineRxState = out_resetbuf;
 
