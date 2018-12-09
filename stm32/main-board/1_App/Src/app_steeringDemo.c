@@ -43,6 +43,9 @@ uint8_t pwm = 10;
 
 static cFirstOrderTF contrPD;
 
+double prev_p;
+static double Kd;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -63,7 +66,6 @@ void TaskInit_steeringDemo(void)
 	L 	  = 0.275;
 
 	Kp = -4/(v*L);
-//	Kd = 23;
 	Td = 0.001; //0.0217;
 	T  = 10*Td;
 
@@ -72,6 +74,9 @@ void TaskInit_steeringDemo(void)
 	contrPD.a1 = T;
 	contrPD.b0 = Kp;
 	contrPD.b1 = Kp*Td;
+
+
+	Kd = 10;
 
     xTaskCreate(Task_steeringDemo,
                 "TASK_DEMO",
@@ -111,6 +116,7 @@ void Task_steeringDemo(void* p)
 		// TRACTION ________________________________________
 
 		motorSetDutyCycle(10);
+		traceBluetooth(BCM_LOG_ENC_VEL, 10);
 
 		// STEERING ________________________________________
 
@@ -122,15 +128,20 @@ void Task_steeringDemo(void* p)
 
 		traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);*/
 
-		p_meas = -lineGet().d;
 
-		e = p_a - p_meas;
+		prev_p = p_meas;
+
+		p_meas = lineGet().d;
+		traceBluetooth(BCM_LOG_LINE_D, &p_meas);
+
+		//e = p_a - p_meas;
 
 		//phi_a = controllerTransferFunction(&contrPD, e);
 
-		phi_a = e * Kp;
+		phi_a = -1 * p_meas / 120 * 0.75 + Kd * (prev_p - p_meas);
 
-		servoSetAngle(3.14159265359/180 * phi_a *2);
+		servoSetAngle(phi_a);
+		traceBluetooth(BCM_LOG_SERVO_ANGLE, &phi_a);
 
 		// END DELAY _______________________________________
 

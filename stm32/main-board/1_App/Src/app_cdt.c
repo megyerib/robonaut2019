@@ -169,14 +169,14 @@ void Task_CarDiagnosticsTool(void* p)
 		if (bcmBluetoothConnected())
 		{
 			//TODO DEBUG
-			if(sent == 10)
+			/*if(sent == 10)
 			{
 				bcmSend(helloMsg, sizeof(helloMsg));
 				vTaskDelay(10);
 
 				sent = 0;
 			}
-			sent++;
+			sent++;*/
 			// END_DEBUG
 
 			traceFlushData();
