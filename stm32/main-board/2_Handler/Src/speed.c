@@ -8,14 +8,42 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include "tim.h"
+
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define PERIOD 5.0f
+
+#define MUL    (1.0f/PERIOD)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
+static uint16_t prev_cntrval = 0;
+static uint16_t cur_cntrval = 0;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 // Global function definitions -----------------------------------------------------------------------------------------
+
+void speedInit()
+{
+
+}
+
+int16_t speedGet()
+{
+	float cntrDiff = (float)(cur_cntrval - prev_cntrval);
+	float speed = cntrDiff * MUL;
+
+	return speed;
+}
+
+void speedPeriodicMeasure()
+{
+	prev_cntrval = cur_cntrval;
+	cur_cntrval  = TIM3->CNT;
+}
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
