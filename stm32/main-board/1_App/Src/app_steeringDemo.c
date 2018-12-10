@@ -25,7 +25,7 @@
 
 // State machine parameters
 #define ROAD_SIGNAL_THRESHOLD       6  /* Ennyiszer kell látnunk egy jelet, hogy elhiggyük. (ld. fent) */
-#define FAST_IN_CNTR          (4000/5) /* Ennyi cikluson keresztül készülünk rá a gyors szakaszra */
+#define FAST_IN_CNTR          (500/5) /* Ennyi cikluson keresztül készülünk rá a gyors szakaszra */
 #define BRAKE_IN_CNTR         (500/5)  /* Ennyi cikluson át fékezünk */
 #define CORNER_IN_CNTR        10 /* Ennyi idõt megyünk a kanyarba befele (nem érdekes) */
 
@@ -265,8 +265,8 @@ static void setParams_corner()
 {
 	// Kanyarodunk
 
-	K_P =  2.22 * (1.0 / 90.0f);
-	K_D = 2.3 * 1.6f;
+	K_P     =  0.025f;
+	K_D     =  3.68f;
 	motor_d = 19;
 }
 
@@ -274,8 +274,8 @@ static void setParams_fastIn()
 {
 	// Rámegyünk a gyors szakaszra. Érdemes valahogy egyenesbe állni.
 
-	K_P =  2.15 * (1.0 / 90.0f);
-	K_D = 2.15 * 1.6f;
+	K_P     =  0.023f;
+	K_D     =  3.36f;
 	motor_d = 25;
 }
 
@@ -283,8 +283,8 @@ static void setParams_fast()
 {
 	// Gyorsan megyünk
 
-	K_P =  1.85 * (1.0 / 90.0f);
-	K_D = 1.97 * 1.6f;
+	K_P     =  0.01f;
+	K_D     =  0.1f;
 	motor_d = 30;
 }
 
@@ -292,8 +292,8 @@ static void setParams_brakeIn()
 {
 	// Fékezés eleje (akár még várhatunk is a fékezéssel)
 
-	K_P =  1.85 * (1.0 / 90.0f);
-	K_D = 1.97 * 1.6f;
+	K_P     =  0.021f;
+	K_D     =  3.104f;
 	motor_d = 20;
 }
 
@@ -301,7 +301,7 @@ static void setParams_brake()
 {
 	// Fékezés vége (itt lehet érdemes nagyot fékezni)
 
-	K_P =  1.85 * (1.0 / 90.0f);
-	K_D = 1.97 * 1.6f;
+	K_P     =  0.02;
+	K_D     =  3.12f;
 	motor_d = 16;
 }
