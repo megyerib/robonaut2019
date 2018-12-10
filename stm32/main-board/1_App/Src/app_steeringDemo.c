@@ -266,7 +266,7 @@ static void setParams_corner()
 
 	K_P =  2.22 * (1.0 / 90.0f);
 	K_D = 2.3 * 1.6f;
-	motor_d = 15;
+	motor_d = 18;
 }
 
 static void setParams_fastIn()
@@ -275,7 +275,7 @@ static void setParams_fastIn()
 
 	K_P =  2.22 * (1.0 / 90.0f);
 	K_D = 2.3 * 1.6f;
-	motor_d = 19;
+	motor_d = 21;
 }
 
 static void setParams_fast()
@@ -284,7 +284,7 @@ static void setParams_fast()
 
 	K_P =  2.22 * (1.0 / 90.0f);
 	K_D = 2.3 * 1.6f;
-	motor_d = 19;
+	motor_d = 23;
 }
 
 static void setParams_brake()
@@ -293,5 +293,5 @@ static void setParams_brake()
 
 	K_P =  2.22 * (1.0 / 90.0f);
 	K_D = 2.3 * 1.6f;
-	motor_d = 0;
+	motor_d = 19;
 }
