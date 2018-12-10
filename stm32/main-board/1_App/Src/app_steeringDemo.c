@@ -267,7 +267,7 @@ static void setParams_corner()
 
 	K_P =  2.22 * (1.0 / 90.0f);
 	K_D = 2.3 * 1.6f;
-	motor_d = 20;
+	motor_d = 19;
 }
 
 static void setParams_fastIn()
@@ -276,32 +276,32 @@ static void setParams_fastIn()
 
 	K_P =  2.15 * (1.0 / 90.0f);
 	K_D = 2.15 * 1.6f;
-	motor_d = 21;
+	motor_d = 25;
 }
 
 static void setParams_fast()
 {
 	// Gyorsan megyünk
 
-	K_P =  2.1 * (1.0 / 90.0f);
-	K_D = 2.13 * 1.6f;
-	motor_d = 23;
+	K_P =  1.85 * (1.0 / 90.0f);
+	K_D = 1.97 * 1.6f;
+	motor_d = 30;
 }
 
 static void setParams_brakeIn()
 {
 	// Fékezés eleje (akár még várhatunk is a fékezéssel)
 
-	K_P =  2.15 * (1.0 / 90.0f);
-	K_D = 2 * 1.6f;
-	motor_d = 19;
+	K_P =  1.85 * (1.0 / 90.0f);
+	K_D = 1.97 * 1.6f;
+	motor_d = 20;
 }
 
 static void setParams_brake()
 {
 	// Fékezés vége (itt lehet érdemes nagyot fékezni)
 
-	K_P =  2.15 * (1.0 / 90.0f);
-	K_D = 2 * 1.6f;
-	motor_d = 19;
+	K_P =  1.85 * (1.0 / 90.0f);
+	K_D = 1.97 * 1.6f;
+	motor_d = 16;
 }
