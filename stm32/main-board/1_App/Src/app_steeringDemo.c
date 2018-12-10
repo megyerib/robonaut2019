@@ -24,7 +24,7 @@
 #define STTERINGDEMO_TASK_DELAY 5
 
 // State machine parameters
-#define ROAD_SIGNAL_THRESHOLD       8  /* Ennyiszer kell látnunk egy jelet, hogy elhiggyük. (ld. fent) */
+#define ROAD_SIGNAL_THRESHOLD       6  /* Ennyiszer kell látnunk egy jelet, hogy elhiggyük. (ld. fent) */
 #define FAST_IN_CNTR          (4000/5) /* Ennyi cikluson keresztül készülünk rá a gyors szakaszra */
 #define BRAKE_IN_CNTR         (500/5)  /* Ennyi cikluson át fékezünk */
 #define CORNER_IN_CNTR        10 /* Ennyi idõt megyünk a kanyarba befele (nem érdekes) */
@@ -52,6 +52,7 @@ static void setParams_corner();
 static void setParams_fastIn();
 static void setParams_fast();
 static void setParams_brake();
+static void setParams_brakeIn();
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -217,7 +218,7 @@ static void qualiStateMachine()
 				countdown = BRAKE_IN_CNTR;
 
 				// Fast -> Brake
-				setParams_brake();
+				setParams_brakeIn();
 			}
 
 			break;
@@ -230,7 +231,7 @@ static void qualiStateMachine()
 				desiredRoadSignal = 0;
 
 				// Brake
-				setParams_corner();
+				setParams_brake();
 			}
 
 			break;
@@ -266,15 +267,15 @@ static void setParams_corner()
 
 	K_P =  2.22 * (1.0 / 90.0f);
 	K_D = 2.3 * 1.6f;
-	motor_d = 18;
+	motor_d = 20;
 }
 
 static void setParams_fastIn()
 {
 	// Rámegyünk a gyors szakaszra. Érdemes valahogy egyenesbe állni.
 
-	K_P =  2.22 * (1.0 / 90.0f);
-	K_D = 2.3 * 1.6f;
+	K_P =  2.15 * (1.0 / 90.0f);
+	K_D = 2.15 * 1.6f;
 	motor_d = 21;
 }
 
@@ -282,16 +283,25 @@ static void setParams_fast()
 {
 	// Gyorsan megyünk
 
-	K_P =  2.22 * (1.0 / 90.0f);
-	K_D = 2.3 * 1.6f;
+	K_P =  2.1 * (1.0 / 90.0f);
+	K_D = 2.13 * 1.6f;
 	motor_d = 23;
+}
+
+static void setParams_brakeIn()
+{
+	// Fékezés eleje (akár még várhatunk is a fékezéssel)
+
+	K_P =  2.15 * (1.0 / 90.0f);
+	K_D = 2 * 1.6f;
+	motor_d = 19;
 }
 
 static void setParams_brake()
 {
-	// Fékezés
+	// Fékezés vége (itt lehet érdemes nagyot fékezni)
 
-	K_P =  2.22 * (1.0 / 90.0f);
-	K_D = 2.3 * 1.6f;
+	K_P =  2.15 * (1.0 / 90.0f);
+	K_D = 2 * 1.6f;
 	motor_d = 19;
 }
