@@ -21,7 +21,13 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define STTERINGDEMO_TASK_DELAY 5
+#define STTERINGDEMO_TASK_DELAY 5 /* ms */
+
+// State machine parameters
+#define ROAD_SIGNAL_THRESHOLD  3 /* Ennyiszer kell látnunk egy jelet, hogy elhiggyük. (ld. fent) */
+#define FAST_IN_CNTR          10 /* Ennyi cikluson keresztül készülünk rá a gyors szakaszra */
+#define BRAKE_IN_CNTR         10 /* Ennyi cikluson át fékezünk */
+#define CORNER_IN_CNTR        10 /* Ennyi idõt megyünk a kanyarba befele (nem érdekes) */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -38,29 +44,13 @@ QUALI_STATE;
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-/*static double p_a;		// m
-static double p_meas;	// m
-static double e;		// m
-static double p;		// m
-static double phi_a;	// deg
-static double v;		// m/s
-static double L;		// m
-
-static double Kp;		//
-static double Td;		// sec
-static double T;		// sec
-
-uint8_t pwm = 10;
-
-static cFirstOrderTF contrPD;*/
-
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void setParams_cornerIn();
+static void qualiStateMachine();
+
 static void setParams_corner();
 static void setParams_fastIn();
 static void setParams_fast();
-static void setParams_brakeIn();
 static void setParams_brake();
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -150,11 +140,6 @@ void Task_steeringDemo(void* p)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-#define ROAD_SIGNAL_THRESHOLD  5
-#define FAST_IN_CNTR          10
-#define BRAKE_IN_CNTR         10
-#define CORNER_IN_CNTR        10
-
 static QUALI_STATE quali_state = corner_OutCheck;
 int desiredRoadSignal = 0;
 int countdown;
@@ -228,7 +213,7 @@ static void qualiStateMachine()
 				countdown = BRAKE_IN_CNTR;
 
 				// Fast -> Brake
-				setParams_brakeIn();
+				setParams_brake();
 			}
 
 			break;
@@ -241,7 +226,7 @@ static void qualiStateMachine()
 				desiredRoadSignal = 0;
 
 				// Brake
-				setParams_brake();
+				setParams_corner();
 			}
 
 			break;
@@ -263,21 +248,12 @@ static void qualiStateMachine()
 				countdown = CORNER_IN_CNTR;
 
 				// Brake -> Corner
-				setParams_cornerIn();
+				setParams_corner();
 			}
 
 			break;
 		}
 	}
-}
-
-static void setParams_cornerIn()
-{
-	// A fékút végén vagyunk, szinte már csak lassan kanyarodunk.
-
-	// TODO Kp =
-	// TODO Kd =
-	// TODO motor =
 }
 
 static void setParams_corner()
@@ -307,18 +283,9 @@ static void setParams_fast()
 	// TODO motor =
 }
 
-static void setParams_brakeIn()
-{
-	// Fékezés eleje, legnagyobb fék
-
-	// TODO Kp =
-	// TODO Kd =
-	// TODO motor =
-}
-
 static void setParams_brake()
 {
-	// A fékút végén vagyunk, lefékeztünk, kis fék.
+	// Fékezés
 
 	// TODO Kp =
 	// TODO Kd =
