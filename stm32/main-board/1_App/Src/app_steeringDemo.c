@@ -56,6 +56,13 @@ static cFirstOrderTF contrPD;*/
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
+static void setParams_cornerIn();
+static void setParams_corner();
+static void setParams_fastIn();
+static void setParams_fast();
+static void setParams_brakeIn();
+static void setParams_brake();
+
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void TaskInit_steeringDemo(void)
@@ -164,7 +171,7 @@ static void qualiStateMachine()
 				desiredRoadSignal = 0;
 
 				// Corner
-				// ...
+				setParams_corner();
 			}
 
 			break;
@@ -182,11 +189,11 @@ static void qualiStateMachine()
 
 			if (desiredRoadSignal > ROAD_SIGNAL_THRESHOLD)
 			{
-				quali_state = fast_In;
+				quali_state = fast_InWait;
 				countdown = FAST_IN_CNTR;
 
 				// Corner -> Fast
-				// ...
+				setParams_fastIn();
 			}
 
 			break;
@@ -199,7 +206,7 @@ static void qualiStateMachine()
 				desiredRoadSignal = 0;
 
 				// Fast
-				// ...
+				setParams_fast();
 			}
 
 			break;
@@ -217,11 +224,11 @@ static void qualiStateMachine()
 
 			if (desiredRoadSignal > ROAD_SIGNAL_THRESHOLD)
 			{
-				quali_state = brake_In;
+				quali_state = brake_InWait;
 				countdown = BRAKE_IN_CNTR;
 
 				// Fast -> Brake
-				// ...
+				setParams_brakeIn();
 			}
 
 			break;
@@ -234,7 +241,7 @@ static void qualiStateMachine()
 				desiredRoadSignal = 0;
 
 				// Brake
-				// ...
+				setParams_brake();
 			}
 
 			break;
@@ -252,14 +259,69 @@ static void qualiStateMachine()
 
 			if (desiredRoadSignal > ROAD_SIGNAL_THRESHOLD)
 			{
-				quali_state = corner_In;
+				quali_state = corner_InWait;
 				countdown = CORNER_IN_CNTR;
 
 				// Brake -> Corner
-				// ...
+				setParams_cornerIn();
 			}
 
 			break;
 		}
 	}
 }
+
+static void setParams_cornerIn()
+{
+	// A fékút végén vagyunk, szinte már csak lassan kanyarodunk.
+
+	// TODO Kp =
+	// TODO Kd =
+	// TODO motor =
+}
+
+static void setParams_corner()
+{
+	// Kanyarodunk
+
+	// TODO Kp =
+	// TODO Kd =
+	// TODO motor =
+}
+
+static void setParams_fastIn()
+{
+	// Rámegyünk a gyors szakaszra. Érdemes valahogy egyenesbe állni.
+
+	// TODO Kp =
+	// TODO Kd =
+	// TODO motor =
+}
+
+static void setParams_fast()
+{
+	// Gyorsan megyünk
+
+	// TODO Kp =
+	// TODO Kd =
+	// TODO motor =
+}
+
+static void setParams_brakeIn()
+{
+	// Fékezés eleje, legnagyobb fék
+
+	// TODO Kp =
+	// TODO Kd =
+	// TODO motor =
+}
+
+static void setParams_brake()
+{
+	// A fékút végén vagyunk, lefékeztünk, kis fék.
+
+	// TODO Kp =
+	// TODO Kd =
+	// TODO motor =
+}
+
