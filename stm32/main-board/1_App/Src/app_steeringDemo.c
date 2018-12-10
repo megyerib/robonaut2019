@@ -71,11 +71,10 @@ float prevline = 0;
 int actuateEnabled;
 
 int motor_d;
-
-float P, D;
-
 float K_P;
 float K_D;
+
+float P, D;
 
 void Task_steeringDemo(void* p)
 {
@@ -97,12 +96,12 @@ void Task_steeringDemo(void* p)
 
 		// TRACTION ________________________________________
 
-		motor_d = 17;
+		motor_d = 19;
 
 		// STEERING ________________________________________
 
-		K_P =  2.15 * (1.0 / 90.0f);
-		K_D = 1.5 * 1.6f;
+		K_P =  2.22 * (1.0 / 90.0f);
+		K_D = 2.3 * 1.6f;
 
 		prevline = line_pos;
 
