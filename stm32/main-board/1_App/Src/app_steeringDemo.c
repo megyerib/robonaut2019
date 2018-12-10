@@ -26,7 +26,7 @@
 // State machine parameters
 #define ROAD_SIGNAL_THRESHOLD       6  /* Ennyiszer kell látnunk egy jelet, hogy elhiggyük. (ld. fent) */
 #define FAST_IN_CNTR          (500/5) /* Ennyi cikluson keresztül készülünk rá a gyors szakaszra */
-#define BRAKE_IN_CNTR         (600/5) /* Ennyi ciklus a fékezés második szakaszáig */
+#define BRAKE_IN_CNTR         (650/5) /* Ennyi ciklus a fékezés második szakaszáig */
 #define CORNER_IN_CNTR        10 /* Ennyi idõt megyünk a kanyarba befele (nem érdekes) */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -284,8 +284,8 @@ static void setParams_fast()
 	// Gyorsan megyünk
 
 	K_P     =  0.01f;
-	K_D     =  0.13f;
-	motor_d = 33;
+	K_D     =  0.14f;
+	motor_d = 35;
 }
 
 static void setParams_brakeIn()
@@ -303,5 +303,5 @@ static void setParams_brake()
 
 	K_P     =  0.01f;
 	K_D     =  0.1f;
-	motor_d = 10;
+	motor_d =  5;
 }
