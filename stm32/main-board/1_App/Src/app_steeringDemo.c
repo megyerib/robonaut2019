@@ -25,6 +25,17 @@
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
+typedef enum
+{
+	corner_InWait,
+	corner_OutCheck,
+	fast_InWait,
+	fast_OutCheck,
+	brake_InWait,
+	brake_OutCheck
+}
+QUALI_STATE;
+
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 /*static double p_a;		// m
@@ -131,3 +142,124 @@ void Task_steeringDemo(void* p)
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+#define ROAD_SIGNAL_THRESHOLD  5
+#define FAST_IN_CNTR          10
+#define BRAKE_IN_CNTR         10
+#define CORNER_IN_CNTR        10
+
+static QUALI_STATE quali_state = corner_OutCheck;
+int desiredRoadSignal = 0;
+int countdown;
+
+static void qualiStateMachine()
+{
+	switch (quali_state)
+	{
+		case corner_InWait:
+		{
+			if (countdown-- == 0)
+			{
+				quali_state = corner_OutCheck;
+				desiredRoadSignal = 0;
+
+				// Corner
+				// ...
+			}
+
+			break;
+		}
+		case corner_OutCheck:
+		{
+			if (lineGetRoadSignal() == TripleLine)
+			{
+				desiredRoadSignal++;
+			}
+			else
+			{
+				desiredRoadSignal = 0;
+			}
+
+			if (desiredRoadSignal > ROAD_SIGNAL_THRESHOLD)
+			{
+				quali_state = fast_In;
+				countdown = FAST_IN_CNTR;
+
+				// Corner -> Fast
+				// ...
+			}
+
+			break;
+		}
+		case fast_InWait:
+		{
+			if (countdown-- == 0)
+			{
+				quali_state = fast_OutCheck;
+				desiredRoadSignal = 0;
+
+				// Fast
+				// ...
+			}
+
+			break;
+		}
+		case fast_OutCheck:
+		{
+			if (lineGetRoadSignal() == TripleLine)
+			{
+				desiredRoadSignal++;
+			}
+			else
+			{
+				desiredRoadSignal = 0;
+			}
+
+			if (desiredRoadSignal > ROAD_SIGNAL_THRESHOLD)
+			{
+				quali_state = brake_In;
+				countdown = BRAKE_IN_CNTR;
+
+				// Fast -> Brake
+				// ...
+			}
+
+			break;
+		}
+		case brake_InWait:
+		{
+			if (countdown-- == 0)
+			{
+				quali_state = brake_OutCheck;
+				desiredRoadSignal = 0;
+
+				// Brake
+				// ...
+			}
+
+			break;
+		}
+		case brake_OutCheck:
+		{
+			if (lineGetRoadSignal() == Nothing)
+			{
+				desiredRoadSignal++;
+			}
+			else
+			{
+				desiredRoadSignal = 0;
+			}
+
+			if (desiredRoadSignal > ROAD_SIGNAL_THRESHOLD)
+			{
+				quali_state = corner_In;
+				countdown = CORNER_IN_CNTR;
+
+				// Brake -> Corner
+				// ...
+			}
+
+			break;
+		}
+	}
+}
