@@ -74,6 +74,9 @@ int motor_d;
 
 float P, D;
 
+float K_P;
+float K_D;
+
 void Task_steeringDemo(void* p)
 {
 	while(1)
@@ -94,9 +97,12 @@ void Task_steeringDemo(void* p)
 
 		// TRACTION ________________________________________
 
-		motor_d = 12;
+		motor_d = 17;
 
 		// STEERING ________________________________________
+
+		K_P =  2.15 * (1.0 / 90.0f);
+		K_D = 1.5 * 1.6f;
 
 		prevline = line_pos;
 
@@ -104,9 +110,9 @@ void Task_steeringDemo(void* p)
 
 		line_diff = line_pos - prevline;
 
-		P = line_pos  * (1.0 / 90.0f);
+		P = line_pos  * K_P;
 
-		D = line_diff * 1.6f;
+		D = line_diff * K_D;
 
 		angle = -0.75f * (P + D);
 
