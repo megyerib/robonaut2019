@@ -23,7 +23,7 @@
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void APP_TestApplication()
+void APP_Application()
 {
 	while(1)
 	{

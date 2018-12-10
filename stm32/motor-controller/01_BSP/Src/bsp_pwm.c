@@ -39,10 +39,6 @@ void BSP_PWMStart()
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PERIOD+1);	//to prevent any impulse on the output by starting
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, PERIOD+1);	//to prevent any impulse on the output by starting
 
-	//HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-	//HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-	//HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
-	//HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
 }
 
 void BSP_CreateDutyCycle(float DutyCycle, float* DutyCycleHalfBridge1, float* DutyCycleHalfBridge2)

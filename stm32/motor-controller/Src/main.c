@@ -103,6 +103,7 @@ int main(void)
   MX_ADC_Init();
   MX_USART1_UART_Init();
   MX_TIM3_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -111,7 +112,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   APP_Init();
-  APP_TestApplication();
 
   while (1)
   {

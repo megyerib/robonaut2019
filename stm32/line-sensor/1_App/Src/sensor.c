@@ -46,5 +46,6 @@ void startSensor()
         line = getLine(measVals);
         ledFeedback(&line);
         sendLine(&line);
+        HAL_Delay(10);
     }
 }
