@@ -274,8 +274,8 @@ static void setParams_fastIn()
 {
 	// Rámegyünk a gyors szakaszra. Érdemes valahogy egyenesbe állni.
 
-	K_P     =  0.023f;
-	K_D     =  3.36f;
+	K_P     =  0.01f;
+	K_D     =  0.1f;
 	motor_d = 25;
 }
 
@@ -292,8 +292,8 @@ static void setParams_brakeIn()
 {
 	// Fékezés eleje (akár még várhatunk is a fékezéssel)
 
-	K_P     =  0.021f;
-	K_D     =  3.104f;
+	K_P     =  0.01f;
+	K_D     =  0.1f;
 	motor_d = 20;
 }
 
@@ -301,7 +301,7 @@ static void setParams_brake()
 {
 	// Fékezés vége (itt lehet érdemes nagyot fékezni)
 
-	K_P     =  0.02;
-	K_D     =  3.12f;
+	K_P     =  0.01f;
+	K_D     =  0.1f;
 	motor_d = 16;
 }
