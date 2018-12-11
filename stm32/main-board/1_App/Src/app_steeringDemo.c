@@ -21,12 +21,12 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define STTERINGDEMO_TASK_DELAY 5 /* ms */
+#define STTERINGDEMO_TASK_DELAY 5
 
 // State machine parameters
-#define ROAD_SIGNAL_THRESHOLD  3 /* Ennyiszer kell látnunk egy jelet, hogy elhiggyük. (ld. fent) */
-#define FAST_IN_CNTR          10 /* Ennyi cikluson keresztül készülünk rá a gyors szakaszra */
-#define BRAKE_IN_CNTR         10 /* Ennyi cikluson át fékezünk */
+#define ROAD_SIGNAL_THRESHOLD       6  /* Ennyiszer kell látnunk egy jelet, hogy elhiggyük. (ld. fent) */
+#define FAST_IN_CNTR          (500/5) /* Ennyi cikluson keresztül készülünk rá a gyors szakaszra */
+#define BRAKE_IN_CNTR         (650/5) /* Ennyi ciklus a fékezés második szakaszáig */
 #define CORNER_IN_CNTR        10 /* Ennyi idõt megyünk a kanyarba befele (nem érdekes) */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -52,6 +52,7 @@ static void setParams_corner();
 static void setParams_fastIn();
 static void setParams_fast();
 static void setParams_brake();
+static void setParams_brakeIn();
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -79,11 +80,15 @@ float prevline = 0;
 int actuateEnabled;
 
 int motor_d;
+float K_P;
+float K_D;
 
 float P, D;
 
 void Task_steeringDemo(void* p)
 {
+	setParams_corner();
+
 	while(1)
     {
 		// REMOTE CONTROL __________________________________
@@ -100,9 +105,9 @@ void Task_steeringDemo(void* p)
 			actuateEnabled = 0;
 		}
 
-		// TRACTION ________________________________________
+		// STATE MACHINE (parameter settings) ______________
 
-		motor_d = 12;
+		qualiStateMachine();
 
 		// STEERING ________________________________________
 
@@ -112,11 +117,11 @@ void Task_steeringDemo(void* p)
 
 		line_diff = line_pos - prevline;
 
-		P = line_pos  * (1.0 / 90.0f);
+		P = line_pos  * K_P;
 
-		D = line_diff * 1.6f;
+		D = line_diff * K_D;
 
-		angle = -0.53f * (P + D);
+		angle = -0.75f * (P + D);
 
 		// ACTUATE _________________________________________
 
@@ -213,7 +218,7 @@ static void qualiStateMachine()
 				countdown = BRAKE_IN_CNTR;
 
 				// Fast -> Brake
-				setParams_brake();
+				setParams_brakeIn();
 			}
 
 			break;
@@ -226,7 +231,7 @@ static void qualiStateMachine()
 				desiredRoadSignal = 0;
 
 				// Brake
-				setParams_corner();
+				setParams_brake();
 			}
 
 			break;
@@ -260,35 +265,43 @@ static void setParams_corner()
 {
 	// Kanyarodunk
 
-	// TODO Kp =
-	// TODO Kd =
-	// TODO motor =
+	K_P     =  0.025f;
+	K_D     =  3.68f;
+	motor_d = 19;
 }
 
 static void setParams_fastIn()
 {
 	// Rámegyünk a gyors szakaszra. Érdemes valahogy egyenesbe állni.
 
-	// TODO Kp =
-	// TODO Kd =
-	// TODO motor =
+	K_P     =  0.01f;
+	K_D     =  0.1f;
+	motor_d = 27;
 }
 
 static void setParams_fast()
 {
 	// Gyorsan megyünk
 
-	// TODO Kp =
-	// TODO Kd =
-	// TODO motor =
+	K_P     =  0.01f;
+	K_D     =  0.14f;
+	motor_d = 35;
+}
+
+static void setParams_brakeIn()
+{
+	// Fékezés eleje (akár még várhatunk is a fékezéssel)
+
+	K_P     =  0.01f;
+	K_D     =  0.1f;
+	motor_d = 20;
 }
 
 static void setParams_brake()
 {
-	// Fékezés
+	// Fékezés vége (itt lehet érdemes nagyot fékezni)
 
-	// TODO Kp =
-	// TODO Kd =
-	// TODO motor =
+	K_P     =  0.01f;
+	K_D     =  0.1f;
+	motor_d =  5;
 }
-
