@@ -26,6 +26,7 @@
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 static LINE_SENSOR_OUT front_tmp;
+static int16_t prev_line = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -38,8 +39,6 @@ void lineInit()
 	lineRxStateMachine();
 }
 
-static int16_t prevline = 0;
-
 LINE lineGet()
 {
     LINE_SENSOR_OUT front;
@@ -50,72 +49,21 @@ LINE lineGet()
 	front = front_tmp;
 
     // Get center line position
-    /*for (i = 0; i < front.cnt; i++)
+    for (i = 0; i < front.cnt; i++)
         x_front += front.lines[i];
-    x_front /= front.cnt;*/
-
-	switch (front.cnt)
-	{
-		case 3: // Center line
-		{
-			x_front = front.lines[1];
-
-			break;
-		}
-		case 2: // Continuous line
-		{
-			// Average
-			if (front.lines[1] - front.lines[0] > 40)
-			{
-				x_front = (front.lines[1] + front.lines[0]) / 2;
-				break;
-			}
-
-			// Follow previous line
-			int mindiff = 200; // Bigger than possible
-			int bestline = prevline;
-			int diff;
-
-			for (i = 0; i < front.cnt; i++)
-			{
-				diff = front.lines[i] - prevline;
-
-				if (diff < 0)
-					diff *= 1;
-
-				if (diff < mindiff)
-				{
-					bestline = front.lines[i];
-					mindiff = diff;
-				}
-			}
-
-			x_front = bestline;
-
-			break;
-		}
-		case 1: // Only line
-		{
-			x_front = front.lines[0];
-
-			break;
-		}
-		case 0: // Previous line
-		default:
-		{
-			x_front = prevline;
-
-			break;
-		}
-	}
-
-	prevline = x_front;
+    x_front /= front.cnt;
 
     LINE ret =
     {
         .d = x_front,
         .theta = 0
     };
+
+	// Lost line
+	if (front.cnt == 0)
+		ret.d = prev_line;
+
+	prev_line = ret.d;
 
     return ret;
 }
@@ -133,16 +81,16 @@ RoadSignal lineGetRoadSignal()
 
     switch (front_tmp.cnt)
     {
-    	case 2:
-    	{
-    		ret = DoubleLine;
-    		break;
-    	}
-    	case 3:
-    	{
-    		ret = TripleLine;
-    		break;
-    	}
+		case 3:
+		{
+			ret = TripleLine;
+			break;
+		}
+		case 2:
+		{
+			ret = DoubleLine;
+			break;
+		}
     }
 
     return ret;
