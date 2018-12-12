@@ -144,6 +144,8 @@ void bcmBtBufferFlush (void)
 
 	// Send out the message
 	bspUartTransmit_IT(Uart_Bluetooth, btBuffer, bufSize);
+	// TODO for qt debug
+	bspUartTransmit_IT(Uart_USB, btBuffer, bufSize);
 }
 
 bool bcmLogMemberUpdate (const eBluetoothLogMember member, uint8_t* const array, const uint32_t len)

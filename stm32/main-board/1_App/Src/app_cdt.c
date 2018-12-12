@@ -13,6 +13,8 @@
 #include "app_common.h"
 #include "trace.h"
 #include "bsp_uart.h"
+#include "servo.h"
+#include "sharp.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -47,30 +49,25 @@ QueueHandle_t qLineTheta_u32;
 uint8_t btRxBuffer[TRACE_REC_MSG_SIZE];
 
 QueueHandle_t qRecData;
+cTraceRxBluetoothStruct recData;
+bool btReceived = false;
+double cntr = 0;
 
-/* TODO BT extra feature
-uint8_t	txBtMsg0[16] = "AT+AB FWVersion\r";
-uint8_t txBtMsg1[25] = "AT+AB LocalName Override\r";
-uint8_t txBtMsg2[19] = "AT+AB GetBDAddress\r";
-uint8_t txBtMsg3[16] = "AT+AB Discovery\r";
-uint8_t txBtMsg4[30] = "AT+AB SPPConnect 00C2C674C132\r";
-uint8_t txBtMsg5[30] = "AT+AB RemoteName 00C2C674C132\r";
-uint8_t txBtMsg6[23] = "AT+AB RemoteName [BD Addr\r\n";
+// USB______________________________________
 
-static uint8_t rxBtMsg0[100];
-static uint8_t rxBtMsg1[100];
-static uint8_t rxBtMsg2[100];
-static uint8_t rxBtMsg3[200];
-static uint8_t rxBtMsg4[100];
-static uint8_t rxBtMsg5[100];
+bool usbSent = false;
+bool usbRec = false;
 
-uint8_t txEnter[2] = "\r\n";*/
-uint8_t sent = 0;
-uint8_t flag = 0;
-
-//TODO delete this
 extern UART_HandleTypeDef huart5;
-uint8_t usbTxBuffer[15];
+uint8_t usbRxBuffer[TRACE_REC_MSG_SIZE];
+uint8_t usbTxBuffer[BCM_LOG_SIZE+5];
+uint32_t sharp = 40;
+double servo = 60;
+double encVel = 0;
+
+cTraceRxBluetoothStruct usbStruct;
+
+// END___________________________-
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -121,9 +118,11 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	vQueueAddToRegistry(qRecData, "RecData");
 
+	sharpTriggerAdc();
+
 	xTaskCreate(Task_CarDiagnosticsTool,
 				"TASK_CAR_DIAGNOSTICS_TOOL",
-				DEFAULT_STACK_SIZE+150 ,
+				DEFAULT_STACK_SIZE+180 ,
 				NULL,
 				TASK_CDT_PRIO,
 				NULL);
@@ -135,60 +134,60 @@ void Task_CarDiagnosticsTool(void* p)
 {
 	(void)p;
 
-	//TODO Feature: configuration
-	/*uint8_t bypassMsg[13] = "AT+AB Bypass\r";
-	uint8_t bypassResp1[19];
-	uint8_t bypassResp2[21];
-
-	uint8_t connectRx[19];
-	uint8_t namingMsg[25] = "AT+AB LocalName Override\r";
-
-	bcmResetBluetooth();
-	HAL_UART_Abort(&huart5);
-	bspUartTransmit_IT(Uart_Bluetooth, namingMsg,  sizeof(namingMsg));
-	bspUartReceive(Uart_Bluetooth, 	   connectRx,  sizeof(connectRx), 1000);
-	bspUartTransmit_IT(Uart_Bluetooth, bypassMsg, sizeof(bypassMsg));
-	bspUartReceive(Uart_Bluetooth, 	   bypassResp2,  sizeof(bypassResp2), 5000);
-	bspUartTransmit(Uart_USB, 	bypassMsg, sizeof(bypassMsg), 1000);
-	bspUartTransmit(Uart_USB, 	bypassResp2, sizeof(bypassResp2), 1000);*/
-
-	uint8_t helloMsg[18] = "Hello Override\r\n";
+	bspUartReceive_IT(Uart_USB, usbRxBuffer, TRACE_REC_MSG_SIZE);
+	bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);
 
 
-	bspUartReceive_IT(Uart_USB, btRxBuffer, 15);
-	bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, 15);
-//	UBaseType_t cdtStackUsage;
-//	cdtStackUsage = uxTaskGetStackHighWaterMark(NULL);
+	sharp = sharpGetDistance();
 
 	while(1)
 	{
-		if (bcmBluetoothConnected())
+		if (true)//bcmBluetoothConnected())
 		{
-			//TODO DEBUG
-			/*if(sent == 10)
+			if (usbRec == true)
 			{
-				bcmSend(helloMsg, sizeof(helloMsg));
-				vTaskDelay(10);
+				usbRec = false;
 
-				sent = 0;
+				usbStruct = traceProcessRxData(usbRxBuffer);
 			}
-			sent++;*/
-			// END_DEBUG
 
-			/*if (btReceived == true)
+			if (btReceived == true)
 			{
 				recData = traceProcessRxData(btRxBuffer);
-				//xQueueOverwrite(qRecData, (void*) &recData);
+
+				xQueueOverwrite(qRecData, (void*) &recData);
+
+				btReceived = false;
 
 				// TODO debug?
 				bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);
-			}*/
+				bspUartTransmit_IT(Uart_USB, usbTxBuffer, TRACE_REC_MSG_SIZE);
+			}
 
+			// SEND bt and USB TODO
 			traceFlushData();
 
 			// TODO debug?
-			bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, 15);
+			bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);
+			bspUartReceive_IT(Uart_USB, usbRxBuffer, TRACE_REC_MSG_SIZE);
 		}
+
+
+		if(recData.RecDataSteer > 0 && recData.RecDataSteer < 180)
+		{
+			servo = (double)usbStruct.RecDataSteer;
+			servoSetAngle(usbStruct.RecDataSteer);
+		}
+
+
+		cntr++;
+
+		sharpTriggerAdc();
+
+
+		traceBluetooth(BCM_LOG_SERVO_ANGLE, &servo);
+		traceBluetooth(BCM_LOG_ENC_VEL, &encVel);
+		traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp);
 
 		vTaskDelay(200);
 	}
@@ -196,31 +195,21 @@ void Task_CarDiagnosticsTool(void* p)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-
+void bspUsbTxCpltCallback()
+{
+	usbSent = true;
+}
 
 void bspUsbRxCpltCallback ()
 {
-	uint8_t len = 15;
-	uint8_t buff[len];
-
-	memcpy(btRxBuffer, buff, len);
-
-	bspUartReceive_IT(Uart_USB, buff, 15);
+	usbRec = true;
 }
 
 void bspBluetoothRxCpltCallback ()
 {
-	uint8_t len = 15;
-	cTraceRxBluetoothStruct recData;
+	btReceived = true;
 
-	memcpy(usbTxBuffer, btRxBuffer, len);
-
-	//bspUartReceive_IT(Uart_Bluetooth, rxBuffer, 15);
-	bspUartTransmit_IT(Uart_USB, usbTxBuffer, len);
-
-	recData = traceProcessRxData(btRxBuffer);
-
-	xQueueOverwrite(qRecData, (void*) &recData);
+	//memcpy(usbRxBuffer, btRxBuffer, TRACE_REC_MSG_SIZE);
 }
 
 // THIS ONE WORKS!!!

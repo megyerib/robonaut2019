@@ -34,8 +34,8 @@ void Init()
 
 	bspInit();
 
-	TaskInit_steeringDemo();
-	//TaskInit_CarDiagnosticsTool();
+//	TaskInit_steeringDemo();
+	TaskInit_CarDiagnosticsTool();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

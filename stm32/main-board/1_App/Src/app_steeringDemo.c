@@ -45,6 +45,8 @@ static cFirstOrderTF contrPD;*/
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
+cTraceRxBluetoothStruct recData;
+
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void TaskInit_steeringDemo(void)
@@ -94,7 +96,24 @@ void Task_steeringDemo(void* p)
 
 		// TRACTION ________________________________________
 
-		motor_d = 12;
+		//motor_d = 12;
+
+		// GET PARAMETERS___________________________________
+
+		recData = traceReceiveBluetooth();
+		double kp = recData.RecDataPdKp_d;
+		double kd = recData.RecDataPdTd_d;
+
+		if( recData.RecDataSteer != 0)
+		{
+			servoSetAngle(recData.RecDataSteer*3.14/180-3.14/2);
+
+		}
+
+		if(recData.RecCmdAccelerate == true)
+		{
+			motor_d = recData.RecDataAccelerate;
+		}
 
 		// STEERING ________________________________________
 
@@ -108,7 +127,7 @@ void Task_steeringDemo(void* p)
 
 		D = line_diff * 1.6f;
 
-		angle = -0.75f * (P + D);
+		//angle = -0.75f * (P + D);
 
 		// ACTUATE _________________________________________
 
@@ -120,9 +139,9 @@ void Task_steeringDemo(void* p)
 
 		// TRACE ___________________________________________
 
-		//traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
-		//traceBluetooth(BCM_LOG_LINE_D, &linepos);
-		//traceBluetooth(BCM_LOG_ENC_VEL, 10);
+		traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
+		traceBluetooth(BCM_LOG_LINE_D, &line_pos);
+		traceBluetooth(BCM_LOG_ENC_VEL, 12);
 
 		// END DELAY _______________________________________
 
