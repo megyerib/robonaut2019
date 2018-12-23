@@ -44,6 +44,8 @@ static uint8_t regResult[REGS_TO_READ];
 static Accel  ret_accel;
 static AngVel ret_angvel;
 
+static int i;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void WriteRegBlocking(uint8_t regAddr, uint8_t data);
@@ -64,6 +66,9 @@ void inertInit()
 	WriteRegBlocking(CTRL2_G, 0x60); // Gyro = 416Hz (High-Performance mode)
 
 	// TODO enable interrupt
+
+
+	i = 0;
 }
 
 Accel inertGetAccel()
@@ -80,13 +85,10 @@ AngVel inertGetAngVel()
 
 // Sensor reading ------------------------------------------
 
-int i;
-
 void inertTriggerMeasurement()
 {
-	i = 0;
-
 	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSequence[i], 1, &regResult[i], 1);
+	i++;
 }
 
 void i2cInertialSensorMemRxCallback()
@@ -109,6 +111,8 @@ void i2cInertialSensorMemRxCallback()
 		ret_angvel = *ang_ptr;
 
 		__enable_irq();
+
+		i = 0;
 	}
 }
 

@@ -13,6 +13,7 @@
 #include "usart.h"
 #include "bsp_leds.h"
 #include "bsp_pwm.h"
+#include "bsp_emergency_stop.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
