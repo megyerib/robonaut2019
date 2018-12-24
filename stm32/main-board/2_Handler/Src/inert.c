@@ -23,72 +23,74 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
+#define G 9.81f
+
 #define REGS_TO_READ (12u)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static uint8_t regSequence[REGS_TO_READ] =
-{
-	OUTX_L_XL,  OUTX_H_XL,  // Accelerometer X
-	OUTY_L_XL,  OUTY_H_XL,  // Accelerometer Y
-	OUTZ_L_XL,  OUTZ_H_XL,  // Accelerometer Z
-	OUTX_L_G,   OUTX_H_G,   // Gyroscope X
-	OUTY_L_G,   OUTY_H_G,   // Gyroscope Y
-	OUTZ_L_G,   OUTZ_H_G    // Gyroscope Z
-};
+static int16_t tmp_accel[3];
+static int16_t tmp_angvel[3];
 
-static uint8_t regResult[REGS_TO_READ];
+static int16_t ret_accel[3];
+static int16_t ret_angvel[3];
 
-static Accel  ret_accel;
-static AngVel ret_angvel;
+static uint8_t regSource[REGS_TO_READ];
+static uint8_t* regDest[REGS_TO_READ];
 
 static int i;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void WriteRegBlocking(uint8_t regAddr, uint8_t data);
+static void fillRegDest();
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void inertInit()
 {
+	fillRegDest();
+
 	HAL_GPIO_WritePin(INRT_SD0_GPIO_Port, INRT_SD0_Pin, GPIO_PIN_RESET); // Pull down SD0
 	HAL_GPIO_WritePin(INRT_CS_GPIO_Port, INRT_CS_Pin, GPIO_PIN_SET); // CS (Stays active 4ever)
 
 	// Enable accelerometer
 	WriteRegBlocking(CTRL9_XL, 0x38); // Acc X, Y, Z axes enabled
-	WriteRegBlocking(CTRL1_XL, 0x60); // Acc = 416Hz (High-Performance mode)
+	WriteRegBlocking(CTRL1_XL, 0x6C); // Acc = 416Hz (High-Performance mode); Full scale: +-8g
 
 	// Enable gyroscope
 	WriteRegBlocking(CTRL10_C, 0x38); // Gyro X, Y, Z axes enabled
-	WriteRegBlocking(CTRL2_G, 0x60); // Gyro = 416Hz (High-Performance mode)
+	WriteRegBlocking(CTRL2_G, 0x60);  // Gyro = 416Hz (High-Performance mode)
 
 	// TODO enable interrupt
 
-
-	i = 0;
 }
 
-Accel inertGetAccel()
+ACCEL inertGetAccel()
 {
-	Accel* ptr = (Accel*) &regResult[0];
-    return *ptr;
+    ACCEL ret;
+
+    ret.a_x = ret_accel[0] / -4096.0f * G;
+    ret.a_y = ret_accel[1] / -4096.0f * G;
+    ret.a_z = ret_accel[2] / -4096.0f * G;
+
+	return ret;
 }
 
-AngVel inertGetAngVel()
+ANGVEL inertGetAngVel()
 {
-    AngVel* ptr = (AngVel*) &regResult[6];
-    return *ptr;
+	ANGVEL ret;
+	return ret;
 }
 
 // Sensor reading ------------------------------------------
 
 void inertTriggerMeasurement()
 {
-	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSequence[i], 1, &regResult[i], 1);
-	i++;
+	i = 0;
+	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i], 1, regDest[i], 1);
 }
 
 void i2cInertialSensorMemRxCallback()
@@ -97,22 +99,22 @@ void i2cInertialSensorMemRxCallback()
 
 	if (i < REGS_TO_READ)
 	{
-		HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSequence[i], 1, &regResult[i], 1);
+		HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i], 1, regDest[i], 1);
 	}
 	else // Sensor reading finished
 	{
-	    Accel*  acc_ptr =  (Accel*) &regResult[0];
-	    AngVel* ang_ptr = (AngVel*) &regResult[6];
-
 	    __disable_irq(); // Cheap thread safety
 
 		// Copy the temporary values to their final location
-		ret_accel  = *acc_ptr;
-		ret_angvel = *ang_ptr;
+		int j;
+
+		for (j = 0; j < 3; j++)
+		{
+			ret_accel[j]  = tmp_accel[j];
+			ret_angvel[j] = tmp_angvel[j];
+		}
 
 		__enable_irq();
-
-		i = 0;
 	}
 }
 
@@ -122,4 +124,35 @@ static void WriteRegBlocking(uint8_t regAddr, uint8_t data)
 {
 	// Assuming SD0 is pulled down
 	HAL_I2C_Mem_Write(INERTIAL_I2C, LSM6DS3_ADDR0, regAddr, 1, &data, 1, HAL_MAX_DELAY);
+}
+
+static void fillRegDest()
+{
+	regSource[0] = OUTX_L_XL; // Accelerometer X
+	regSource[1] = OUTX_H_XL;
+	regSource[2] = OUTY_L_XL; // Accelerometer Y
+	regSource[3] = OUTY_H_XL;
+	regSource[4] = OUTZ_L_XL; // Accelerometer Z
+	regSource[5] = OUTZ_H_XL;
+
+	regSource[6] = OUTX_L_G;  // Gyroscope X
+	regSource[7] = OUTX_H_G;
+	regSource[8] = OUTY_L_G;  // Gyroscope Y
+	regSource[9] = OUTY_H_G;
+	regSource[10] = OUTZ_L_G; // Gyroscope Z
+	regSource[11] = OUTZ_H_G;
+
+	regDest[0]  = &((uint8_t*) &tmp_accel)[2]; // Accelerometer Y
+	regDest[1]  = &((uint8_t*) &tmp_accel)[3];
+	regDest[2]  = &((uint8_t*) &tmp_accel)[0]; // Accelerometer X
+	regDest[3]  = &((uint8_t*) &tmp_accel)[1];
+	regDest[4]  = &((uint8_t*) &tmp_accel)[4]; // Accelerometer Z
+	regDest[5]  = &((uint8_t*) &tmp_accel)[5];
+
+	regDest[6]  = &((uint8_t*) &tmp_angvel)[2]; // Gyroscope Y
+	regDest[7]  = &((uint8_t*) &tmp_angvel)[3];
+	regDest[8]  = &((uint8_t*) &tmp_angvel)[0]; // Gyroscope X
+	regDest[9]  = &((uint8_t*) &tmp_angvel)[1];
+	regDest[10] = &((uint8_t*) &tmp_angvel)[4]; // Gyroscope Z
+	regDest[11] = &((uint8_t*) &tmp_angvel)[5];
 }

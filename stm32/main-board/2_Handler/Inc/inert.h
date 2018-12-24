@@ -16,25 +16,25 @@
 
 typedef struct
 {
-	uint16_t a_x;
-	uint16_t a_y;
-	uint16_t a_z;
+	float a_x;
+	float a_y;
+	float a_z;
 }
-Accel;
+ACCEL;
 
 typedef struct
 {
-	uint16_t omega_x;
-	uint16_t omega_y;
-	uint16_t omega_z;
+	float omega_x;
+	float omega_y;
+	float omega_z;
 }
-AngVel;
+ANGVEL;
 
 // Variables -----------------------------------------------------------------------------------------------------------
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 void inertInit();
-Accel inertGetAccel();
-AngVel inertGetAngVel();
+ACCEL inertGetAccel();
+ANGVEL inertGetAngVel();
 void inertTriggerMeasurement();
