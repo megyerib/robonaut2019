@@ -26,6 +26,7 @@
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 static LINE_SENSOR_OUT front_tmp;
+static int16_t prev_line = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -58,6 +59,12 @@ LINE lineGet()
         .theta = 0
     };
 
+	// Lost line
+	if (front.cnt == 0)
+		ret.d = prev_line;
+
+	prev_line = ret.d;
+
     return ret;
 }
 
@@ -71,6 +78,20 @@ Arc lineGetArc(uint16_t r_mm, ArcDir dir)
 RoadSignal lineGetRoadSignal()
 {
     RoadSignal ret = Nothing;
+
+    switch (front_tmp.cnt)
+    {
+		case 3:
+		{
+			ret = TripleLine;
+			break;
+		}
+		case 2:
+		{
+			ret = DoubleLine;
+			break;
+		}
+    }
 
     return ret;
 }

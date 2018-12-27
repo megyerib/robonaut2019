@@ -23,23 +23,36 @@
 
 #define STTERINGDEMO_TASK_DELAY 5
 
+// State machine parameters
+#define ROAD_SIGNAL_THRESHOLD       6  /* Ennyiszer kell l�tnunk egy jelet, hogy elhiggy�k. (ld. fent) */
+#define FAST_IN_CNTR          (500/5) /* Ennyi cikluson kereszt�l k�sz�l�nk r� a gyors szakaszra */
+#define BRAKE_IN_CNTR         (650/5) /* Ennyi ciklus a f�kez�s m�sodik szakasz�ig */
+#define CORNER_IN_CNTR        10 /* Ennyi id�t megy�nk a kanyarba befele (nem �rdekes) */
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
+
+typedef enum
+{
+	corner_InWait,
+	corner_OutCheck,
+	fast_InWait,
+	fast_OutCheck,
+	brake_InWait,
+	brake_OutCheck
+}
+QUALI_STATE;
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-/*static double p_a;		// m
-static double p_meas;	// m
-static double e;		// m
-static double p;		// m
-static double phi_a;	// deg
-static double v;		// m/s
-static double L;		// m
+// Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static double Kp;		//
-static double Td;		// sec
-static double T;		// sec
+static void qualiStateMachine();
 
-uint8_t pwm = 10;
+static void setParams_corner();
+static void setParams_fastIn();
+static void setParams_fast();
+static void setParams_brake();
+static void setParams_brakeIn();
 
 static cFirstOrderTF contrPD;*/
 
@@ -73,11 +86,15 @@ float prevline = 0;
 int actuateEnabled;
 
 int motor_d;
+float K_P;
+float K_D;
 
 float P, D;
 
 void Task_steeringDemo(void* p)
 {
+	setParams_corner();
+
 	while(1)
     {
 		// REMOTE CONTROL __________________________________
@@ -94,7 +111,7 @@ void Task_steeringDemo(void* p)
 			actuateEnabled = 0;
 		}
 
-		// TRACTION ________________________________________
+		// STATE MACHINE (parameter settings) ______________
 
 		//motor_d = 12;
 
@@ -123,9 +140,9 @@ void Task_steeringDemo(void* p)
 
 		line_diff = line_pos - prevline;
 
-		P = line_pos  * (1.0 / 90.0f);
+		P = line_pos  * K_P;
 
-		D = line_diff * 1.6f;
+		D = line_diff * K_D;
 
 		//angle = -0.75f * (P + D);
 
@@ -150,3 +167,164 @@ void Task_steeringDemo(void* p)
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+static QUALI_STATE quali_state = corner_OutCheck;
+int desiredRoadSignal = 0;
+int countdown;
+
+static void qualiStateMachine()
+{
+	switch (quali_state)
+	{
+		case corner_InWait:
+		{
+			if (countdown-- == 0)
+			{
+				quali_state = corner_OutCheck;
+				desiredRoadSignal = 0;
+
+				// Corner
+				setParams_corner();
+			}
+
+			break;
+		}
+		case corner_OutCheck:
+		{
+			if (lineGetRoadSignal() == TripleLine)
+			{
+				desiredRoadSignal++;
+			}
+			else
+			{
+				desiredRoadSignal = 0;
+			}
+
+			if (desiredRoadSignal > ROAD_SIGNAL_THRESHOLD)
+			{
+				quali_state = fast_InWait;
+				countdown = FAST_IN_CNTR;
+
+				// Corner -> Fast
+				setParams_fastIn();
+			}
+
+			break;
+		}
+		case fast_InWait:
+		{
+			if (countdown-- == 0)
+			{
+				quali_state = fast_OutCheck;
+				desiredRoadSignal = 0;
+
+				// Fast
+				setParams_fast();
+			}
+
+			break;
+		}
+		case fast_OutCheck:
+		{
+			if (lineGetRoadSignal() == TripleLine)
+			{
+				desiredRoadSignal++;
+			}
+			else
+			{
+				desiredRoadSignal = 0;
+			}
+
+			if (desiredRoadSignal > ROAD_SIGNAL_THRESHOLD)
+			{
+				quali_state = brake_InWait;
+				countdown = BRAKE_IN_CNTR;
+
+				// Fast -> Brake
+				setParams_brakeIn();
+			}
+
+			break;
+		}
+		case brake_InWait:
+		{
+			if (countdown-- == 0)
+			{
+				quali_state = brake_OutCheck;
+				desiredRoadSignal = 0;
+
+				// Brake
+				setParams_brake();
+			}
+
+			break;
+		}
+		case brake_OutCheck:
+		{
+			if (lineGetRoadSignal() == Nothing)
+			{
+				desiredRoadSignal++;
+			}
+			else
+			{
+				desiredRoadSignal = 0;
+			}
+
+			if (desiredRoadSignal > ROAD_SIGNAL_THRESHOLD)
+			{
+				quali_state = corner_InWait;
+				countdown = CORNER_IN_CNTR;
+
+				// Brake -> Corner
+				setParams_corner();
+			}
+
+			break;
+		}
+	}
+}
+
+static void setParams_corner()
+{
+	// Kanyarodunk
+
+	K_P     =  0.025f;
+	K_D     =  3.68f;
+	motor_d = 19;
+}
+
+static void setParams_fastIn()
+{
+	// R�megy�nk a gyors szakaszra. �rdemes valahogy egyenesbe �llni.
+
+	K_P     =  0.01f;
+	K_D     =  0.1f;
+	motor_d = 27;
+}
+
+static void setParams_fast()
+{
+	// Gyorsan megy�nk
+
+	K_P     =  0.01f;
+	K_D     =  0.14f;
+	motor_d = 35;
+}
+
+static void setParams_brakeIn()
+{
+	// F�kez�s eleje (ak�r m�g v�rhatunk is a f�kez�ssel)
+
+	K_P     =  0.01f;
+	K_D     =  0.1f;
+	motor_d = 20;
+}
+
+static void setParams_brake()
+{
+	// F�kez�s v�ge (itt lehet �rdemes nagyot f�kezni)
+
+	K_P     =  0.01f;
+	K_D     =  0.1f;
+	motor_d =  5;
+}
