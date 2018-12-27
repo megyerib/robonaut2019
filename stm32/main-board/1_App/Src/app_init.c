@@ -37,10 +37,11 @@ void Init()
 	//DEBUG
     servoInit();
 
-    lineInit();
+ //   lineInit();
     //
 
 	TaskInit_Sharp();
+//	TaskInit_Servo();
 	//TaskInit_SControl();
 	//TaskInit_steeringDemo();
 	TaskInit_CarDiagnosticsTool();

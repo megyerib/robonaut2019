@@ -61,9 +61,10 @@ bool usbRec = false;
 extern UART_HandleTypeDef huart5;
 uint8_t usbRxBuffer[TRACE_REC_MSG_SIZE];
 uint8_t usbTxBuffer[BCM_LOG_SIZE+5];
-uint32_t sharp = 40;
+cMEASUREMENT_DIST sharp;
 double servo = 60;
 double encVel = 0;
+double motor = 0;
 
 cTraceRxBluetoothStruct usbStruct;
 
@@ -120,6 +121,9 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	sharpTriggerAdc();
 
+	//TODO
+	sharp.Distance = 40;
+
 	xTaskCreate(Task_CarDiagnosticsTool,
 				"TASK_CAR_DIAGNOSTICS_TOOL",
 				DEFAULT_STACK_SIZE+180 ,
@@ -138,7 +142,7 @@ void Task_CarDiagnosticsTool(void* p)
 	bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);
 
 
-	sharp = sharpGetDistance();
+	sharp = sharpGetMeasurement();
 
 	while(1)
 	{
@@ -183,9 +187,9 @@ void Task_CarDiagnosticsTool(void* p)
 				recData.RecCmdSteer = false;
 			}
 
-			sharp = sharpGetDistance();
+			sharp = sharpGetMeasurement();
 
-			if(sharp < 40)
+			if(sharp.Distance < 40)
 			{
 				uint8_t motor_stop = 0;
 				traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, true);

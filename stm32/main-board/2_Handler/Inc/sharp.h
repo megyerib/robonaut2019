@@ -12,6 +12,7 @@
 
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include "task.h"
 
 #include "adc.h"
 
@@ -33,17 +34,9 @@ SemaphoreHandle_t semSharp;
 
 void sharpInit ();
 
-//! @brief  Gets the calculated distance of the SHARP sensor safely.
-//! @retval Distance.
-uint16_t sharpGetDistance ();
-
-
-//! @brief  Sets the calculated distance of the SHARP sensor safely
-//! @param  Distance to be stored.
-void sharpSetDistance(const uint16_t distance);
-
-
 //! @brief  Starts the ADC conversion and will generate an IT when it is ready.
 void sharpTriggerAdc ();
 
+//! @brief  Gets the calculated distance of the SHARP sensor safely.
+//! @retval Distance.
 cMEASUREMENT_DIST sharpGetMeasurement ();

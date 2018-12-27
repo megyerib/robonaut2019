@@ -54,7 +54,7 @@ static void setParams_fast();
 static void setParams_brake();
 static void setParams_brakeIn();
 
-static cFirstOrderTF contrPD;*/
+static cFirstOrderTF contrPD;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 

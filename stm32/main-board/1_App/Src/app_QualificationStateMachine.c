@@ -77,7 +77,7 @@ void Task_QSM (void* p)
 	uint8_t  motorDutyCycle = 0;
 	uint32_t elapsedTime = 0;
 	LINE     blackLine;
-	uint32_t sharpDist = 0;
+	cMEASUREMENT_DIST sharp;
 	bool	 collisionWaringing = false;
 	uint8_t  motorBoardBuffer[3];
 	uint32_t i = 0;
@@ -86,9 +86,9 @@ void Task_QSM (void* p)
 	{
 		switch (state)
 		{
-			sharpDist = sharpGetDistance();
+			sharp = sharpGetMeasurement();
 
-			if (sharpDist < 20)
+			if (sharp.Distance < 20)
 			{
 				collisionWaringing = true;
 			}
@@ -128,7 +128,7 @@ void Task_QSM (void* p)
 
 				// Trigger: Blue Button pressed (after 50ms for prelling), sharp distance or 5s elapsed.
 				if(
-						sharpDist < 20 ||
+						sharp.Distance < 20 ||
 						(HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET && elapsedTime > 5) ||
 						elapsedTime == 500)
 				{
@@ -167,7 +167,7 @@ void Task_QSM (void* p)
 		traceBluetooth(BCM_LOG_LINE_D, &blackLine.d);
 		traceBluetooth(BCM_LOG_LINE_THETA, &blackLine.theta);
 		traceBluetooth(BCM_LOG_SERVO_ANGLE, &servoAngle);
-		traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharpDist);
+		traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp.Distance);
 		traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &collisionWaringing);
 
 

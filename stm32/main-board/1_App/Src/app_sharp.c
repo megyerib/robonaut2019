@@ -46,15 +46,17 @@ void Task_Sharp (void* p)
 {
 	(void)p;
 
-	uint32_t sharp_distance = 0;
+	cMEASUREMENT_DIST sharp;
 	bool warning = true;
 	bool noWarning = false;
+
+	sharp.Distance = 0;
 
 	while(1)
 	{
 		sharpTriggerAdc();
-		sharp_distance = sharpGetDistance();
-		if(sharp_distance > 40)
+		sharp = sharpGetMeasurement();
+		if(sharp.Distance > 40)
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			xEventGroupClearBits(event_sharp, 1);
@@ -67,7 +69,7 @@ void Task_Sharp (void* p)
 			traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &warning);
 		}
 
-		traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp_distance);
+		traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp.Distance);
 
 		vTaskDelay(TASK_DELAY_40_MS);
 	}

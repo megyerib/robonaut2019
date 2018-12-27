@@ -19,17 +19,17 @@
 #define 	B_2					-0.000444444	//!< [1/cm]
 #define		VERTEX				1.9 			//!< [V]
 
-#define		WAIT_SEMAPHORE		100				//!< Ticks [ms]
+#define		WAIT_SEMAPHORE		2				//!< Ticks [ms]
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 //! Common resource that stores the actual measured distance.
-static uint16_t sharpDistance = 0;
-
-static uint8_t sequenceNumber = 0;
+static cMEASUREMENT_DIST sharpMeasurement;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
+
+static void sharpSetMeasurement(const cMEASUREMENT_DIST meas);
 
 static uint16_t sharpCharacteristic (const uint32_t adcValue);
 
@@ -39,32 +39,10 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc);
 
 void sharpInit ()
 {
-	sequenceNumber = 0;
+	sharpMeasurement.Sequence = 0;
 
 	// Initial value.
 	sharpTriggerAdc();
-}
-
-uint16_t sharpGetDistance ()
-{
-	uint16_t distance;
-
-	if ( xSemaphoreTake(semSharp, WAIT_SEMAPHORE) == pdTRUE )
-	{
-		distance = sharpDistance;
-		xSemaphoreGive(semSharp);
-	}
-
-	return distance;
-}
-
-void sharpSetDistance(const uint16_t distance)
-{
-	if ( xSemaphoreTake(semSharp, WAIT_SEMAPHORE) == pdTRUE )
-	{
-		sharpDistance = distance;
-		xSemaphoreGive(semSharp);
-	}
 }
 
 void sharpTriggerAdc ()
@@ -74,14 +52,40 @@ void sharpTriggerAdc ()
 
 cMEASUREMENT_DIST sharpGetMeasurement ()
 {
-	cMEASUREMENT_DIST meas;
+	cMEASUREMENT_DIST retVal;
 
-	//TODO
-	meas.Sequence = sequenceNumber;
-	meas.Distance =
+	if ( xSemaphoreTake(semSharp, WAIT_SEMAPHORE) == pdTRUE )
+	{
+		retVal = sharpMeasurement;
+		xSemaphoreGive(semSharp);
+	}
+
+	return retVal;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+//! @brief  Sets the calculated distance of the SHARP sensor safely
+//! @param  Distance to be stored.
+static void sharpSetMeasurement(const cMEASUREMENT_DIST meas)
+{
+	BaseType_t xTaskWokenByReceive = pdFALSE;
+
+	if (xSemaphoreTakeFromISR(semSharp, &xTaskWokenByReceive) == pdTRUE)
+	{
+		sharpMeasurement = meas;
+		xSemaphoreGiveFromISR(semSharp, &xTaskWokenByReceive);
+	}
+
+	if (xTaskWokenByReceive != pdFALSE)
+	{
+		// pdTRUE
+		/* We should switch context so the ISR returns to a different task.
+		   NOTE:  How this is done depends on the port you are using.  Check
+		   the documentation and examples for your port. */
+		taskYIELD();
+	}
+}
 
 //! @brief 	Implements the inverse characteristics of the sensor and returns a
 //!			distance from an adc value.
@@ -116,21 +120,17 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 {
 	if (hadc->Instance == ADC1)
 	{
-		uint32_t adcValue = HAL_ADC_GetValue(&BSP_SHARP_HADC);
-		uint16_t distance = sharpCharacteristic(adcValue);
+		uint32_t adcValue;
+		cMEASUREMENT_DIST meas;
 
-		//TODO Do we need semaphore?
-		sharpDistance = distance;
+		// Get the ADC result.
+		adcValue = HAL_ADC_GetValue(&BSP_SHARP_HADC);
 
-		// Incrementing the sequence number.
-		if (sequenceNumber == 255)
-		{
-			sequenceNumber = 0;
-		}
-		else
-		{
-			sequenceNumber++;
-		}
+		// Calculate the distance and increment the sequence number.
+		meas.Distance = sharpCharacteristic(adcValue);
+		meas.Sequence++;
+
+		sharpSetMeasurement(meas);
 	}
 }
 
