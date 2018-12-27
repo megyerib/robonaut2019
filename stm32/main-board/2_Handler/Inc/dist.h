@@ -1,32 +1,33 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file      dist.h
-//!  \brief     Interface to distance sensors
-//!  \details
+//!  \brief     Interface to distance sensors.
+//!  \details	Handles the available distance sensors and calculates the distances based on the characteristics.
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #pragma once
+
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "stm32f4xx_hal.h"
+#include "hndlCommon.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
-
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 typedef enum
 {
-    Front = 0,
-    Right,
-    Left,
-
+    Front			= 0,
+    RightFront,
+    RightMiddle,
+	Rear,
     DirectionNum
 }
-Direction;
+eDIRECTION;
 
 // Variables -----------------------------------------------------------------------------------------------------------
-
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 void distInit();
-uint16_t distGet(Direction dir);
+
+uint16_t distGet(const eDIRECTION dir);

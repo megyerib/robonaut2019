@@ -13,16 +13,24 @@
 
 #include "scm_SpeedControlModule.h"
 #include "trace.h"
+#include "motor.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
+
+QueueHandle_t qAlkalmazasDemoMotor;
+uint8_t pwm = 0;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void TaskInit_SControl(void)
 {
-	scmInitControllerPI();
+	//scmInitControllerPI();
+	motorInit();
+
+	qAlkalmazasDemoMotor = xQueueCreate( 1, sizeof( uint8_t ) );
 
 	xTaskCreate(Task_SControl,
 				"TASK_SCNTRL",
@@ -36,27 +44,21 @@ void Task_SControl(void* p)
 {
 	(void)p;
 
-	double yn;
-	double rn = 1;
-	double cntr = 0;
-
-	//UBaseType_t scmStackUsage;
-	//scmStackUsage = uxTaskGetStackHighWaterMark(NULL);
+	uint8_t qValue = 0;
 
 	while(1)
 	{
-		if (cntr == 625)
+		qValue = xQueueReceive(qAlkalmazasDemoMotor, &qValue, 0);
+		if( qValue != pdFALSE && qValue >= 0 && qValue < 100 )
 		{
-			rn *= -1;
-			cntr = 0;
+			pwm = qValue;
 		}
 
-		yn = scmControlLoop(rn);
+		motorSetDutyCycle(pwm);
 
-		traceBluetooth(BCM_LOG_CTR_MTR_CURR, &yn);
+		traceBluetooth(BCM_LOG_ENC_VEL, &pwm);
 
-		cntr++;
-		vTaskDelay(TASK_DELAY_16_MS);
+		vTaskDelay(TASK_DELAY_5_MS);
 	}
 }
 

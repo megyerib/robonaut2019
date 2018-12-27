@@ -153,6 +153,8 @@ void Task_CarDiagnosticsTool(void* p)
 
 			if (btReceived == true)
 			{
+				btReceived = false;
+
 				recData = traceProcessRxData(btRxBuffer);
 
 				xQueueOverwrite(qRecData, (void*) &recData);
@@ -166,6 +168,37 @@ void Task_CarDiagnosticsTool(void* p)
 
 			// SEND bt and USB TODO
 			traceFlushData();
+
+			if(recData.RecCmdAccelerate && recData.RecDataAccelerate >= 0 && recData.RecDataAccelerate < 100)
+			{
+				motor = (double)recData.RecDataAccelerate;
+//				xQueueOverwrite(qAlkalmazasDemoMotor, &motor);
+				recData.RecCmdAccelerate = false;
+			}
+
+			if(recData.RecCmdSteer && recData.RecDataSteer >= 0 && recData.RecDataSteer < 180)
+			{
+				servo = (double)recData.RecDataSteer * 3.14/180 - 3.14/2;
+				servoSetAngle(servo);
+				recData.RecCmdSteer = false;
+			}
+
+			sharp = sharpGetDistance();
+
+			if(sharp < 40)
+			{
+				uint8_t motor_stop = 0;
+				traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, true);
+	//			xQueueOverwrite(qAlkalmazasDemoMotor, &motor_stop);
+			}
+			else
+			{
+				traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, true);
+			}
+
+			traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp);
+			traceBluetooth(BCM_LOG_ENC_VEL, &motor);
+			traceBluetooth(BCM_LOG_SERVO_ANGLE, &servo);
 
 			// TODO debug?
 			bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);

@@ -34,7 +34,15 @@ void Init()
 
 	bspInit();
 
-//	TaskInit_steeringDemo();
+	//DEBUG
+    servoInit();
+
+    lineInit();
+    //
+
+	TaskInit_Sharp();
+	//TaskInit_SControl();
+	//TaskInit_steeringDemo();
 	TaskInit_CarDiagnosticsTool();
 }
 

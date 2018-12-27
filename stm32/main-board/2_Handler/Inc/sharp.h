@@ -15,6 +15,8 @@
 
 #include "adc.h"
 
+#include "hndlCommon.h"
+
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define  	BSP_SHARP_HADC					hadc1
@@ -29,6 +31,8 @@ SemaphoreHandle_t semSharp;
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
+void sharpInit ();
+
 //! @brief  Gets the calculated distance of the SHARP sensor safely.
 //! @retval Distance.
 uint16_t sharpGetDistance ();
@@ -42,3 +46,4 @@ void sharpSetDistance(const uint16_t distance);
 //! @brief  Starts the ADC conversion and will generate an IT when it is ready.
 void sharpTriggerAdc ();
 
+cMEASUREMENT_DIST sharpGetMeasurement ();

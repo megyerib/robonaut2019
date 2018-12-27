@@ -27,6 +27,8 @@
 //! Common resource that stores the actual measured distance.
 static uint16_t sharpDistance = 0;
 
+static uint8_t sequenceNumber = 0;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static uint16_t sharpCharacteristic (const uint32_t adcValue);
@@ -34,6 +36,14 @@ static uint16_t sharpCharacteristic (const uint32_t adcValue);
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc);
 
 // Global function definitions -----------------------------------------------------------------------------------------
+
+void sharpInit ()
+{
+	sequenceNumber = 0;
+
+	// Initial value.
+	sharpTriggerAdc();
+}
 
 uint16_t sharpGetDistance ()
 {
@@ -60,6 +70,15 @@ void sharpSetDistance(const uint16_t distance)
 void sharpTriggerAdc ()
 {
 	HAL_ADC_Start_IT(&BSP_SHARP_HADC);
+}
+
+cMEASUREMENT_DIST sharpGetMeasurement ()
+{
+	cMEASUREMENT_DIST meas;
+
+	//TODO
+	meas.Sequence = sequenceNumber;
+	meas.Distance =
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
@@ -102,6 +121,16 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 
 		//TODO Do we need semaphore?
 		sharpDistance = distance;
+
+		// Incrementing the sequence number.
+		if (sequenceNumber == 255)
+		{
+			sequenceNumber = 0;
+		}
+		else
+		{
+			sequenceNumber++;
+		}
 	}
 }
 
