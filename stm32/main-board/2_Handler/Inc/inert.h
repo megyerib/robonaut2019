@@ -37,4 +37,5 @@ ANGVEL;
 void inertInit();
 ACCEL inertGetAccel();
 ANGVEL inertGetAngVel();
+
 void inertTriggerMeasurement();
