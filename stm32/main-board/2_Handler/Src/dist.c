@@ -44,7 +44,7 @@ uint16_t distGet(const eDIRECTION dir)
 		}
 		case Rear:
 		{
-			retVal = sharpGetDistance();
+			retVal = sharpGetMeasurement().Distance;
 			break;
 		}
 		default:
