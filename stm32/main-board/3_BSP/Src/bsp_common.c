@@ -24,7 +24,7 @@
 void bspInit()
 {
     bspUartInit();
-    //bspServoInit();
+    // Don't call servo init here, no limit values are set as deafult. A HANDLER function can initialize the servo.
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

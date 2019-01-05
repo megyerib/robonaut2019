@@ -101,6 +101,7 @@ extern cBSP_SrvHandleTypeDef hsrv;
 
 //! @brief	Initializes the servo, checks the PWM and the servo configuration. On successful init the PWM can be used,
 //! 		on unsuccessful init TIM clk is disabled so no harm can be done.
+//! 		MUST BE CALLED AFTER #hsrv wass configured.
 //! @retval	Init was successful or not: SRV_INIT_STATUS
 const eBSP_SrvTimInitStat bspServoTimInit(void);
 
