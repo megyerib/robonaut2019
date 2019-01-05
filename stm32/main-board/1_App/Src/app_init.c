@@ -33,20 +33,23 @@ void Init()
 	// Wait for the PSU init
 	HAL_Delay(1000);
 
+	// BSP -------------------------------------------------------------------------------------------------------------
 	bspInit();
 
-	// Init tasks
+	// HANDLER ---------------------------------------------------------------------------------------------------------
+
+
+	// APP -------------------------------------------------------------------------------------------------------------
+
 	TaskInit_inert();
 	//DEBUG
     servoInit();
-
- //   lineInit();
+    // lineInit();
     //
-
 	TaskInit_Sharp();
-//	TaskInit_Servo();
-	//TaskInit_SControl();
-	//TaskInit_steeringDemo();
+	// TaskInit_Servo();
+	// TaskInit_SControl();
+	// TaskInit_steeringDemo();
 	TaskInit_CarDiagnosticsTool();
 }
 
