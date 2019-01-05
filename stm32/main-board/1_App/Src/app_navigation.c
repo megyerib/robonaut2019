@@ -8,6 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include <navigation.h>
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -16,8 +17,6 @@
 
 #include "inert.h"
 #include "trace.h"
-#include "naviDeadReckoning.h"
-
 #include "bsp_servoTimer.h"
 
 
