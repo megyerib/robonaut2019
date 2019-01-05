@@ -1,8 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file      bsp_servoTimer.h
-//!  \brief
-//!  \details	This module operates the servo timer.
+//!  \brief		This module handles the servo timer.
+//!  \details   Initializes the timer according to the chosen servo (analog/digital). It holds limits to the pwm
+//! 			signal so the servo can not be harmed.
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -56,11 +57,11 @@ typedef struct
 	uint16_t PWM_period;		//! 16 bit
 
 	//! Rotational properties
-	uint16_t Left_End;			//! element of [0�;90�] interval. IMPORTANT: Needed for compare value saturation!
+	uint16_t Left_End;			//! element of [0deg;90deg] interval. IMPORTANT: Needed for compare value saturation!
 	uint16_t Deg_30;
-	uint16_t Deg_90;			//! 1,5 ms ~ 90�
+	uint16_t Deg_90;			//! 1,5 ms ~ 90 deg
 	uint16_t Deg_150;
-	uint16_t Right_End;			//! element of [90�;180�] interval. IMPORTANT: Needed for compare value saturation!
+	uint16_t Right_End;			//! element of [90deg;180deg] interval. IMPORTANT: Needed for compare value saturation!
 
 	int16_t CV_compensation;   	//! Compare value compensation (most be set after every settings).
 
@@ -73,21 +74,21 @@ typedef struct
 //!
 //!     <-------------->
 //!     ____        T    ____
-//!    |    |           |         0�
+//!    |    |           |         0 deg
 //! ___|    |___________|
 //!     <-->
 //!      1ms
 //!
 //!     <-------------->
 //!     ______      T    ____
-//!    |      |         |         90�
+//!    |      |         |         90 deg
 //! ___|      |_________|
 //!     <---->
 //!      1.5ms
 //!
 //!     <-------------->
 //!     ________    T    ____
-//!    |        |       |        180�
+//!    |        |       |        180 deg
 //! ___|        |_______|
 //!     <------>
 //!        2ms
