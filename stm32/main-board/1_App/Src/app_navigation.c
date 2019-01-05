@@ -55,11 +55,11 @@ void Task_Navigation(void* p)
 {
 	(void)p;
 
-	Accel prev_a;
-	Accel a;
+	ACCEL prev_a;
+	ACCEL a;
 	cVelocityVector v;
 
-	AngVel w;
+	ANGVEL w;
 	cAngularVelocity w_drn;
 
 	cNedParameters ned;

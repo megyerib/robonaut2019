@@ -9,6 +9,7 @@
 // Includes ------------------------------------------------------------------------------------------------------------
 
 #include "stm32f4xx_hal.h"
+#include "inert.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -16,16 +17,18 @@
 
 typedef struct
 {
-    uint16_t x;
-    uint16_t y;
-    uint16_t theta;
+    float x;
+    float y;
+    float theta;
 }
-Position;
+POSITION;
 
 // Variables -----------------------------------------------------------------------------------------------------------
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 void posInit();
-Position posGet();
-void posSet(Position pos);
+POSITION posGet();
+
+void posReset();
+void posSet(POSITION pos);

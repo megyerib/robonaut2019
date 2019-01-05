@@ -1,20 +1,18 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      app_init.c
-//!  \brief     
-//!  \details   
+//!  \file      app_inert.c
+//!  \brief
+//!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "stm32f4xx_hal.h"
-
-#include "bsp_common.h"
-
-#include "app_cdt.h"
-#include "app_steeringDemo.h"
 #include "app_inert.h"
+#include "app_common.h"
+#include "inert.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -24,30 +22,34 @@
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-// Global function definitions /////////////////////////////////////////////////////////////////////////////////////////
+// Global function definitions -----------------------------------------------------------------------------------------
+
+void TaskInit_inert(void)
+{
+	inertInit();
+
+	xTaskCreate(Task_inert,
+				"TASK_INERT",
+				DEFAULT_STACK_SIZE,
+				NULL,
+				TASK_INERT_PRIO,
+				NULL);
+}
+
+void Task_inert(void* p)
+{
+	ACCEL a;
+
+	while (1)
+	{
+		inertTriggerMeasurement();
+
+		a = inertGetAccel();
+
+		vTaskDelay(10);
+	}
+}
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-void Init()
-{
-	// Wait for the PSU init
-	HAL_Delay(1000);
-
-	bspInit();
-
-	// Init tasks
-	TaskInit_inert();
-	//DEBUG
-    servoInit();
-
- //   lineInit();
-    //
-
-	TaskInit_Sharp();
-//	TaskInit_Servo();
-	//TaskInit_SControl();
-	//TaskInit_steeringDemo();
-	TaskInit_CarDiagnosticsTool();
-}
-
-// END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// END -----------------------------------------------------------------------------------------------------------------

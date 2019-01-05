@@ -2,18 +2,12 @@
 //!
 //!  \file      inert.c
 //!  \brief     Inertial sensor handler
-//!  \details   TODO 2 interrupt mode (needs some soldering)
-//!             TODO data processing (averaging etc.)
+//!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/* Idea for 2 interrupt mode:
- * - INT1 for accelerometer
- * - INT2 for gyroscope
- * - Each one sets a flag (in IT handler routine)
- * - If both are set the reading starts (from IT handler routine)
- * - @ the end of the reading both flags are reset.
- */
+// XL: Accelerometer
+//  G: Gyroscope
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
@@ -23,26 +17,33 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
+#define G         (9.81f)
+#define XL_CAL    (9.81f / 9.92f) /* Rough calibration */
+#define XL_1G_VAL (4096.0f)
+#define XL_C      (G * XL_CAL / XL_1G_VAL)
+
 #define REGS_TO_READ (12u)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static uint8_t regSequence[REGS_TO_READ] =
+static const uint8_t regSource[REGS_TO_READ] =
 {
-	OUTX_L_XL,  OUTX_H_XL,  // Accelerometer X
-	OUTY_L_XL,  OUTY_H_XL,  // Accelerometer Y
-	OUTZ_L_XL,  OUTZ_H_XL,  // Accelerometer Z
-	OUTX_L_G,   OUTX_H_G,   // Gyroscope X
-	OUTY_L_G,   OUTY_H_G,   // Gyroscope Y
-	OUTZ_L_G,   OUTZ_H_G    // Gyroscope Z
+	OUTX_L_XL, OUTX_H_XL, // Accelerometer X
+	OUTY_L_XL, OUTY_H_XL, // Accelerometer Y
+	OUTZ_L_XL, OUTZ_H_XL, // Accelerometer Z
+	OUTX_L_G,  OUTX_H_G,  // Gyroscope X
+	OUTY_L_G,  OUTY_H_G,  // Gyroscope Y
+	OUTZ_L_G,  OUTZ_H_G   // Gyroscope Z
 };
 
-static uint8_t regResult[REGS_TO_READ];
+static int16_t tmp_reading[6];
 
-static Accel  ret_accel;
-static AngVel ret_angvel;
+static int16_t ret_accel[3];
+static int16_t ret_angvel[3];
+
+static int i_reg;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -57,58 +58,56 @@ void inertInit()
 
 	// Enable accelerometer
 	WriteRegBlocking(CTRL9_XL, 0x38); // Acc X, Y, Z axes enabled
-	WriteRegBlocking(CTRL1_XL, 0x60); // Acc = 416Hz (High-Performance mode)
+	WriteRegBlocking(CTRL1_XL, 0x6C); // Acc = 416Hz (High-Performance mode); Full scale: +-8g
 
 	// Enable gyroscope
 	WriteRegBlocking(CTRL10_C, 0x38); // Gyro X, Y, Z axes enabled
-	WriteRegBlocking(CTRL2_G, 0x60); // Gyro = 416Hz (High-Performance mode)
-
-	// TODO enable interrupt
+	WriteRegBlocking(CTRL2_G, 0x60);  // Gyro = 416Hz (High-Performance mode)
 }
 
-Accel inertGetAccel()
+ACCEL inertGetAccel()
 {
-	Accel* ptr = (Accel*) &regResult[0];
-    return *ptr;
+    ACCEL ret;
+
+    ret.a_x = ret_accel[1] * -XL_C; // X = -Y
+    ret.a_y = ret_accel[0] *  XL_C; // Y =  X
+    ret.a_z = ret_accel[2] * -XL_C; // Z = -Z
+
+	return ret;
 }
 
-AngVel inertGetAngVel()
+ANGVEL inertGetAngVel()
 {
-    AngVel* ptr = (AngVel*) &regResult[6];
-    return *ptr;
+	ANGVEL ret;
+	return ret;
 }
-
-// Sensor reading ------------------------------------------
-
-int i;
 
 void inertTriggerMeasurement()
 {
-	i = 0;
-
-	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSequence[i], 1, &regResult[i], 1);
+	i_reg = 0;
+	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i_reg], 1, &((uint8_t*) tmp_reading)[i_reg], 1);
 }
+
+// Callback functions --------------------------------------------------------------------------------------------------
 
 void i2cInertialSensorMemRxCallback()
 {
-	i++;
+	i_reg++;
 
-	if (i < REGS_TO_READ)
+	if (i_reg < REGS_TO_READ)
 	{
-		HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSequence[i], 1, &regResult[i], 1);
+		HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i_reg], 1, &((uint8_t*) tmp_reading)[i_reg], 1);
 	}
 	else // Sensor reading finished
 	{
-	    Accel*  acc_ptr =  (Accel*) &regResult[0];
-	    AngVel* ang_ptr = (AngVel*) &regResult[6];
-
-	    __disable_irq(); // Cheap thread safety
-
 		// Copy the temporary values to their final location
-		ret_accel  = *acc_ptr;
-		ret_angvel = *ang_ptr;
+		int j;
 
-		__enable_irq();
+		for (j = 0; j < 3; j++)
+		{
+			ret_accel[j]  = tmp_reading[j];
+			ret_angvel[j] = tmp_reading[j+3];
+		}
 	}
 }
 
