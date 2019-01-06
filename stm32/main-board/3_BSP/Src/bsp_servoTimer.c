@@ -179,14 +179,14 @@ static void bspServoInitializeTimer()
 	BSP_SRV_HTIM2.Init.ClockDivision 	= TIM_CLOCKDIVISION_DIV1;
 	if (HAL_TIM_PWM_Init(&BSP_SRV_HTIM2) != HAL_OK)
 	{
-		_Error_Handler(__FILE__, __LINE__);
+		//_Error_Handler(__FILE__, __LINE__);
 	}
 
 	sMasterConfig.MasterOutputTrigger 	= TIM_TRGO_RESET;
 	sMasterConfig.MasterSlaveMode 		= TIM_MASTERSLAVEMODE_DISABLE;
 	if (HAL_TIMEx_MasterConfigSynchronization(&BSP_SRV_HTIM2, &sMasterConfig) != HAL_OK)
 	{
-		_Error_Handler(__FILE__, __LINE__);
+		//_Error_Handler(__FILE__, __LINE__);
 	}
 
 	sConfigOC.OCMode 					= TIM_OCMODE_PWM1;
@@ -195,6 +195,6 @@ static void bspServoInitializeTimer()
 	sConfigOC.OCFastMode 				= TIM_OCFAST_DISABLE;
 	if (HAL_TIM_PWM_ConfigChannel(&BSP_SRV_HTIM2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
 	{
-		_Error_Handler(__FILE__, __LINE__);
+		//_Error_Handler(__FILE__, __LINE__);
 	}
 }

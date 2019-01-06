@@ -18,6 +18,7 @@
 #include "bsp_uart.h"
 #include "controller.h"
 #include "remote.h"
+#include "main.h" // LD2
 
 // Defines -------------------------------------------------------------------------------------------------------------
 

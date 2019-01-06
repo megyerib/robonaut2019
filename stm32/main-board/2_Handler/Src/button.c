@@ -12,6 +12,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "button.h"
+#include "main.h" // Custom port/button names
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
