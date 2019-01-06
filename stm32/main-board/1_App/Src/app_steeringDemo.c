@@ -54,7 +54,7 @@ static void setParams_fast();
 static void setParams_brake();
 static void setParams_brakeIn();
 
-static cFirstOrderTF contrPD;
+//static cFirstOrderTF contrPD;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -114,12 +114,13 @@ void Task_steeringDemo(void* p)
 		// STATE MACHINE (parameter settings) ______________
 
 		//motor_d = 12;
+		qualiStateMachine();
 
 		// GET PARAMETERS___________________________________
 
 		recData = traceReceiveBluetooth();
-		double kp = recData.RecDataPdKp_d;
-		double kd = recData.RecDataPdTd_d;
+		//double kp = recData.RecDataPdKp_d;
+		//double kd = recData.RecDataPdTd_d;
 
 		if( recData.RecDataSteer != 0)
 		{
@@ -158,7 +159,7 @@ void Task_steeringDemo(void* p)
 
 		traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
 		traceBluetooth(BCM_LOG_LINE_D, &line_pos);
-		traceBluetooth(BCM_LOG_ENC_VEL, 12);
+		traceBluetooth(BCM_LOG_ENC_VEL, (void*) 12);
 
 		// END DELAY _______________________________________
 

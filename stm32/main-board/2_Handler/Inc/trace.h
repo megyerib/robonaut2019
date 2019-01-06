@@ -10,12 +10,12 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include <bsp_bluetooth.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 
 #include "hndlCommon.h"
-#include "bcm_BluetoothCommunication.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 

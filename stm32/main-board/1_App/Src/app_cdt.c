@@ -191,13 +191,13 @@ void Task_CarDiagnosticsTool(void* p)
 
 			if(sharp.Distance < 40)
 			{
-				uint8_t motor_stop = 0;
-				traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, true);
+				//uint8_t motor_stop = 0;
+				traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, (void*) true);
 	//			xQueueOverwrite(qAlkalmazasDemoMotor, &motor_stop);
 			}
 			else
 			{
-				traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, true);
+				traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, (void*) true);
 			}
 
 			traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp);

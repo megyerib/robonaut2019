@@ -61,7 +61,7 @@ void Task_Servo(void* p)
 	uint32_t rate = LOG_RATE;
 	GPIO_PinState btn;
 	int enab = 0;
-	uint8_t comp = 114;
+	//uint8_t comp = 114;
 
 	while(1)
 	{

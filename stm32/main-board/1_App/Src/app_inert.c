@@ -39,6 +39,7 @@ void TaskInit_inert(void)
 void Task_inert(void* p)
 {
 	ACCEL a;
+	(void)a;
 
 	while (1)
 	{

@@ -8,8 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "bcm_BluetoothCommunication.h"
-
+#include <bsp_bluetooth.h>
 #include "usart.h"
 #include "bsp_uart.h"
 

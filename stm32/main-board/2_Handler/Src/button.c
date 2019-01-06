@@ -61,7 +61,7 @@ void buttonTriggerRead()
 	for (i = 0; i < btnCount; i++)
 	{
 		// Read
-		buttons[i].values << 1;
+		buttons[i].values <<= 1;
 		buttons[i].values += HAL_GPIO_ReadPin(buttons[i].port, buttons[i].pin);
 		buttons[i].values ^= buttons[i].polarity;
 
@@ -79,12 +79,12 @@ void buttonTriggerRead()
 
 uint8_t buttonGetState(BTN button)
 {
-
+	return 0;
 }
 
 uint8_t buttonGetEdge(BTN button, EDGE edge)
 {
-
+	return 0;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

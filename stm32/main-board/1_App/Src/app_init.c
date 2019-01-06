@@ -15,6 +15,8 @@
 #include "app_cdt.h"
 #include "app_steeringDemo.h"
 #include "app_inert.h"
+#include "app_sharp.h"
+#include "servo.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
