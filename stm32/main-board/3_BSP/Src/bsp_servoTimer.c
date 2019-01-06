@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file      bsp_servoTimer.c
-//!  \brief		This module handles the servo timer.
-//!  \details	See in the header module...
+//!  \brief
+//!  \details	This module operates the servo timer.
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@
 #define		BSP_SRV_TIM_INSATNCE	 	TIM2
 #define		BSP_SRV_TIM_CHANNEL		 	TIM_CHANNEL_1
 
-#define 	BSP_SRV_TIM_APB1_FREQ    	84000000		   // [Hz] = 84MHz
+#define 	BSP_SRV_TIM_APB1_FREQ    	90000000		   // [Hz] = 90MHz
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -47,10 +47,23 @@ const eBSP_SrvTimInitStat bspServoTimInit(void)
 	// Check if the settings are correct
 	tim_stat = bspServoCheckPWM();
 
-	if(tim_stat != SRV_TIM_STAT_OK)
+	if(tim_stat == SRV_TIM_STAT_OK)
+	{
+		// PWM settings are in order.
+
+		// Servo PWM is on the pin
+		HAL_TIM_PWM_Start(&BSP_SRV_HTIM2, BSP_SRV_TIM_CHANNEL);
+
+		// Set the servo in the middle position
+		bspServoTimSetCompare(hsrv.Deg_90);
+	}
+	else
 	{
 		// Error: Servo timer (PWM) configuration indicates an error.
 		status = SRV_INIT_FAIL_SRV_PWM;
+
+		// Disable CLK
+		bspServoTimDisable();
 	}
 
 	return status;
@@ -58,12 +71,12 @@ const eBSP_SrvTimInitStat bspServoTimInit(void)
 
 void bspServoTimDisable(void)
 {
-	HAL_TIM_PWM_Stop(&BSP_SRV_HTIM2, BSP_SRV_TIM_CHANNEL);
+	HAL_TIM_PWM_MspDeInit(&BSP_SRV_HTIM2);
 }
 
 void bspServoTimEnable(void)
 {
-	HAL_TIM_PWM_Start(&BSP_SRV_HTIM2, BSP_SRV_TIM_CHANNEL);
+	HAL_TIM_PWM_MspInit(&BSP_SRV_HTIM2);
 }
 
 void bspServoTimSetCompare(const uint32_t compare)
@@ -164,7 +177,6 @@ static void bspServoInitializeTimer()
 	BSP_SRV_HTIM2.Init.CounterMode 		= TIM_COUNTERMODE_UP;
 	BSP_SRV_HTIM2.Init.Period 			= hsrv.PWM_period;
 	BSP_SRV_HTIM2.Init.ClockDivision 	= TIM_CLOCKDIVISION_DIV1;
-
 	if (HAL_TIM_PWM_Init(&BSP_SRV_HTIM2) != HAL_OK)
 	{
 		//_Error_Handler(__FILE__, __LINE__);
@@ -172,7 +184,6 @@ static void bspServoInitializeTimer()
 
 	sMasterConfig.MasterOutputTrigger 	= TIM_TRGO_RESET;
 	sMasterConfig.MasterSlaveMode 		= TIM_MASTERSLAVEMODE_DISABLE;
-
 	if (HAL_TIMEx_MasterConfigSynchronization(&BSP_SRV_HTIM2, &sMasterConfig) != HAL_OK)
 	{
 		//_Error_Handler(__FILE__, __LINE__);
@@ -182,7 +193,6 @@ static void bspServoInitializeTimer()
 	sConfigOC.Pulse 					= 0;
 	sConfigOC.OCPolarity 				= TIM_OCPOLARITY_HIGH;
 	sConfigOC.OCFastMode 				= TIM_OCFAST_DISABLE;
-
 	if (HAL_TIM_PWM_ConfigChannel(&BSP_SRV_HTIM2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
 	{
 		//_Error_Handler(__FILE__, __LINE__);

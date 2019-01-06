@@ -1,9 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file      bsp_servoTimer.h
-//!  \brief		This module handles the servo timer.
-//!  \details   Initializes the timer according to the chosen servo (analog/digital). It holds limits to the pwm
-//! 			signal so the servo can not be harmed.
+//!  \brief
+//!  \details	This module operates the servo timer.
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,11 +56,11 @@ typedef struct
 	uint16_t PWM_period;		//! 16 bit
 
 	//! Rotational properties
-	uint16_t Left_End;			//! element of [0deg;90deg] interval. IMPORTANT: Needed for compare value saturation!
+	uint16_t Left_End;			//! element of [0�;90�] interval. IMPORTANT: Needed for compare value saturation!
 	uint16_t Deg_30;
-	uint16_t Deg_90;			//! 1,5 ms ~ 90 deg
+	uint16_t Deg_90;			//! 1,5 ms ~ 90�
 	uint16_t Deg_150;
-	uint16_t Right_End;			//! element of [90deg;180deg] interval. IMPORTANT: Needed for compare value saturation!
+	uint16_t Right_End;			//! element of [90�;180�] interval. IMPORTANT: Needed for compare value saturation!
 
 	int16_t CV_compensation;   	//! Compare value compensation (most be set after every settings).
 
@@ -74,21 +73,21 @@ typedef struct
 //!
 //!     <-------------->
 //!     ____        T    ____
-//!    |    |           |         0 deg
+//!    |    |           |         0�
 //! ___|    |___________|
 //!     <-->
 //!      1ms
 //!
 //!     <-------------->
 //!     ______      T    ____
-//!    |      |         |         90 deg
+//!    |      |         |         90�
 //! ___|      |_________|
 //!     <---->
 //!      1.5ms
 //!
 //!     <-------------->
 //!     ________    T    ____
-//!    |        |       |        180 deg
+//!    |        |       |        180�
 //! ___|        |_______|
 //!     <------>
 //!        2ms
@@ -101,7 +100,6 @@ extern cBSP_SrvHandleTypeDef hsrv;
 
 //! @brief	Initializes the servo, checks the PWM and the servo configuration. On successful init the PWM can be used,
 //! 		on unsuccessful init TIM clk is disabled so no harm can be done.
-//! 		MUST BE CALLED AFTER #hsrv wass configured.
 //! @retval	Init was successful or not: SRV_INIT_STATUS
 const eBSP_SrvTimInitStat bspServoTimInit(void);
 

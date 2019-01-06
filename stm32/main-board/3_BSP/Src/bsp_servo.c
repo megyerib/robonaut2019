@@ -8,7 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include <bsp_servo.h>
+#include "bsp_servo.h"
 #include "bsp_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -46,12 +46,18 @@ eBSP_SrvTimInitStat servoInit(void)
 
 	ret_val = servoConfig();
 
-	if(ret_val == SRV_INIT_OK) // Valid servo model was chosen.
+	if(ret_val == SRV_INIT_OK)
 	{
-		bspServoTimEnable();
+		// Valid servo model was chosen.
+
+		// Configure the TIM PWM, if error occurs TIM clk is disabled.
+		bspServoTimInit();
 	}
-	else                       // Error: No valid servo motor was selected.
+	else
 	{
+		// Error: No valid servo motor was selected.
+
+		// Disable CLK
 		bspServoTimDisable();
 	}
 
@@ -125,8 +131,8 @@ eBSP_SrvTimInitStat servoConfig()
 
 		   // Calculated with known equations (bsp_servo.h)
 		   hsrv.PWM_cntr_freq 		= 62500;					// [Hz]
-		   hsrv.PWM_prescaler 		= 1343;
-		   hsrv.PWM_period 			= 249;
+		   hsrv.PWM_prescaler 		= 1440 - 1;
+		   hsrv.PWM_period 			=  250 - 1;
 
 		   // Measured  servo properties.
 		   hsrv.Left_End 			= 62;						// Defined by car 	(30� 0.846ms 53)

@@ -65,12 +65,6 @@ cTraceRxBluetoothStruct recData;
 
 void TaskInit_steeringDemo(void)
 {
-    servoInit();
-
-    lineInit();
-
-    remoteInit();
-
     xTaskCreate(Task_steeringDemo,
                 "TASK_DEMO",
                 DEFAULT_STACK_SIZE,
@@ -134,7 +128,8 @@ void Task_steeringDemo(void* p)
 
 		(void) actuateEnabled;
 
-		servoSetAngle(angle);
+		//motorSetDutyCycle(motor_d);
+		//servoSetAngle(angle);
 
 		// TRACE ___________________________________________
 

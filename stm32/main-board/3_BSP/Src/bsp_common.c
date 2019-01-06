@@ -12,7 +12,6 @@
 #include "bsp_bluetooth.h"
 #include "bsp_i2c.h"
 #include "bsp_servo.h"
-#include "bsp_servoTimer.h"
 //#include "bsp_sharp.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -32,7 +31,7 @@ void bspInit()
     i2cInit();
 
     bcmInit();
-    bspServoTimInit();
+    //bspServoTimInit(); // Don't call it here; It will be called in servoInit();
     servoInit();
     //sharpInit();
 }
