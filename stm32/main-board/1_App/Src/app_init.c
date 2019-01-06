@@ -8,15 +8,11 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "stm32f4xx_hal.h"
-
 #include "bsp_common.h"
+#include "handler_common.h"
 
-#include "app_cdt.h"
+// App layer headers
 #include "app_steeringDemo.h"
-#include "app_inert.h"
-#include "app_sharp.h"
-#include "servo.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -26,30 +22,26 @@
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-// Global function definitions /////////////////////////////////////////////////////////////////////////////////////////
+static void appInit();
 
-// Local (static) function definitions ---------------------------------------------------------------------------------
+// Global function definitions /////////////////////////////////////////////////////////////////////////////////////////
 
 void Init()
 {
 	// Wait for the PSU init
 	HAL_Delay(1000);
 
-	// BSP -------------------------------------------------------------------------------------------------------------
 	bspInit();
+	hndlInit();
+	appInit();
+}
 
-	// HANDLER ---------------------------------------------------------------------------------------------------------
-	servoInit();
-    // lineInit();
-    //
+// Local (static) function definitions ---------------------------------------------------------------------------------
 
-	// APP -------------------------------------------------------------------------------------------------------------
-	TaskInit_inert();
-	TaskInit_Sharp();
-	// TaskInit_Servo();
-	// TaskInit_SControl();
-	// TaskInit_steeringDemo();
-	TaskInit_CarDiagnosticsTool();
+//! Initialize app layer modules
+static void appInit()
+{
+	TaskInit_steeringDemo();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

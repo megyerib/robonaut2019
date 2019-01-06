@@ -8,10 +8,10 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include <app_SpeedControlModule.h>
 #include "app_common.h"
 #include "app_SpeedControl.h"
 
-#include "scm_SpeedControlModule.h"
 #include "trace.h"
 #include "motor.h"
 

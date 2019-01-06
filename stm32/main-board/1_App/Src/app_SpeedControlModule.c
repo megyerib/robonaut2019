@@ -8,8 +8,8 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "hndlCommon.h"
-#include "scm_SpeedControlModule.h"
+#include <app_SpeedControlModule.h>
+#include <handler_common.h>
 #include "controller.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------

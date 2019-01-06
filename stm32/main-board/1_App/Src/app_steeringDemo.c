@@ -8,10 +8,10 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include <bsp_servo.h>
 #include "app_common.h"
 #include "app_steeringDemo.h"
 #include "trace.h"
-#include "servo.h"
 #include "motor.h"
 #include "line.h"
 #include "bsp_common.h"
@@ -22,7 +22,7 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define STTERINGDEMO_TASK_DELAY 5
+#define STEERINGDEMO_TASK_DELAY 5
 
 // State machine parameters
 #define ROAD_SIGNAL_THRESHOLD       6  /* Ennyiszer kell l�tnunk egy jelet, hogy elhiggy�k. (ld. fent) */
@@ -108,31 +108,13 @@ void Task_steeringDemo(void* p)
 		else
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-			vTaskDelay(STTERINGDEMO_TASK_DELAY);
+			vTaskDelay(STEERINGDEMO_TASK_DELAY);
 			actuateEnabled = 0;
 		}
 
 		// STATE MACHINE (parameter settings) ______________
 
-		//motor_d = 12;
 		qualiStateMachine();
-
-		// GET PARAMETERS___________________________________
-
-		recData = traceReceiveBluetooth();
-		//double kp = recData.RecDataPdKp_d;
-		//double kd = recData.RecDataPdTd_d;
-
-		if( recData.RecDataSteer != 0)
-		{
-			servoSetAngle(recData.RecDataSteer*3.14/180-3.14/2);
-
-		}
-
-		if(recData.RecCmdAccelerate == true)
-		{
-			motor_d = recData.RecDataAccelerate;
-		}
 
 		// STEERING ________________________________________
 
@@ -146,25 +128,23 @@ void Task_steeringDemo(void* p)
 
 		D = line_diff * K_D;
 
-		//angle = -0.75f * (P + D);
+		angle = -0.75f * (P + D);
 
 		// ACTUATE _________________________________________
 
-		if (actuateEnabled)
-		{
-			motorSetDutyCycle(motor_d);
-			servoSetAngle(angle);
-		}
+		(void) actuateEnabled;
+
+		servoSetAngle(angle);
 
 		// TRACE ___________________________________________
 
-		traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
+		/*traceBluetooth(BCM_LOG_SERVO_ANGLE, &angle);
 		traceBluetooth(BCM_LOG_LINE_D, &line_pos);
-		traceBluetooth(BCM_LOG_ENC_VEL, (void*) 12);
+		traceBluetooth(BCM_LOG_ENC_VEL, (void*) 12);*/
 
 		// END DELAY _______________________________________
 
-		vTaskDelay(STTERINGDEMO_TASK_DELAY);
+		vTaskDelay(STEERINGDEMO_TASK_DELAY);
     }
 }
 

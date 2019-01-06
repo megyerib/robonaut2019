@@ -11,11 +11,11 @@
 // Includes ------------------------------------------------------------------------------------------------------------
 
 #include <bsp_bluetooth.h>
+#include <handler_common.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
 
-#include "hndlCommon.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 

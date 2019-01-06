@@ -9,12 +9,12 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include <bsp_servo.h>
 #include "app_servo.h"
 
 #include "event_groups.h"
 
 #include "trace.h"
-#include "servo.h"
 #include "steer.h"
 #include "bsp_common.h"
 

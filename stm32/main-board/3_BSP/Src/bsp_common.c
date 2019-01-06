@@ -8,8 +8,12 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "bsp_servoTimer.h"
 #include "bsp_uart.h"
+#include "bsp_bluetooth.h"
+#include "bsp_i2c.h"
+#include "bsp_servo.h"
+#include "bsp_servoTimer.h"
+//#include "bsp_sharp.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -23,8 +27,14 @@
 
 void bspInit()
 {
+	// MCU comm peripherals first
     bspUartInit();
-    // Don't call servo init here, no limit values are set as deafult. A HANDLER function can initialize the servo.
+    i2cInit();
+
+    bcmInit();
+    bspServoTimInit();
+    servoInit();
+    //sharpInit();
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

@@ -8,8 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../2_Handler/Inc/radio.h"
-
+#include <start.h>
 #include "usart.h"
 #include "../../3_BSP/Inc/bsp_uart.h"
 
@@ -19,7 +18,7 @@
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static RadioSignal state = rsNothing;
+static StartSignal state = sNothing;
 static uint8_t message;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
@@ -28,12 +27,12 @@ static uint8_t message;
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-void radioInit()
+void startInit()
 {
 	bspUartReceive_IT(Uart_Radio, &message, 1);
 }
 
-RadioSignal radioGetState()
+StartSignal startGetState()
 {
     return state;
 }
@@ -48,6 +47,6 @@ void bspRadioRxCpltCallback()
     }
     else
     {
-        state = rsError;
+        state = sError;
     }
 }

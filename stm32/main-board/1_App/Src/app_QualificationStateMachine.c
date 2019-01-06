@@ -8,6 +8,10 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include <app_SpeedControlModule.h>
+#include <bsp_servo.h>
+#include <bsp_sharp.h>
+#include <bsp_sharp.h>
 #include "app_common.h"
 #include "app_QualificationStateMachine.h"
 
@@ -15,11 +19,7 @@
 #include "line.h"
 #include "steer.h"
 #include "trace.h"
-#include "sharp.h"
-
-#include "servo.h"
-#include "scm_SpeedControlModule.h"
-#include "sharp.h"
+#include "bsp_sharp.h"
 
 //TODO: move to motor.h
 #include "bsp_uart.h"

@@ -8,7 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "servo.h"
+#include <bsp_servo.h>
 #include "bsp_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -46,18 +46,12 @@ eBSP_SrvTimInitStat servoInit(void)
 
 	ret_val = servoConfig();
 
-	if(ret_val == SRV_INIT_OK)
+	if(ret_val == SRV_INIT_OK) // Valid servo model was chosen.
 	{
-		// Valid servo model was chosen.
-
-		// Configure the TIM PWM, if error occurs TIM clk is disabled.
-		bspServoTimInit();
+		bspServoTimEnable();
 	}
-	else
+	else                       // Error: No valid servo motor was selected.
 	{
-		// Error: No valid servo motor was selected.
-
-		// Disable CLK
 		bspServoTimDisable();
 	}
 

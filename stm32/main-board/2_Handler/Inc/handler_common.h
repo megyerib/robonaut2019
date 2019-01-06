@@ -27,6 +27,9 @@ typedef struct
 // Variables -----------------------------------------------------------------------------------------------------------
 // Function prototypes -------------------------------------------------------------------------------------------------
 
+//! Initialize handler layer
+void hndlInit();
+
 //! THis function determines how many digit the given value contains.
 //! @param number
 //! @return

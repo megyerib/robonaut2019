@@ -8,13 +8,41 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "../../2_Handler/Inc/hndlCommon.h"
+#include <handler_common.h>
+
+#include "button.h"
+#include "dist.h"
+#include "inert.h"
+#include "line.h"
+#include "motor.h"
+#include "navigation.h"
+#include "remote.h"
+#include "speed.h"
+#include "start.h"
+#include "steer.h"
+#include "trace.h"
+
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
+
+void hndlInit()
+{
+	buttonInit();
+	distInit();
+	inertInit();
+	lineInit();
+	motorInit();
+	naviDRInit();
+	remoteInit();
+	speedInit();
+	startInit();
+	steerInit();
+	traceInit();
+}
 
 uint32_t hndlGetNumberLength (const uint32_t number)
 {
