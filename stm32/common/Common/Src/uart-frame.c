@@ -67,8 +67,9 @@ void convertToUartFrame(uint8_t* payload, uint8_t* frame, int payloadLen, int* f
 }
 
 // Buffer length is ok
-// Begin flag no present as it was once split by the state machine.
+// Begin flag is not present as it was once split by the state machine.
 // Last 2 bytes are the end flag
+// The function just removes the escape flags
 void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* payloadLen)
 {
     int i;
@@ -92,58 +93,142 @@ void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* p
 	*payloadLen = j;
 }
 
-int isUartFrameEnded(uint8_t* frame, int framelen)
+void uartFrameRxStm(UFRAME_RX_STM* stm)
 {
-	int ret = 0;
+	int breakLoop = 0;
 
-	if (frame[framelen-2] == ESCAPE_CHAR && frame[framelen-1] == frameEnd)
+	while (!breakLoop)
 	{
-		// Has frame began?
-		for (int i = 0; i < framelen - 1; i++)
+		switch (stm->state)
 		{
-			if (frame[i] == ESCAPE_CHAR && frame[i+1] == frameBegin)
+			case init:
 			{
-				ret = 1;
+				stm->state = out_resetbuf;
+
+				break;
+			}
+			case out_resetbuf:
+			{
+				stm->rxBufSize = 0;
+
+				stm->state = out_rx;
+				break;
+			}
+			case out_rx:
+			{
+				//bspUartReceive_IT(Uart_LineFront, &lineRxBuf[lineRxBufSize], 1);
+				stm->receive(&stm->rxBuf[stm->rxBufSize]);
+				stm->rxBufSize++;
+
+				stm->state = out_begincheck;
+				breakLoop = 1;
+				break;
+			}
+			case out_begincheck:
+			{
+				if (
+					stm->rxBufSize >= 2                          &&
+					stm->rxBuf[stm->rxBufSize - 2] == ESCAPE_CHAR &&
+					stm->rxBuf[stm->rxBufSize - 1] == frameBegin
+				)
+				{
+					stm->state = in_resetbuf;
+				}
+				else
+				{
+					stm->state = out_ovrcheck;
+				}
+
+				break;
+			}
+			case out_ovrcheck:
+			{
+				if (stm->rxBufSize < UFRAME_BUFMAX)
+				{
+					stm->state = out_rx;
+				}
+				else
+				{
+					stm->state = out_resetbuf;
+				}
+
+				break;
+			}
+			case in_resetbuf:
+			{
+				stm->rxBufSize = 0;
+
+				stm->state = in_rx;
+				break;
+			}
+			case in_rx:
+			{
+				stm->receive(&stm->rxBuf[stm->rxBufSize]);
+				stm->rxBufSize++;
+
+				stm->state = in_endcheck;
+				breakLoop = 1;
+				break;
+			}
+			case in_endcheck:
+			{
+				if (
+					stm->rxBufSize >= 2                          &&
+					stm->rxBuf[stm->rxBufSize - 2] == ESCAPE_CHAR &&
+					stm->rxBuf[stm->rxBufSize - 1] == frameEnd
+				)
+				{
+					stm->state = in_process;
+				}
+				else
+				{
+					stm->state = in_ovrcheck;
+				}
+
+				break;
+			}
+			case in_ovrcheck:
+			{
+				if (stm->rxBufSize < UFRAME_BUFMAX)
+				{
+					stm->state = in_rx;
+				}
+				else
+				{
+					stm->state = out_resetbuf;
+				}
+
+				break;
+			}
+			case in_process:
+			{
+				//LINE_SENSOR_OUT* receivedLine;
+
+				convertFromUartFrame(
+					stm->rxBuf,
+					stm->uframeBuf,
+					stm->rxBufSize,
+					&stm->uframeBufSize
+				);
+
+				stm->process(stm->uframeBuf, stm->uframeBufSize);
+				/*if (uframeBufSize == sizeof(LINE_SENSOR_OUT))
+				{
+					receivedLine = (LINE_SENSOR_OUT*) uframeBuf;
+					front_tmp = *receivedLine;
+				}*/
+
+				stm->state = out_resetbuf;
+
+				break;
+			}
+			default:
+			{
+				stm->state = out_resetbuf;
 				break;
 			}
 		}
 	}
-
-	return ret;
-}
-
-int isUartFrameValid(uint8_t* frame, int framelen)
-{
-	int begin = 0;
-	int end   = 0;
-
-	int i;
-
-	for (i = 0; i < framelen; i++)
-	{
-		// Safety
-		if (i >= RX_BUF_MAX)
-			return 0;
-
-		if (frame[i] == ESCAPE_CHAR)
-		{
-			if (frame[i+1] == frameBegin)
-			{
-				begin = 1;
-			}
-
-			if (frame[i+1] == frameEnd)
-			{
-				if (begin)
-				{
-					end = 1;
-					break;
-				}
-			}
-		}
-	}
-
-	return (begin && end);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

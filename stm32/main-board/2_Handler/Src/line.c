@@ -28,15 +28,22 @@
 static LINE_SENSOR_OUT front_tmp;
 static int16_t prev_line = 0;
 
+static UFRAME_RX_STM uframeStm;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void lineRxStateMachine();
+static void uframeReceive(uint8_t* nextchar);
+static void uframeProcess(uint8_t* buf, uint8_t size);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void lineInit()
 {
-	lineRxStateMachine();
+	uframeStm.state = init;
+	uframeStm.receive = uframeReceive;
+	uframeStm.process = uframeProcess;
+
+	uartFrameRxStm(&uframeStm);
 }
 
 LINE lineGet()
@@ -100,160 +107,21 @@ RoadSignal lineGetRoadSignal()
 
 void bspLineFrontRxCpltCallback (void)
 {
-	lineRxStateMachine();
+	uartFrameRxStm(&uframeStm);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-UARTFRAME_STATE lineRxState = init;
-uint8_t lineRxBuf[UFRAME_BUFMAX];
-int     lineRxBufSize;
-uint8_t uframeBuf[UFRAME_BUFMAX];
-int     uframeBufSize;
-
-int overruns      = 0;
-int frameReceived = 0;
-int lineReceived  = 0;
-
-static void lineRxStateMachine()
+static void uframeReceive(uint8_t* nextchar)
 {
-	int breakLoop = 0;
+	bspUartReceive_IT(Uart_LineFront, nextchar, 1);
+}
 
-	while (!breakLoop)
+static void uframeProcess(uint8_t* buf, uint8_t size)
+{
+	if (size == sizeof(LINE_SENSOR_OUT))
 	{
-		switch (lineRxState)
-		{
-			case init:
-			{
-				lineRxState = out_resetbuf;
-
-				break;
-			}
-			case out_resetbuf:
-			{
-				lineRxBufSize = 0;
-
-				lineRxState = out_rx;
-				break;
-			}
-			case out_rx:
-			{
-				bspUartReceive_IT(Uart_LineFront, &lineRxBuf[lineRxBufSize], 1);
-				lineRxBufSize++;
-
-				lineRxState = out_begincheck;
-				breakLoop = 1;
-				break;
-			}
-			case out_begincheck:
-			{
-				if (
-					lineRxBufSize >= 2                          &&
-					lineRxBuf[lineRxBufSize - 2] == ESCAPE_CHAR &&
-					lineRxBuf[lineRxBufSize - 1] == frameBegin
-				)
-				{
-					lineRxState = in_resetbuf;
-				}
-				else
-				{
-					lineRxState = out_ovrcheck;
-				}
-
-				break;
-			}
-			case out_ovrcheck:
-			{
-				if (lineRxBufSize < UFRAME_BUFMAX)
-				{
-					lineRxState = out_rx;
-				}
-				else
-				{
-					overruns++;
-					lineRxState = out_resetbuf;
-				}
-
-				break;
-			}
-			case in_resetbuf:
-			{
-				lineRxBufSize = 0;
-
-				lineRxState = in_rx;
-				break;
-			}
-			case in_rx:
-			{
-				bspUartReceive_IT(Uart_LineFront, &lineRxBuf[lineRxBufSize], 1);
-				lineRxBufSize++;
-
-				lineRxState = in_endcheck;
-				breakLoop = 1;
-				break;
-			}
-			case in_endcheck:
-			{
-				if (
-					lineRxBufSize >= 2                          &&
-					lineRxBuf[lineRxBufSize - 2] == ESCAPE_CHAR &&
-					lineRxBuf[lineRxBufSize - 1] == frameEnd
-				)
-				{
-					lineRxState = in_process;
-				}
-				else
-				{
-					lineRxState = in_ovrcheck;
-				}
-
-				break;
-			}
-			case in_ovrcheck:
-			{
-				if (lineRxBufSize < UFRAME_BUFMAX)
-				{
-					lineRxState = in_rx;
-				}
-				else
-				{
-					overruns++;
-					lineRxState = out_resetbuf;
-				}
-
-				break;
-			}
-			case in_process:
-			{
-				LINE_SENSOR_OUT* receivedLine;
-
-				frameReceived++;
-
-				convertFromUartFrame(
-					lineRxBuf,
-					uframeBuf,
-					lineRxBufSize,
-					&uframeBufSize
-				);
-
-				if (uframeBufSize == sizeof(LINE_SENSOR_OUT))
-				{
-					receivedLine = (LINE_SENSOR_OUT*) uframeBuf;
-					front_tmp = *receivedLine;
-
-					lineReceived++;
-				}
-
-				lineRxState = out_resetbuf;
-
-				break;
-			}
-			default:
-			{
-				lineRxState = out_resetbuf;
-				break;
-			}
-		}
+		front_tmp = *((LINE_SENSOR_OUT*) buf);
 	}
 }
 

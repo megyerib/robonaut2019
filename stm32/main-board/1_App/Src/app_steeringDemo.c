@@ -25,10 +25,10 @@
 #define STEERINGDEMO_TASK_DELAY 5
 
 // State machine parameters
-#define ROAD_SIGNAL_THRESHOLD       6  /* Ennyiszer kell lï¿½tnunk egy jelet, hogy elhiggyï¿½k. (ld. fent) */
-#define FAST_IN_CNTR          (500/5) /* Ennyi cikluson keresztï¿½l kï¿½szï¿½lï¿½nk rï¿½ a gyors szakaszra */
-#define BRAKE_IN_CNTR         (650/5) /* Ennyi ciklus a fï¿½kezï¿½s mï¿½sodik szakaszï¿½ig */
-#define CORNER_IN_CNTR        10 /* Ennyi idï¿½t megyï¿½nk a kanyarba befele (nem ï¿½rdekes) */
+#define ROAD_SIGNAL_THRESHOLD      6   /* Ennyiszer kell látnunk egy jelet, hogy elhiggyük. (ld. fent) */
+#define FAST_IN_CNTR          (500/5)  /* Ennyi cikluson keresztül készülünk rá a gyors szakaszra */
+#define BRAKE_IN_CNTR         (650/5)  /* Ennyi ciklus a fékezés második szakaszáig */
+#define CORNER_IN_CNTR            10   /* Ennyi idõt megyünk a kanyarba befele (nem érdekes) */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -272,7 +272,7 @@ static void setParams_corner()
 
 static void setParams_fastIn()
 {
-	// Rï¿½megyï¿½nk a gyors szakaszra. ï¿½rdemes valahogy egyenesbe ï¿½llni.
+	// Rámegyünk a gyors szakaszra. Érdemes valahogy egyenesbe állni.
 
 	K_P     =  0.01f;
 	K_D     =  0.1f;
@@ -281,7 +281,7 @@ static void setParams_fastIn()
 
 static void setParams_fast()
 {
-	// Gyorsan megyï¿½nk
+	// Gyorsan megyünk
 
 	K_P     =  0.01f;
 	K_D     =  0.14f;
@@ -290,7 +290,7 @@ static void setParams_fast()
 
 static void setParams_brakeIn()
 {
-	// Fï¿½kezï¿½s eleje (akï¿½r mï¿½g vï¿½rhatunk is a fï¿½kezï¿½ssel)
+	// Fékezés eleje (akár még várhatunk is a fékezéssel)
 
 	K_P     =  0.01f;
 	K_D     =  0.1f;
@@ -299,7 +299,7 @@ static void setParams_brakeIn()
 
 static void setParams_brake()
 {
-	// Fï¿½kezï¿½s vï¿½ge (itt lehet ï¿½rdemes nagyot fï¿½kezni)
+	// Fékezés vége (itt lehet érdemes nagyot fékezni)
 
 	K_P     =  0.01f;
 	K_D     =  0.1f;
