@@ -27,7 +27,9 @@
 
 void i2cInit()
 {
+	HAL_I2C_MspInit(&BSP_HI2C_DISTANCE);
 
+	//HAL_I2C_Master_Transmit(&HI2C_DISTANCE);
 }
 
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
@@ -36,9 +38,18 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 	{
 		i2cInertialSensorMemRxCallback();
 	}
+	else if (hi2c == BSP_HI2C_DISTANCE)
+	{
+		i2cDistanceMemRxCallbacl();
+	}
 }
 
 __weak void i2cInertialSensorMemRxCallback()
 {
 	// Weak function defined in the inertial sensor handler.
+}
+
+__weak void i2cDistanceMemRxCallbacl()
+{
+	// Weak function defined in the time of flight sensor handler.
 }
