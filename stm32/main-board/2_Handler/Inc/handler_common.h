@@ -64,6 +64,7 @@ void hndlPlaceFractionToAsciiMsg (
 										const uint32_t decimaldigits
 									);
 
+float hndlNumIntegTrapezoidal (const float a, const float b, const float fa, const float fb);
 
 
 

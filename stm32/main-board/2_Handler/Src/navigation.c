@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file		naviDeadReckoning.c
+//!  \file		navigation.c
 //!  \brief
 //!  \details	This module is responsible for the navigation of the car. This module implements the simple Dead
 //! 			Reckoning algorithm.
@@ -10,8 +10,9 @@
 // Includes ------------------------------------------------------------------------------------------------------------
 
 
-#include <navigation.h>
+#include "navigation.h"
 #include "math.h"
+#include "handler_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -20,64 +21,138 @@
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
-typedef struct
-{
-	double theta;
-	cVelocityVector v;
-} cStrapDownNavigation;
+
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static cStrapDownNavigation naviOffset;
+static cVEC_ACCEL prevA;
+static cVelocityVector prevV;
+static cNedParameters prevP;
+static float prevOmega;
+static float prevPhi;
 
-static cStrapDownNavigation naviState;
-static cStrapDownNavigation prevNaviState;
+static cVEC_ACCEL currA;
+static cVelocityVector currV;
+static cNedParameters currP;
+static float currOmega;
+static float currPhi;
 
-static cAngularVelocity prevMeasure;
-
-static cNedParameters nedPosition;
-static cNedParameters prevNedPosition;
+static float dt_s;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-//static const double drn_NumInteg_Trapezoidal (const double a, const double b, const double fa, const double fb);
-
-//static void drn_UpdateOrientation (const double omega, const double time);
-
-static void drnUpdateOrientation (const double omega, const double dt);
-
-static void drnUpdateVelocity (const double u, const double v);
-
-static void drnCalculateNedParameters (const double dt);
+static void naviUpdateOrientation (void);
+static void naviUpdateVelocity 	  (void);
+static void naviUpdatePosition    (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void naviDRInit (void)
 {
-	naviOffset.theta = 0;
-	naviOffset.v.x = 0;
-	naviOffset.v.y = 0;
+	prevA.u = 0;
+	prevA.v = 0;
+	prevV.u = 0;
+	prevV.v = 0;
+	prevP.n = 0;
+	prevP.e = 0;
+	prevOmega = 0;
+	prevPhi = 0;
 
-	//drn_SetOrientation(naviOffset.theta);
+	currA.u = 0;
+	currA.v = 0;
+	currV.u = 0;
+	currV.v = 0;
+	currP.n = 0;
+	currP.e = 0;
+	currOmega = 0;
+	currPhi = 0;
 
-	prevMeasure.omega = 0;
-	prevMeasure.time = 0;
-
-	naviState.theta = 0;
-	naviState.v.x = 0;
-	naviState.v.y = 0;
-
-	prevNaviState.theta = 0;
-	prevNaviState.v.x = 0;
-	prevNaviState.v.y = 0;
-
-	nedPosition.n = 0;
-	nedPosition.e = 0;
-
-	prevNedPosition.n = 0;
-	prevNedPosition.e = 0;
+	dt_s = 1;
 }
 
+cNAVI_STATE naviDRNaviProcess (const cVEC_ACCEL a, const float omega, const uint32_t dt)
+{
+	cNAVI_STATE retval;
+
+	// Save the current sensor data.
+	currA = a;
+	currOmega = omega;
+
+	// Convert time to seconds.
+	dt_s = (float)dt / 1000;
+
+	// Calculate orientation.
+	naviUpdateOrientation();
+
+	// Calculate velocity.
+	naviUpdateVelocity();
+
+	// Calculate position.
+	naviUpdatePosition();
+
+	// Construct navigation state vector.
+	retval.p = currP;
+	retval.phi = currPhi;
+
+	return retval;
+}
+
+// Local (static) function definitions ---------------------------------------------------------------------------------
+
+// omega = [rad/s], dt = [s] -> phi = [rad]
+static void naviUpdateOrientation ()
+{
+	float dPhi;
+
+	// Calculate the derivative of the new theta form the current and the last omega value
+	dPhi = hndlNumIntegTrapezoidal(0, dt_s, prevOmega, currOmega);
+
+	// Determine the current theta value
+	currPhi = prevPhi + dPhi;
+
+	// Save the current parameters as previous measurement and state for the next iteration
+	prevOmega = currOmega;
+	prevPhi   = currPhi;
+}
+
+// u, v = [m/s]
+static void naviUpdateVelocity ()
+{
+	cVelocityVector dv;
+
+	// Calculate the velocity change since the last value.
+	dv.u = hndlNumIntegTrapezoidal(0, dt_s, prevA.u, currA.u);
+	dv.v = hndlNumIntegTrapezoidal(0, dt_s, prevA.v, currA.v);
+
+	// Calculate the new velocity.
+	currV.u = prevV.u + dv.u;
+	currV.v = prevV.v + dv.v;
+
+	// Save the result for the next calculation.
+	prevA = currA;
+	prevV = currV;
+}
+
+// dt = [s] -> n = [m], e = [m]
+static void naviUpdatePosition (void)
+{
+	float grad_n;
+	float grad_e;
+
+	// Determine the derivative of the NED coordinations.
+	grad_n = cos(currPhi) * currV.u - sin(currPhi) * currV.v;
+	grad_e = sin(currPhi) * currV.u + cos(currPhi) * currV.v;
+
+	// Calculate the new NED coordinates with the previous results.
+	currP.n = prevP.n + dt_s * grad_n;
+	currP.e = prevP.e + dt_s * grad_e;
+
+	// Save the new result
+	prevP = currP;
+}
+
+
+/* TODO Do we need this?
 cNedParameters naviDRGetNedCoordinates (void)
 {
 	cNedParameters ned;
@@ -101,96 +176,4 @@ void naviDRSetNedCoordinates (const cNedParameters coords)
 		xSemaphoreGive(semDrNavi);
 	}
 }
-
-// v = [m/s], w = [rad/s], dt = [ms]
-cNedParameters naviDRNavigate (const cVelocityVector v, const cAngularVelocity w, const uint32_t dt)
-{
-	cNedParameters retval;
-
-	//Convert time to sec
-	double dt_s = (double)dt / 1000;
-
-	drnUpdateOrientation(w.omega, dt_s);
-	drnUpdateVelocity(v.x, v.y);
-	drnCalculateNedParameters(dt_s);
-
-	retval = naviDRGetNedCoordinates();
-
-	return retval;
-}
-
-double naviDRNumIntegTrapezoidal (const double a, const double b, const double fa, const double fb)
-{
-	double integral;
-
-	integral = (b - a) * (fb + fa) / 2;
-
-	return integral;
-}
-
-// Local (static) function definitions ---------------------------------------------------------------------------------
-
-/*static void drn_UpdateOrientation (const double omega, const double time)
-{
-	double lastOmega;
-	double lastTime;
-	double theta;
-
-	// Get previous values
-	lastOmega = prevMeasure.omega;
-	lastTime = prevMeasure.time;
-
-	// Calculate current theta and save it
-	theta = drn_NumInteg_Trapezoidal(lastTime, time, lastOmega, omega);
-	naviState.theta = theta;
-
-	// Save the current parameters as previous measurement
-	prevMeasure.omega = omega;
-	prevMeasure.time = time;
-}*/
-
-// omega = [rad/s], dt = [s] -> theta = [rad]
-static void drnUpdateOrientation (const double omega, const double dt)
-{
-	volatile double dtheta;
-
-	// Calculate the derivative of the new theta form the current and the last omega value
-	dtheta = naviDRNumIntegTrapezoidal(0, dt, prevMeasure.omega, omega);
-
-	// Determine the current theta value
-	naviState.theta = prevNaviState.theta + dtheta;
-
-	// Save the current parameters as previous measurement and state for the next iteration
-	prevMeasure.omega = omega;
-	prevNaviState.theta = naviState.theta;
-}
-
-// u, v = [m/s]
-static void drnUpdateVelocity (const double u, const double v)
-{
-	naviState.v.x = u;
-	naviState.v.y = v;
-}
-
-// dt = [s] -> n = [m], e = [m]
-static void drnCalculateNedParameters (const double dt)
-{
-	volatile double delta_n;
-	volatile double delta_e;
-	volatile cNedParameters coords;
-
-	// Determine the derivative of the NED coordinations
-	delta_n = naviState.v.x*cos(naviState.theta) - naviState.v.y*sin(naviState.theta);
-	delta_e = naviState.v.x*sin(naviState.theta) + naviState.v.y*cos(naviState.theta);
-
-	// Calculate the new NED coordinates with the previous results
-	coords.n = prevNedPosition.n + dt * delta_n;
-	coords.e = prevNedPosition.e + dt * delta_e;
-
-	// Save the new result as previous for the next iteration
-	prevNedPosition.n = coords.n;
-	prevNedPosition.e = coords.e;
-
-	// Save the new result
-	naviDRSetNedCoordinates(coords);
-}
+*/

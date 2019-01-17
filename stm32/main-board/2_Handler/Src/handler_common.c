@@ -8,7 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include <handler_common.h>
+#include "handler_common.h"
 
 #include "button.h"
 #include "dist.h"
@@ -166,6 +166,15 @@ void hndlPlaceFractionToAsciiMsg (
 
 	// Call the Integer placer function with absolute value and negative indication flag.
 	hndlPlaceIntegerToAsciiMsg(array, convertedValue, frameSize, isNegative);
+}
+
+float hndlNumIntegTrapezoidal (const float a, const float b, const float fa, const float fb)
+{
+	double integral;
+
+	integral = (b - a) * (fb + fa) / 2;
+
+	return integral;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
