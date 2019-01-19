@@ -8,7 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include <navigation.h>
+#include "navigation.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -17,25 +17,32 @@
 
 #include "inert.h"
 #include "trace.h"
+#include "handler_common.h"
+
 #include "bsp_servoTimer.h"
 
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
+
+static ACCEL  acceleration;
+static ANGVEL angularVelocity;
+
+static cVEC_ACCEL a;
+static float omega;
+static cNAVI_STATE naviState;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
 
-
-//! @brief	Initializes the Task_Servo task.
+//! @brief	Initializes the Task_Navigation task.
 void TaskInit_Navigation(void)
 {
 	semDrNavi = xSemaphoreCreateBinary();
 	if(semDrNavi != NULL)
 	{
 		xSemaphoreGive(semDrNavi);
-		naviDRInit();
-		inertInit();
 
 		inertTriggerMeasurement();
 	}
@@ -54,38 +61,25 @@ void Task_Navigation(void* p)
 {
 	(void)p;
 
-	ACCEL prev_a;
-	ACCEL a;
-	cVelocityVector v;
-
-	ANGVEL w;
-	cAngularVelocity w_drn;
-
-	cNedParameters ned;
-
-	a.a_x = 0;
-	a.a_y = 0;
-	a.a_z = 0;
-
-//	UBaseType_t naviStackUsage;
-//	naviStackUsage = uxTaskGetStackHighWaterMark(NULL);
-
 	while(1)
 	{
-		prev_a = a;
-		a = inertGetAccel();
-		w = inertGetAngVel();
+		// Measurements.
+		acceleration    = inertGetAccel();
+		angularVelocity = inertGetAngVel();
 
-		w_drn.omega = w.omega_z;
+		// Parallel with the orientation of the car.
+		a.u = acceleration.a_x;
+		// Orthogonal with the orientation of the car.
+		a.v = acceleration.a_y;
+		// Yaw direction in the RPY coordinate-system.
+		omega = angularVelocity.omega_z;
 
-		v.x = naviDRNumIntegTrapezoidal(0, TASK_DELAY_16_MS, prev_a.a_x, a.a_x);
-		v.y = naviDRNumIntegTrapezoidal(0, TASK_DELAY_16_MS, prev_a.a_y, a.a_y);
+		// Calculate the actual position and orientation.
+		naviState = naviDRNaviProcess(a, omega, TASK_DELAY_16_MS);
 
-		ned = naviDRNavigate(v, w_drn, TASK_DELAY_16_MS);
-
-		traceBluetooth(BCM_LOG_NAVI_N, &ned.n);
-		traceBluetooth(BCM_LOG_NAVI_E, &ned.e);
-		//traceBluetooth(BCM_LOG_NAVI_THETA, &);
+		traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
+		traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
+		traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
 
 		inertTriggerMeasurement();
 
