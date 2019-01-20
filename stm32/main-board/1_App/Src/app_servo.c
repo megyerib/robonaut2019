@@ -34,7 +34,7 @@
 
 extern EventGroupHandle_t event_sharp;
 
-extern QueueHandle_t qServoAngle_d;
+extern QueueHandle_t qServoAngle_f;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------

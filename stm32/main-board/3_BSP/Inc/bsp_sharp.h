@@ -10,7 +10,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include <handler_common.h>
+#include "handler_common.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
 #include "task.h"
@@ -38,5 +38,6 @@ void sharpInit ();
 void sharpTriggerAdc ();
 
 //! @brief  Gets the calculated distance of the SHARP sensor safely.
+//!
 //! @retval Distance.
 cMEASUREMENT_DIST sharpGetMeasurement ();

@@ -8,13 +8,11 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include <bsp_sharp.h>
+#include "bsp_sharp.h"
 #include "app_sharp.h"
 
 #include "app_common.h"
 #include "trace.h"
-
-#include "bsp_servoTimer.h"
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------

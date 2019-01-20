@@ -8,7 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include <bsp_sharp.h>
+#include "bsp_sharp.h"
 #include "bsp_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -19,7 +19,7 @@
 #define 	B_2					-0.000444444	//!< [1/cm]
 #define		VERTEX				1.9 			//!< [V]
 
-#define		WAIT_SEMAPHORE		2				//!< Ticks [ms]
+#define		WAIT_SEMAPHORE		5				//!< Ticks [ms]
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -31,7 +31,7 @@ static cMEASUREMENT_DIST sharpMeasurement;
 
 static void sharpSetMeasurement(const cMEASUREMENT_DIST meas);
 
-static uint16_t sharpCharacteristic (const uint32_t adcValue);
+static uint32_t sharpCharacteristic (const uint32_t adcValue);
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc);
 
@@ -66,6 +66,7 @@ cMEASUREMENT_DIST sharpGetMeasurement ()
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 //! @brief  Sets the calculated distance of the SHARP sensor safely
+//!
 //! @param  Distance to be stored.
 static void sharpSetMeasurement(const cMEASUREMENT_DIST meas)
 {
@@ -89,9 +90,11 @@ static void sharpSetMeasurement(const cMEASUREMENT_DIST meas)
 
 //! @brief 	Implements the inverse characteristics of the sensor and returns a
 //!			distance from an adc value.
+//!
 //! @param	ADC converted value from a voltage.
+//!
 //! @retval	Calculated distance.
-static uint16_t sharpCharacteristic (const uint32_t adcValue)
+static uint32_t sharpCharacteristic (const uint32_t adcValue)
 {
 	float measured_voltage = 0.0;
 	float calculated_distance = 0.0;
@@ -109,12 +112,13 @@ static uint16_t sharpCharacteristic (const uint32_t adcValue)
 		calculated_distance = 1.0 / (measured_voltage * M_2 + B_2);
 	}
 
-	return (uint16_t)calculated_distance;
+	return (uint32_t)calculated_distance;
 }
 
 //! @brief	This function is called after the adc conversion and IT handling.
 //!			Here the result of the conversion is ready to be used/saved.
 //! 			Equation used: d = 1/y, where y = x * m + b
+//!
 //! @param	Pointer to the handler of the ADC.
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 {
@@ -127,6 +131,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 		adcValue = HAL_ADC_GetValue(&BSP_SHARP_HADC);
 
 		// Calculate the distance and increment the sequence number.
+		meas = sharpMeasurement;
 		meas.Distance = sharpCharacteristic(adcValue);
 		meas.Sequence++;
 

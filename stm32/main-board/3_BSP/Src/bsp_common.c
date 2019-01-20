@@ -30,7 +30,7 @@ void bspInit()
     bspUartInit();
     i2cInit();
 
-    bcmInit();
+    bspBluetoothInit();
     //bspServoTimInit(); // Don't call it here; It will be called in servoInit();
     servoInit();
     //sharpInit();

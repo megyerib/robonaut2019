@@ -138,13 +138,13 @@ void hndlPlaceIntegerToAsciiMsg (uint8_t* const array, const uint32_t value, con
 
 void hndlPlaceFractionToAsciiMsg (
 										uint8_t* const array,
-										const double   value,
+										const float    value,
 										const uint32_t frameSize,
 										const uint32_t decimaldigits
 								 )
 {
 	uint32_t i = 0;
-	double temp = value;
+	float temp = value;
 	uint32_t convertedValue;
 	bool isNegative = false;
 
@@ -170,7 +170,7 @@ void hndlPlaceFractionToAsciiMsg (
 
 float hndlNumIntegTrapezoidal (const float a, const float b, const float fa, const float fb)
 {
-	double integral;
+	float integral;
 
 	integral = (b - a) * (fb + fa) / 2;
 
