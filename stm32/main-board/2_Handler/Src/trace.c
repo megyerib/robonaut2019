@@ -17,27 +17,27 @@
 //! Handles of the available message queues
 extern QueueHandle_t qSharpDistance_u32;	// 1
 extern QueueHandle_t qSharpCollWarn_x;
-extern QueueHandle_t qServoAngle_d;
-extern QueueHandle_t qInertAccelX_d;
-extern QueueHandle_t qInertAccelY_d;
-extern QueueHandle_t qInertAccelZ_d;
-extern QueueHandle_t qInertAngVelX_d;
-extern QueueHandle_t qInertAngVelY_d;
-extern QueueHandle_t qInertAngVelZ_d;
-extern QueueHandle_t qNaviN_d;				// 10
-extern QueueHandle_t qNaviE_d;
-extern QueueHandle_t qNaviTheta_d;
-extern QueueHandle_t qEncVel_d;
+extern QueueHandle_t qServoAngle_f;
+extern QueueHandle_t qInertAccelX_f;
+extern QueueHandle_t qInertAccelY_f;
+extern QueueHandle_t qInertAccelZ_f;
+extern QueueHandle_t qInertAngVelX_f;
+extern QueueHandle_t qInertAngVelY_f;
+extern QueueHandle_t qInertAngVelZ_f;
+extern QueueHandle_t qNaviN_f;				// 10
+extern QueueHandle_t qNaviE_f;
+extern QueueHandle_t qNaviPhi_f;
+extern QueueHandle_t qEncVel_f;
 extern QueueHandle_t qTof1Distance_u32;
 extern QueueHandle_t qTof2Distance_u32;
 extern QueueHandle_t qTof3Distance_u32;
-extern QueueHandle_t qMtrMainBatVolt_d;
-extern QueueHandle_t qMtrSecBatVolt_d;
-extern QueueHandle_t qMtrCurr_d;
+extern QueueHandle_t qMtrMainBatVolt_f;
+extern QueueHandle_t qMtrSecBatVolt_f;
+extern QueueHandle_t qMtrCurr_f;
 extern QueueHandle_t qMtrSysCurr_u32;		// 20
 extern QueueHandle_t qMtrSrvCurr_u32;
 extern QueueHandle_t qMtrCmdStopEngine_x;
-extern QueueHandle_t qCtrlMtrCurr_d;
+extern QueueHandle_t qCtrlMtrCurr_f;
 extern QueueHandle_t qLineD_u32;
 extern QueueHandle_t qLineTheta_u32;
 
@@ -68,8 +68,8 @@ static bool traceWrapBool (bool* const value, const eBluetoothLogMember member);
 //! @param member		determines which how sent and what type of data
 //! @param length		how many character has to be sent out
 //! @return				was the conversion successful or not
-static bool traceWrapDouble (
-								double* const 			  value,
+static bool traceWrapFloat (
+								float* const 			  value,
 								const uint32_t 			  decimals,
 								const eBluetoothLogMember member,
 								const uint32_t 			  length
@@ -86,7 +86,7 @@ static uint32_t traceUnwrapInteger (uint8_t* const buffer, uint32_t begin, uint3
 
 static bool traceUnwrapBool (uint8_t* const buffer, uint32_t begin);
 
-static double traceUnwrapDouble (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals);
+static float traceUnwrapFloat (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -114,37 +114,37 @@ void traceBluetooth (const eBluetoothLogMember destination, void* const data)
 			xQueueOverwrite(qSharpCollWarn_x, (bool* const)data);
 			break;
 		case BCM_LOG_SERVO_ANGLE:
-			xQueueOverwrite(qServoAngle_d, (double* const)data);
+			xQueueOverwrite(qServoAngle_f, (float* const)data);
 			break;
 		case BCM_LOG_INERT_ACCEL_X:
-			xQueueOverwrite(qInertAccelX_d, (double* const)data);
+			xQueueOverwrite(qInertAccelX_f, (float* const)data);
 			break;
 		case BCM_LOG_INERT_ACCEL_Y:
-			xQueueOverwrite(qInertAccelY_d, (double* const)data);
+			xQueueOverwrite(qInertAccelY_f, (float* const)data);
 			break;
 		case BCM_LOG_INERT_ACCEL_Z:
-			xQueueOverwrite(qInertAccelZ_d, (double* const)data);
+			xQueueOverwrite(qInertAccelZ_f, (float* const)data);
 			break;
 		case BCM_LOG_INERT_ANG_VEL_X:
-			xQueueOverwrite(qInertAngVelX_d, (double* const)data);
+			xQueueOverwrite(qInertAngVelX_f, (float* const)data);
 			break;
 		case BCM_LOG_INERT_ANG_VEL_Y:
-			xQueueOverwrite(qInertAngVelY_d, (double* const)data);
+			xQueueOverwrite(qInertAngVelY_f, (float* const)data);
 			break;
 		case BCM_LOG_INERT_ANG_VEL_Z:
-			xQueueOverwrite(qInertAngVelZ_d, (double* const)data);
+			xQueueOverwrite(qInertAngVelZ_f, (float* const)data);
 			break;
 		case BCM_LOG_NAVI_N:				// 10
-			xQueueOverwrite(qNaviN_d, (double* const)data);
+			xQueueOverwrite(qNaviN_f, (float* const)data);
 			break;
 		case BCM_LOG_NAVI_E:
-			xQueueOverwrite(qNaviE_d, (double* const)data);
+			xQueueOverwrite(qNaviE_f, (float* const)data);
 			break;
 		case BCM_LOG_NAVI_THETA:
-			xQueueOverwrite(qNaviTheta_d, (double* const)data);
+			xQueueOverwrite(qNaviPhi_f, (float* const)data);
 			break;
 		case BCM_LOG_ENC_VEL:
-			xQueueOverwrite(qEncVel_d, (double* const)data);
+			xQueueOverwrite(qEncVel_f, (float* const)data);
 			break;
 		case BCM_LOG_TOF_1_DISTANCE:
 			xQueueOverwrite(qTof1Distance_u32, (uint32_t* const)data);
@@ -156,13 +156,13 @@ void traceBluetooth (const eBluetoothLogMember destination, void* const data)
 			xQueueOverwrite(qTof3Distance_u32, (uint32_t* const)data);
 			break;
 		case BCM_LOG_MTR_MAIN_BAT_VOLT:
-			xQueueOverwrite(qMtrMainBatVolt_d, (double* const)data);
+			xQueueOverwrite(qMtrMainBatVolt_f, (float* const)data);
 			break;
 		case BCM_LOG_MTR_SEC_BAT_VOLT:
-			xQueueOverwrite(qMtrSecBatVolt_d, (double* const)data);
+			xQueueOverwrite(qMtrSecBatVolt_f, (float* const)data);
 			break;
 		case BCM_LOG_MTR_CURR:
-			xQueueOverwrite(qMtrCurr_d, (double* const)data);
+			xQueueOverwrite(qMtrCurr_f, (float* const)data);
 			break;
 		case BCM_LOG_MTR_SYS_CURR:			// 20
 			xQueueOverwrite(qMtrSysCurr_u32, (uint32_t* const)data);
@@ -174,7 +174,7 @@ void traceBluetooth (const eBluetoothLogMember destination, void* const data)
 			xQueueOverwrite(qMtrCmdStopEngine_x, (bool* const)data);
 			break;
 		case BCM_LOG_CTR_MTR_CURR:
-			xQueueOverwrite(qCtrlMtrCurr_d, (double* const)data);
+			xQueueOverwrite(qCtrlMtrCurr_f, (float* const)data);
 			break;
 		case BCM_LOG_LINE_D:
 			xQueueOverwrite(qLineD_u32, (uint32_t* const)data);
@@ -191,27 +191,27 @@ void traceFlushData (void)
 {
 	uint32_t sharpDist        = 0;
 	bool     sharpColWarn     = 0;
-	double   srvAngle         = 0;
-	double   inertAccelX      = 0;
-	double   inertAccelY      = 0;
-	double   inertAccelZ      = 0;
-	double   inertAngVelX     = 0;
-	double   inertAngVelY     = 0;
-	double   inertAngVelZ     = 0;
-	double   naviN            = 0;
-	double   naviE            = 0;
-	double   naviTheta        = 0;
-	double   encVel           = 0;
+	float   srvAngle          = 0;
+	float   inertAccelX       = 0;
+	float   inertAccelY       = 0;
+	float   inertAccelZ       = 0;
+	float   inertAngVelX      = 0;
+	float   inertAngVelY      = 0;
+	float   inertAngVelZ      = 0;
+	float   naviN             = 0;
+	float   naviE             = 0;
+	float   naviTheta         = 0;
+	float   encVel            = 0;
 	uint32_t tof1Distance     = 0;
 	uint32_t tof2Distance     = 0;
 	uint32_t tof3Distance     = 0;
-	double   mtrMainBatVolt   = 0;
-	double   mtrSecBatVolt    = 0;
-	double   mtrCurr          = 0;
+	float   mtrMainBatVolt    = 0;
+	float   mtrSecBatVolt     = 0;
+	float   mtrCurr           = 0;
 	uint32_t mtrSysCurr       = 0;
 	uint32_t mtrSrvCurr       = 0;
 	bool     mtrCmdStopEngine = 0;
-	double   ctrlMtrCurr      = 0;
+	float   ctrlMtrCurr       = 0;
 	uint32_t lineD			  = 0;
 	uint32_t lineTheta		  = 0;
 
@@ -222,38 +222,38 @@ void traceFlushData (void)
 	xQueueReceive(qSharpCollWarn_x, &sharpColWarn, 0);
 	traceWrapBool(&sharpColWarn, BCM_LOG_SHARP_COLLISION_WARNING);
 
-	xQueueReceive(qServoAngle_d, &srvAngle, 0);
-	traceWrapDouble(&srvAngle, TRACE_DECIMALS_SERVO_ANGLE, BCM_LOG_SERVO_ANGLE, BCM_LOG_LENGHT_SERVO_ANGLE);
+	xQueueReceive(qServoAngle_f, &srvAngle, 0);
+	traceWrapFloat(&srvAngle, TRACE_DECIMALS_SERVO_ANGLE, BCM_LOG_SERVO_ANGLE, BCM_LOG_LENGHT_SERVO_ANGLE);
 
-	xQueueReceive(qInertAccelX_d, &inertAccelX, 0);
-	traceWrapDouble(&inertAccelX, TRACE_DECIMALS_INERT_ACCEL_X, BCM_LOG_INERT_ACCEL_X, BCM_LOG_LENGHT_INERT_ACCEL_X);
+	xQueueReceive(qInertAccelX_f, &inertAccelX, 0);
+	traceWrapFloat(&inertAccelX, TRACE_DECIMALS_INERT_ACCEL_X, BCM_LOG_INERT_ACCEL_X, BCM_LOG_LENGHT_INERT_ACCEL_X);
 
-	xQueueReceive(qInertAccelY_d, &inertAccelY, 0);
-	traceWrapDouble(&inertAccelY, TRACE_DECIMALS_INERT_ACCEL_Y, BCM_LOG_INERT_ACCEL_Y, BCM_LOG_LENGHT_INERT_ACCEL_Y);
+	xQueueReceive(qInertAccelY_f, &inertAccelY, 0);
+	traceWrapFloat(&inertAccelY, TRACE_DECIMALS_INERT_ACCEL_Y, BCM_LOG_INERT_ACCEL_Y, BCM_LOG_LENGHT_INERT_ACCEL_Y);
 
-	xQueueReceive(qInertAccelZ_d, &inertAccelZ, 0);
-	traceWrapDouble(&inertAccelZ, TRACE_DECIMALS_INERT_ACCEL_Z, BCM_LOG_INERT_ACCEL_Z, BCM_LOG_LENGHT_INERT_ACCEL_Z);
+	xQueueReceive(qInertAccelZ_f, &inertAccelZ, 0);
+	traceWrapFloat(&inertAccelZ, TRACE_DECIMALS_INERT_ACCEL_Z, BCM_LOG_INERT_ACCEL_Z, BCM_LOG_LENGHT_INERT_ACCEL_Z);
 
-	xQueueReceive(qInertAngVelX_d, &inertAngVelX, 0);
-	traceWrapDouble(&inertAngVelX, TRACE_DECIMALS_INERT_ANG_VEL_X, BCM_LOG_INERT_ANG_VEL_X, BCM_LOG_LENGHT_INERT_ANG_VEL_X);
+	xQueueReceive(qInertAngVelX_f, &inertAngVelX, 0);
+	traceWrapFloat(&inertAngVelX, TRACE_DECIMALS_INERT_ANG_VEL_X, BCM_LOG_INERT_ANG_VEL_X, BCM_LOG_LENGHT_INERT_ANG_VEL_X);
 
-	xQueueReceive(qInertAngVelY_d, &inertAngVelY, 0);
-	traceWrapDouble(&inertAngVelY, TRACE_DECIMALS_INERT_ANG_VEL_Y, BCM_LOG_INERT_ANG_VEL_Y, BCM_LOG_LENGHT_INERT_ANG_VEL_Y);
+	xQueueReceive(qInertAngVelY_f, &inertAngVelY, 0);
+	traceWrapFloat(&inertAngVelY, TRACE_DECIMALS_INERT_ANG_VEL_Y, BCM_LOG_INERT_ANG_VEL_Y, BCM_LOG_LENGHT_INERT_ANG_VEL_Y);
 
-	xQueueReceive(qInertAngVelZ_d, &inertAngVelZ, 0);
-	traceWrapDouble(&inertAngVelZ, TRACE_DECIMALS_INERT_ANG_VEL_Z, BCM_LOG_INERT_ANG_VEL_Z, BCM_LOG_LENGHT_INERT_ANG_VEL_Z);
+	xQueueReceive(qInertAngVelZ_f, &inertAngVelZ, 0);
+	traceWrapFloat(&inertAngVelZ, TRACE_DECIMALS_INERT_ANG_VEL_Z, BCM_LOG_INERT_ANG_VEL_Z, BCM_LOG_LENGHT_INERT_ANG_VEL_Z);
 
-	xQueueReceive(qNaviN_d, &naviN, 0);
-	traceWrapDouble(&naviN, TRACE_DECIMALS_NAVI_N, BCM_LOG_NAVI_N, BCM_LOG_LENGHT_NAVI_N);
+	xQueueReceive(qNaviN_f, &naviN, 0);
+	traceWrapFloat(&naviN, TRACE_DECIMALS_NAVI_N, BCM_LOG_NAVI_N, BCM_LOG_LENGHT_NAVI_N);
 
-	xQueueReceive(qNaviE_d, &naviE, 0);
-	traceWrapDouble(&naviE, TRACE_DECIMALS_NAVI_E, BCM_LOG_NAVI_E, BCM_LOG_LENGHT_NAVI_E);
+	xQueueReceive(qNaviE_f, &naviE, 0);
+	traceWrapFloat(&naviE, TRACE_DECIMALS_NAVI_E, BCM_LOG_NAVI_E, BCM_LOG_LENGHT_NAVI_E);
 
-	xQueueReceive(qNaviTheta_d, &naviTheta, 0);
-	traceWrapDouble(&naviTheta, TRACE_DECIMALS_NAVI_THETA, BCM_LOG_NAVI_THETA, BCM_LOG_LENGHT_NAVI_THETA);
+	xQueueReceive(qNaviPhi_f, &naviTheta, 0);
+	traceWrapFloat(&naviTheta, TRACE_DECIMALS_NAVI_THETA, BCM_LOG_NAVI_THETA, BCM_LOG_LENGHT_NAVI_THETA);
 
-	xQueueReceive(qEncVel_d, &encVel, 0);
-	traceWrapDouble(&encVel, TRACE_DECIMALS_ENC_VEL, BCM_LOG_ENC_VEL, BCM_LOG_LENGHT_ENC_VEL);
+	xQueueReceive(qEncVel_f, &encVel, 0);
+	traceWrapFloat(&encVel, TRACE_DECIMALS_ENC_VEL, BCM_LOG_ENC_VEL, BCM_LOG_LENGHT_ENC_VEL);
 
 	xQueueReceive(qTof1Distance_u32, &tof1Distance, 0);
 	traceWrapInteger(&tof1Distance, BCM_LOG_TOF_1_DISTANCE, BCM_LOG_LENGHT_TOF_1_DISTANCE);
@@ -264,14 +264,14 @@ void traceFlushData (void)
 	xQueueReceive(qTof3Distance_u32, &tof3Distance, 0);
 	traceWrapInteger(&tof3Distance, BCM_LOG_TOF_3_DISTANCE, BCM_LOG_LENGHT_TOF_3_DISTANCE);
 
-	xQueueReceive(qMtrMainBatVolt_d, &mtrMainBatVolt, 0);
-	traceWrapDouble(&mtrMainBatVolt, TRACE_DECIMALS_MTR_MAIN_BAT_VOLT, BCM_LOG_MTR_MAIN_BAT_VOLT, BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT);
+	xQueueReceive(qMtrMainBatVolt_f, &mtrMainBatVolt, 0);
+	traceWrapFloat(&mtrMainBatVolt, TRACE_DECIMALS_MTR_MAIN_BAT_VOLT, BCM_LOG_MTR_MAIN_BAT_VOLT, BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT);
 
-	xQueueReceive(qMtrSecBatVolt_d, &mtrSecBatVolt, 0);
-	traceWrapDouble(&mtrSecBatVolt, TRACE_DECIMALS_MTR_SEC_BAT_VOLT, BCM_LOG_MTR_SEC_BAT_VOLT, BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT);
+	xQueueReceive(qMtrSecBatVolt_f, &mtrSecBatVolt, 0);
+	traceWrapFloat(&mtrSecBatVolt, TRACE_DECIMALS_MTR_SEC_BAT_VOLT, BCM_LOG_MTR_SEC_BAT_VOLT, BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT);
 
-	xQueueReceive(qMtrCurr_d, &mtrCurr, 0);
-	traceWrapDouble(&mtrCurr, TRACE_DECIMALS_MTR_CURR, BCM_LOG_MTR_CURR, BCM_LOG_LENGHT_MTR_CURR);
+	xQueueReceive(qMtrCurr_f, &mtrCurr, 0);
+	traceWrapFloat(&mtrCurr, TRACE_DECIMALS_MTR_CURR, BCM_LOG_MTR_CURR, BCM_LOG_LENGHT_MTR_CURR);
 
 	xQueueReceive(qMtrSysCurr_u32, &mtrSysCurr, 0);
 	traceWrapInteger(&mtrSysCurr, BCM_LOG_MTR_SYS_CURR, BCM_LOG_LENGHT_MTR_SYS_CURR);
@@ -282,8 +282,8 @@ void traceFlushData (void)
 	xQueueReceive(qMtrCmdStopEngine_x, &mtrCmdStopEngine, 0);
 	traceWrapBool(&mtrCmdStopEngine, BCM_LOG_MTR_CMD_STOP_ENGINE);
 
-	xQueueReceive(qCtrlMtrCurr_d, &ctrlMtrCurr, 0);
-	traceWrapDouble(&ctrlMtrCurr, TRACE_DECIMALS_CTRL_MTR_CURR, BCM_LOG_CTR_MTR_CURR, BCM_LOG_LENGHT_CTRL_MTR_CURR);
+	xQueueReceive(qCtrlMtrCurr_f, &ctrlMtrCurr, 0);
+	traceWrapFloat(&ctrlMtrCurr, TRACE_DECIMALS_CTRL_MTR_CURR, BCM_LOG_CTR_MTR_CURR, BCM_LOG_LENGHT_CTRL_MTR_CURR);
 
 	xQueueReceive(qLineD_u32, &lineD, 0);
 	traceWrapInteger(&lineD, BCM_LOG_LINE_D, BCM_LOG_LENGHT_LINE_D);
@@ -330,13 +330,13 @@ cTraceRxBluetoothStruct traceProcessRxData (uint8_t* const buffer)
 		dataSruct.RecCmdPdTd = traceUnwrapBool(buffer, index);
 		index++;
 
-		dataSruct.RecDataPdTd_d = traceUnwrapDouble(buffer, index, TRACE_REC_PD_TD_SIZE, TRACE_REC_PD_TD_DECIMALS);
+		dataSruct.RecDataPdTd_d = traceUnwrapFloat(buffer, index, TRACE_REC_PD_TD_SIZE, TRACE_REC_PD_TD_DECIMALS);
 		index += TRACE_REC_PD_TD_SIZE;
 
 		dataSruct.RecCmdPdKp_x = traceUnwrapBool(buffer, index);
 		index++;
 
-		dataSruct.RecDataPdKp_d = traceUnwrapDouble(buffer, index, TRACE_REC_PD_KP_SIZE, TRACE_REC_PD_KP_DECIMALS);
+		dataSruct.RecDataPdKp_d = traceUnwrapFloat(buffer, index, TRACE_REC_PD_KP_SIZE, TRACE_REC_PD_KP_DECIMALS);
 		index += TRACE_REC_PD_KP_SIZE;
 	}
 
@@ -415,8 +415,8 @@ static bool traceWrapBool (bool* const value, const eBluetoothLogMember member)
 	return traced;
 }
 
-static bool traceWrapDouble (
-								double* const 			  value,
+static bool traceWrapFloat (
+								float* const 			  value,
 								const uint32_t 			  decimals,
 								const eBluetoothLogMember member,
 								const uint32_t 			  length
@@ -426,7 +426,7 @@ static bool traceWrapDouble (
 	uint8_t  buffer[length];
 	uint32_t mul;
 	uint32_t bound;
-	double   locValue = *value;
+	float    locValue = *value;
 
 	// At least one integer digit is need, the value can't be only decimals.
 	if(length > decimals)
@@ -529,11 +529,11 @@ static bool traceUnwrapBool (uint8_t* const buffer, uint32_t begin)
 	return retVal;
 }
 
-static double traceUnwrapDouble (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals)
+static float traceUnwrapFloat (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals)
 {
 	uint32_t digits;
 	uint32_t decims;
-	double retVal;
+	float    retVal;
 	uint8_t i = 0;
 	bool isNegative = false;
 
@@ -549,7 +549,7 @@ static double traceUnwrapDouble (uint8_t* const buffer, uint32_t begin, uint32_t
 
 	decims = traceUnwrapInteger(buffer, begin+size-decimals, decimals);
 
-	retVal = (double)decims;
+	retVal = (float)decims;
 
 	for (i = 0; i < decimals; i++)
 	{

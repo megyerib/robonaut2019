@@ -29,10 +29,6 @@ static void bcmLogGet (cBluetoothLog* const log);
 
 void bcmInit (void)
 {
-	bspUartInitDevice(Uart_Bluetooth);
-	//TODO Earliest need for USB
-	bspUartInitDevice(Uart_USB);
-
 	// Reset pin to high -> enable Bluetooth module.
 	HAL_GPIO_WritePin(BT_RST_GPIO_Port, BT_RST_Pin, GPIO_PIN_SET);
 

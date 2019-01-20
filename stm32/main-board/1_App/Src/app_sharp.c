@@ -8,7 +8,7 @@
 
 // ------------------------------- Includes -------------------------------- //
 
-#include <bsp_sharp.h>
+#include "bsp_sharp.h"
 #include "app_sharp.h"
 
 #include "app_common.h"

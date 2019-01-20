@@ -21,7 +21,7 @@
 typedef struct
 {
 	uint8_t  Sequence;
-	uint16_t Distance;
+	uint32_t Distance;
 } cMEASUREMENT_DIST;
 
 // Variables -----------------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ void hndlPlaceIntegerToAsciiMsg (uint8_t* const array, const uint32_t value, con
 //! @param decimaldigits	how many decimals (precision) must be saved
 void hndlPlaceFractionToAsciiMsg (
 										uint8_t* const array,
-										const double   value,
+										const float    value,
 										const uint32_t frameSize,
 										const uint32_t decimaldigits
 									);
