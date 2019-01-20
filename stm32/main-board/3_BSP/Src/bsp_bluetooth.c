@@ -27,7 +27,7 @@ static void bcmLogGet (cBluetoothLog* const log);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void bcmInit (void)
+void bspBluetoothInit (void)
 {
 	// Reset pin to high -> enable Bluetooth module.
 	HAL_GPIO_WritePin(BT_RST_GPIO_Port, BT_RST_Pin, GPIO_PIN_SET);
@@ -35,10 +35,10 @@ void bcmInit (void)
 	//Empty the structure
 	memset(&btLog, 0, sizeof(btLog));
 
-	bcmTryConnectToCar();
+	bspTryConnectToCar();
 }
 
-bool bcmBluetoothConnected (void)
+bool bspBluetoothConnected (void)
 {
 	// Check the connection and update flag
 	connected = HAL_GPIO_ReadPin(BT_CONN_GPIO_Port, BT_CONN_Pin);
@@ -46,7 +46,7 @@ bool bcmBluetoothConnected (void)
 	return connected;
 }
 
-void bcmResetBluetooth (void)
+void bspResetBluetooth (void)
 {
 	// Bluetooth module needs a 5ms long low active pulse to reset
 	HAL_GPIO_WritePin(BT_CONN_GPIO_Port, BT_CONN_Pin, GPIO_PIN_RESET);
@@ -54,7 +54,7 @@ void bcmResetBluetooth (void)
 	HAL_GPIO_WritePin(BT_CONN_GPIO_Port, BT_CONN_Pin, GPIO_PIN_SET);
 }
 
-bool bcmTryConnectToCar (void)
+bool bspTryConnectToCar (void)
 {
 	bool connSuccess = false;
 
@@ -70,7 +70,7 @@ bool bcmTryConnectToCar (void)
 	uint8_t sppConnectRx[30];
 
 	// Connection check.
-	connected = bcmBluetoothConnected();
+	connected = bspBluetoothConnected();
 
 	// Send welcome message
 	bspUartTransmit(Uart_USB, crLfMsg,    sizeof(crLfMsg), 1000);
@@ -105,7 +105,7 @@ bool bcmTryConnectToCar (void)
 	return connSuccess;
 }
 
-void bcmBtBufferFlush (void)
+void bspBtBufferFlush (void)
 {
 	uint32_t header = 2;
 	uint32_t msgSize = 3;
@@ -143,7 +143,7 @@ void bcmBtBufferFlush (void)
 	bspUartTransmit_IT(Uart_USB, btBuffer, bufSize);
 }
 
-bool bcmLogMemberUpdate (const eBluetoothLogMember member, uint8_t* const array, const uint32_t len)
+bool bspLogMemberUpdate (const eBluetoothLogMember member, uint8_t* const array, const uint32_t len)
 {
 	bool success = true;
 
@@ -226,12 +226,12 @@ bool bcmLogMemberUpdate (const eBluetoothLogMember member, uint8_t* const array,
 	return success;
 }
 
-void bcmSend (uint8_t* const txBuffer, const uint16_t length)
+void bspBtSend (uint8_t* const txBuffer, const uint16_t length)
 {
 	bspUartTransmit_IT(Uart_Bluetooth, txBuffer, length);
 }
 
-void bcmReceive (uint8_t* const rxBuffer, const uint16_t length)
+void bspBtReceive (uint8_t* const rxBuffer, const uint16_t length)
 {
 	bspUartReceive_IT(Uart_Bluetooth, rxBuffer, length);
 }

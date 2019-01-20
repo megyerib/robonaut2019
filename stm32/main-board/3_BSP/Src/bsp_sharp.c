@@ -66,6 +66,7 @@ cMEASUREMENT_DIST sharpGetMeasurement ()
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 //! @brief  Sets the calculated distance of the SHARP sensor safely
+//!
 //! @param  Distance to be stored.
 static void sharpSetMeasurement(const cMEASUREMENT_DIST meas)
 {
@@ -89,7 +90,9 @@ static void sharpSetMeasurement(const cMEASUREMENT_DIST meas)
 
 //! @brief 	Implements the inverse characteristics of the sensor and returns a
 //!			distance from an adc value.
+//!
 //! @param	ADC converted value from a voltage.
+//!
 //! @retval	Calculated distance.
 static uint32_t sharpCharacteristic (const uint32_t adcValue)
 {
@@ -115,6 +118,7 @@ static uint32_t sharpCharacteristic (const uint32_t adcValue)
 //! @brief	This function is called after the adc conversion and IT handling.
 //!			Here the result of the conversion is ready to be used/saved.
 //! 			Equation used: d = 1/y, where y = x * m + b
+//!
 //! @param	Pointer to the handler of the ADC.
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef * hadc)
 {

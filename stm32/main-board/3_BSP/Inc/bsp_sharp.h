@@ -38,5 +38,6 @@ void sharpInit ();
 void sharpTriggerAdc ();
 
 //! @brief  Gets the calculated distance of the SHARP sensor safely.
+//!
 //! @retval Distance.
 cMEASUREMENT_DIST sharpGetMeasurement ();

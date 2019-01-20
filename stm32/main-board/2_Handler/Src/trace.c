@@ -92,7 +92,7 @@ static float traceUnwrapFloat (uint8_t* const buffer, uint32_t begin, uint32_t s
 
 void traceInit (void)
 {
-	bcmInit();
+	bspBluetoothInit();
 
 	/* TODO DEBUG
 	uint8_t buff[12] = "0010-1053809";
@@ -292,7 +292,7 @@ void traceFlushData (void)
 	traceWrapInteger(&lineTheta, BCM_LOG_LINE_THETA, BCM_LOG_LENGHT_LINE_THETA);
 
 	// Send out the bluetooth log.
-	bcmBtBufferFlush();
+	bspBtBufferFlush();
 }
 
 cTraceRxBluetoothStruct traceProcessRxData (uint8_t* const buffer)
@@ -396,7 +396,7 @@ static bool traceWrapInteger (uint32_t* const value, const eBluetoothLogMember m
 	hndlPlaceIntegerToAsciiMsg(buffer, locValue, length, isNegative);
 
 	// Save the buffer into the bluetooth log structure.
-	traced = bcmLogMemberUpdate(member, buffer, length);
+	traced = bspLogMemberUpdate(member, buffer, length);
 
 	return traced;
 }
@@ -410,7 +410,7 @@ static bool traceWrapBool (bool* const value, const eBluetoothLogMember member)
 	buffer = (uint8_t)(*value) + 0x30;
 
 	// Save the value to the bluetooth log structure.
-	traced = bcmLogMemberUpdate(member, &buffer, 1);
+	traced = bspLogMemberUpdate(member, &buffer, 1);
 
 	return traced;
 }
@@ -478,7 +478,7 @@ static bool traceWrapFloat (
 		hndlPlaceFractionToAsciiMsg(buffer, locValue, length, decimals);
 
 		// Save the buffer into the trace buffer.
-		traced = bcmLogMemberUpdate(member, buffer, length);
+		traced = bspLogMemberUpdate(member, buffer, length);
 	}
 
 	return traced;

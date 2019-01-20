@@ -10,7 +10,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include <handler_common.h>
+#include "handler_common.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
 
@@ -158,23 +158,23 @@ bool connected;
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 //! Initializes the bluetooth communication module.
-void bcmInit (void);
+void bspBluetoothInit (void);
 
 //! Checks the bluetooth connection.
 //!
 //! @return			True if connected, False if not connected
-bool bcmBluetoothConnected (void);
+bool bspBluetoothConnected (void);
 
 //!	Resets the bluetooth module.
-void bcmResetBluetooth (void);
+void bspResetBluetooth (void);
 
 //! Builds up a connection with a given bluetooth device with this (car) board.
 //!
 //! @return			True if successfully connected, False if could not connet
-bool bcmTryConnectToCar (void);
+bool bspTryConnectToCar (void);
 
 //!	Send out the log structure through Bluetooth UART.
-void bcmBtBufferFlush (void);
+void bspBtBufferFlush (void);
 
 //!	Stores a given uint8_t array to the bluetotth log structure.
 //!
@@ -182,17 +182,17 @@ void bcmBtBufferFlush (void);
 //! @param array	array that holds the characters that has to be stored
 //! @param len		how many characters has to be saved
 //! @return			True if successfully stored, False if could not store
-bool bcmLogMemberUpdate (const eBluetoothLogMember member, uint8_t* const array, const uint32_t len);
+bool bspLogMemberUpdate (const eBluetoothLogMember member, uint8_t* const array, const uint32_t len);
 
 //! Sends out a uint8_t array through Bluetooth with interrupt.
 //!
 //! @param txBuffer	characters will be sent out
 //! @param length	how many characters will be sent out
-void bcmSend (uint8_t* const txBuffer, const uint16_t length);
+void bspBtSend (uint8_t* const txBuffer, const uint16_t length);
 
 //! Receives a given number of characters and stores in an array.
 //!
 //! @param rxBuffer	array that will store the characters
 //! @param length	how many characters will be received
-void bcmReceive (uint8_t* const rxBuffer, const uint16_t length);
+void bspBtReceive (uint8_t* const rxBuffer, const uint16_t length);
 
