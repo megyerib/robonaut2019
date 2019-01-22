@@ -17,7 +17,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 	if(htim->Instance == ER_TIMER_INSTANCE)	//Motor leállító parancsot itt adjuk meg, ha lejár a timer.
 	{
-		//BSP_SetDutyCycle(&StopDutyCycle);
+		BSP_SetDutyCycle(&StopDutyCycle);
 	}
 }
 

@@ -48,32 +48,43 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		{
 			if (CharCount > 0)
 			{
+				polarity = POSITIVE;							//alapesetben elore megyunk
 				int32_t Converted = 0;
 
 				while(ReceiveBufferUART[i] != '\r' && ReceiveBufferUART[i] != '\n')
 				{
-				if (ReceiveBufferUART[i] < '0' || ReceiveBufferUART[i] > '9')
-				{
-					valid = 0;
-					break;
-				}
+					if (ReceiveBufferUART[i] < '0' || ReceiveBufferUART[i] > '9')
+					{
+						if (ReceiveBufferUART[i] == '-' && i == 0)		//ha az elso karakter "-", akkor tolatunk
+						{
+							polarity = NEGATIVE;
+							valid = 1;
+							i++;										//a kitoltesi tenyezo szamitasbol kihagyjuk a "-" jel ASCI erteket :)
+						}
+						else
+						{
+							valid = 0;
+							break;
+						}
+					}
 
 					Converted *= 10;
 					Converted += ReceiveBufferUART[i] - '0';
 					i++;
 				}
 
-			if (valid)
-			{
-				BSP_emergency_stop_reset_timer();
+				if (valid)
+				{
+					BSP_emergency_stop_reset_timer();
+					ConvertedDutyCycle = Converted + 0.0;
+					ConvertedDutyCycle /= 100;
 
-				ConvertedDutyCycle = Converted + 0.0;
-				ConvertedDutyCycle /= 100;
+					BSP_SetDutyCycle(&ConvertedDutyCycle);
 
-				BSP_SetDutyCycle(&ConvertedDutyCycle);
-				HAL_UART_Transmit_IT(MAIN_BOARD_UART, response, 5);
-			}
-				CharCount = 0;
+					HAL_UART_Transmit_IT(MAIN_BOARD_UART, response, 5);
+				}
+
+					CharCount = 0;
 			}
 		}
 		else
