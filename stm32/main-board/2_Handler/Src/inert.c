@@ -22,6 +22,8 @@
 #define XL_1G_VAL (4096.0f)
 #define XL_C      (G * XL_CAL / XL_1G_VAL)
 
+#define G_C       (1.0f)
+
 #define REGS_TO_READ (12u)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -79,6 +81,12 @@ ACCEL inertGetAccel()
 ANGVEL inertGetAngVel()
 {
 	ANGVEL ret;
+
+	// TODO
+	ret.omega_x = ret_angvel[1] * -G_C;
+	ret.omega_y = ret_angvel[0] *  G_C;
+	ret.omega_z = ret_angvel[2] * -G_C;
+
 	return ret;
 }
 
