@@ -39,12 +39,30 @@ void BSP_PWMStart()
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PERIOD+1);	//to prevent any impulse on the output by starting
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, PERIOD+1);	//to prevent any impulse on the output by starting
 
+	polarity = POSITIVE;
 }
 
 void BSP_CreateDutyCycle(float DutyCycle, float* DutyCycleHalfBridge1, float* DutyCycleHalfBridge2)
 {
-	*DutyCycleHalfBridge1 = (DutyCycle + 1) / 2;
-	*DutyCycleHalfBridge2 = 1 - *DutyCycleHalfBridge1;
+	float dutyCycle = DutyCycle;
+
+	if (dutyCycle > DUTY_CYLE_MAX)
+		{
+			dutyCycle = DUTY_CYLE_MAX;
+		}
+
+	polarity = NEGATIVE;
+
+	if (polarity == POSITIVE)
+	{
+		*DutyCycleHalfBridge2 = (dutyCycle + 1) / 2;
+		*DutyCycleHalfBridge1 = 1 - *DutyCycleHalfBridge2;
+	}
+	if (polarity == NEGATIVE)
+	{
+		*DutyCycleHalfBridge1 = (dutyCycle + 1) / 2;
+		*DutyCycleHalfBridge2 = 1 - *DutyCycleHalfBridge1;
+	}
 }
 
 void BSP_CreateCompareValue(float* DutyCycleHalfBridge, int32_t* CompareValueHigh, int32_t* CompareValueLow)
