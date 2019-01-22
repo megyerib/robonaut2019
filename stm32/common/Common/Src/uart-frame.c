@@ -66,16 +66,13 @@ void convertToUartFrame(uint8_t* payload, uint8_t* frame, int payloadLen, int* f
     *framelen = j;
 }
 
-// Buffer length is ok
-// Begin flag is not present as it was once split by the state machine.
-// Last 2 bytes are the end flag
-// The function just removes the escape flags
-void convertFromUartFrame(uint8_t* frame, uint8_t* payload, int framelen, int* payloadLen)
+// Input: UART frame without begin and end flags
+static void removeEscapeChars(uint8_t* frame, uint8_t* payload, int framelen, int* payloadLen)
 {
     int i;
     int j = 0;
 
-	for (i = 0; i < framelen - 2; i++)
+	for (i = 0; i < framelen; i++)
     {
     	if (frame[i] != ESCAPE_CHAR)
     	{
@@ -116,7 +113,6 @@ void uartFrameRxStm(UFRAME_RX_STM* stm)
 			}
 			case out_rx:
 			{
-				//bspUartReceive_IT(Uart_LineFront, &lineRxBuf[lineRxBufSize], 1);
 				stm->receive(&stm->rxBuf[stm->rxBufSize]);
 				stm->rxBufSize++;
 
@@ -202,21 +198,14 @@ void uartFrameRxStm(UFRAME_RX_STM* stm)
 			}
 			case in_process:
 			{
-				//LINE_SENSOR_OUT* receivedLine;
-
-				convertFromUartFrame(
+				removeEscapeChars(
 					stm->rxBuf,
 					stm->uframeBuf,
-					stm->rxBufSize,
+					stm->rxBufSize - 2, // Remove end flag
 					&stm->uframeBufSize
 				);
 
 				stm->process(stm->uframeBuf, stm->uframeBufSize);
-				/*if (uframeBufSize == sizeof(LINE_SENSOR_OUT))
-				{
-					receivedLine = (LINE_SENSOR_OUT*) uframeBuf;
-					front_tmp = *receivedLine;
-				}*/
 
 				stm->state = out_resetbuf;
 
