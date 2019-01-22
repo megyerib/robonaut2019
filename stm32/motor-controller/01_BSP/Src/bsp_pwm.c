@@ -51,7 +51,7 @@ void BSP_CreateDutyCycle(float DutyCycle, float* DutyCycleHalfBridge1, float* Du
 			dutyCycle = DUTY_CYLE_MAX;
 		}
 
-	polarity = NEGATIVE;
+	//polarity = NEGATIVE;
 
 	if (polarity == POSITIVE)
 	{
