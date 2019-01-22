@@ -64,6 +64,7 @@
 /* Exported functions prototypes ---------------------------------------------*/
 void ADC_IRQHandler(void);
 void TIM1_CC_IRQHandler(void);
+void TIM4_IRQHandler(void);
 void I2C1_EV_IRQHandler(void);
 void TIM8_TRG_COM_TIM14_IRQHandler(void);
 void I2C3_EV_IRQHandler(void);

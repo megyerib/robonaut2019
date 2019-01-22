@@ -61,6 +61,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "app_init.h"
+
+#include "speed.h" /* Bc of that damn periodelapsedcallback */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -139,6 +141,7 @@ int main(void)
   MX_UART4_Init();
   MX_I2C3_Init();
   MX_TIM1_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   Init();
   /* USER CODE END 2 */
@@ -237,6 +240,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
+  else if (htim->Instance == TIM4)
+  {
+	 speedCallback();
+  }
 
   /* USER CODE END Callback 1 */
 }

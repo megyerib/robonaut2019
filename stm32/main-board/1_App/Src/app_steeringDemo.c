@@ -86,12 +86,16 @@ float K_D;
 
 float P, D;
 
+float speed;
+
 void Task_steeringDemo(void* p)
 {
 	setParams_corner();
 
 	while(1)
     {
+		speed = speedGet();
+
 		// REMOTE CONTROL __________________________________
 
 		if (remoteGetState())
