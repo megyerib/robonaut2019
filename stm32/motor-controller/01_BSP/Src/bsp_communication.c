@@ -23,7 +23,7 @@
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-unsigned char response[] = "Got it!\r\n";
+unsigned char response[] = "Ping!\r\n";
 int CharCount;
 unsigned char ReceiveBufferUART[24];
 

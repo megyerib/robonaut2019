@@ -11,17 +11,22 @@
 #include "stm32f0xx_hal.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
+typedef enum {POSITIVE, NEGATIVE} POLARITY_STATE;
 
 #define PERIOD							500
 #define DEADTIME_HIGH					-10
 #define DEADTIME_LOW					-10
 
-#define DUTY_CYCLE_HALF_BRIDGE_MAX		0.85f
+#define DUTY_CYLE_MAX					0.8f
+
+#define DUTY_CYCLE_HALF_BRIDGE_MAX		0.91f
 #define DUTY_CYCLE_HALF_BRIDGE_MIN		(1.0f - DUTY_CYCLE_HALF_BRIDGE_MAX)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Variables -----------------------------------------------------------------------------------------------------------
+
+POLARITY_STATE polarity;
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
