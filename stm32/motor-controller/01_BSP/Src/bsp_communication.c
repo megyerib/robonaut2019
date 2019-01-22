@@ -48,13 +48,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		{
 			if (CharCount > 0)
 			{
+				polarity = POSITIVE;							//alapesetben elore megyunk
 				int32_t Converted = 0;
 
 				while(ReceiveBufferUART[i] != '\r' && ReceiveBufferUART[i] != '\n')
 				{
 					if (ReceiveBufferUART[i] < '0' || ReceiveBufferUART[i] > '9')
 					{
-						valid = 0;
 						if (ReceiveBufferUART[i] == '-' && i == 0)		//ha az elso karakter "-", akkor tolatunk
 						{
 							polarity = NEGATIVE;
@@ -63,6 +63,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						}
 						else
 						{
+							valid = 0;
 							break;
 						}
 					}
@@ -79,7 +80,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 					ConvertedDutyCycle /= 100;
 
 					BSP_SetDutyCycle(&ConvertedDutyCycle);
-					polarity = POSITIVE;							//alapesetben elore megyunk
 
 					HAL_UART_Transmit_IT(MAIN_BOARD_UART, response, 5);
 				}
