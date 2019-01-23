@@ -120,7 +120,7 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	vQueueAddToRegistry(qRecData, "RecData");
 
-	sharpTriggerAdc();
+	// TODO sharpTriggerAdc();
 
 	//TODO
 	sharp.Distance = 40;
@@ -142,8 +142,17 @@ void Task_CarDiagnosticsTool(void* p)
 	bspUartReceive_IT(Uart_USB, usbRxBuffer, TRACE_REC_MSG_SIZE);
 	bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);
 
+	uint8_t btSentMessage[BCM_LOG_SIZE+7];
 
-	sharp = sharpGetMeasurement();
+	while (1)
+	{
+		traceFlushData();
+		bspUartTransmit_IT(Uart_USB, btSentMessage, BCM_LOG_SIZE+7);
+
+		vTaskDelay(200);
+	}
+
+/*	sharp = sharpGetMeasurement();
 
 	while(1)
 	{
@@ -228,7 +237,7 @@ void Task_CarDiagnosticsTool(void* p)
 		traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp);
 
 		vTaskDelay(200);
-	}
+	}*/
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

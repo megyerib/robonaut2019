@@ -92,8 +92,6 @@ static float traceUnwrapFloat (uint8_t* const buffer, uint32_t begin, uint32_t s
 
 void traceInit (void)
 {
-	bspBluetoothInit();
-
 	/* TODO DEBUG
 	uint8_t buff[12] = "0010-1053809";
 

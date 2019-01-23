@@ -13,15 +13,34 @@
 #include "navigation.h"
 #include "math.h"
 #include "handler_common.h"
+#include "bsp_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
 // TODO move to hndlCommon.h and include to sharp too.
 #define 	WAIT_SEMAPHORE			100		//!< Ticks [ms]
 
+#define     NAVI_F_GRAVY_TO_SI      (9.80665f)
+
+#define     NAVI_DPS_TO_SI          (float)(PI/180)
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
+typedef struct
+{
+	cNAVI_STATE start;
+	cNAVI_STATE end;
+	struct cSEGMENT* left;
+	struct cSEGMENT* midle;
+	struct cSEGMENT* right;
+} cSEGMENT_INFO;
 
+typedef struct
+{
+	cSEGMENT_INFO alfa;
+	cSEGMENT_INFO beta;
+	bool dir;
+} cSEGMENT;
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
@@ -38,6 +57,8 @@ static float currOmega;
 static float currPhi;
 
 static float dt_s;
+
+static cSEGMENT map[20];
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -95,6 +116,16 @@ cNAVI_STATE naviDRNaviProcess (const cVEC_ACCEL a, const float omega, const uint
 	retval.phi = currPhi;
 
 	return retval;
+}
+
+float naviConvertDpsToSI (const float ang_dps)
+{
+	return ang_dps * NAVI_DPS_TO_SI;
+}
+
+float naviConvertGToSI (const float accel_g)
+{
+	return accel_g * NAVI_F_GRAVY_TO_SI;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

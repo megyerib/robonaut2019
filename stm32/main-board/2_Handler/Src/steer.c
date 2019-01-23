@@ -28,7 +28,7 @@ static double steerCalculateSteerAngle ( double servoAngle );
 
 void steerInit()
 {
-	servoInit();
+
 }
 
 void steerSetAngle(double steerAngle)

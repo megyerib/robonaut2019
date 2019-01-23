@@ -29,11 +29,10 @@ void bspInit()
 	// MCU comm peripherals first
     bspUartInit();
     i2cInit();
-
-    bspBluetoothInit();
+    //sharpInit(); todo
     //bspServoTimInit(); // Don't call it here; It will be called in servoInit();
     servoInit();
-    //sharpInit();
+
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

@@ -41,7 +41,7 @@ extern QueueHandle_t qServoAngle_f;
 
 void TaskInit_Servo(void)
 {
-	servoInit();
+	//servoInit();
 
 	xTaskCreate(Task_Servo,
 				"TASK_SERVO",

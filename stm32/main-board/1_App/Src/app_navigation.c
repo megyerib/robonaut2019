@@ -49,7 +49,7 @@ void TaskInit_Navigation(void)
 
 	xTaskCreate(Task_Navigation,
 				"TASK_NAVIGATION",
-				DEFAULT_STACK_SIZE,
+				DEFAULT_STACK_SIZE+100,
 				NULL,
 				TASK_NAVI_PRIO,
 				NULL);
@@ -64,22 +64,22 @@ void Task_Navigation(void* p)
 	while(1)
 	{
 		// Measurements.
-		acceleration    = inertGetAccel();
-		angularVelocity = inertGetAngVel();
+		acceleration    = inertGetAccel();		// g
+		angularVelocity = inertGetAngVel();		// dps
 
 		// Parallel with the orientation of the car.
-		a.u = acceleration.a_x;
+		a.u = naviConvertGToSI(acceleration.a_x);
 		// Orthogonal with the orientation of the car.
-		a.v = acceleration.a_y;
+		a.v = naviConvertGToSI(acceleration.a_y);
 		// Yaw direction in the RPY coordinate-system.
-		omega = angularVelocity.omega_z;
+		omega = naviConvertDpsToSI(angularVelocity.omega_z);
 
 		// Calculate the actual position and orientation.
 		naviState = naviDRNaviProcess(a, omega, TASK_DELAY_16_MS);
 
-		traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
-		traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
-		traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
+		//traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
+		//traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
+		//traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
 
 		inertTriggerMeasurement();
 
