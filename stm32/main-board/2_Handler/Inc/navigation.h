@@ -71,7 +71,13 @@ void naviDRInit (void);
 //!
 //! @return
 //**********************************************************************************************************************
-cNAVI_STATE naviDRNaviProcess (const cVEC_ACCEL a, const float omega, const uint32_t dt);
+cNAVI_STATE naviDRProcessInertial (const cVEC_ACCEL a, const float omega, const uint32_t dt);
+
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
+cNAVI_STATE naviDRProcessIncremental(const cVelocityVector v, const float omega, const uint32_t dt);
 
 //**********************************************************************************************************************
 //!

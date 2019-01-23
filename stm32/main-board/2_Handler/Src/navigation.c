@@ -91,9 +91,9 @@ void naviDRInit (void)
 	dt_s = 1;
 }
 
-cNAVI_STATE naviDRNaviProcess (const cVEC_ACCEL a, const float omega, const uint32_t dt)
+cNAVI_STATE naviDRProcessInertial (const cVEC_ACCEL a, const float omega, const uint32_t dt)
 {
-	cNAVI_STATE retval;
+	cNAVI_STATE retVal;
 
 	// Save the current sensor data.
 	currA = a;
@@ -112,10 +112,34 @@ cNAVI_STATE naviDRNaviProcess (const cVEC_ACCEL a, const float omega, const uint
 	naviUpdatePosition();
 
 	// Construct navigation state vector.
-	retval.p = currP;
-	retval.phi = currPhi;
+	retVal.p   = currP;
+	retVal.phi = currPhi;
 
-	return retval;
+	return retVal;
+}
+
+cNAVI_STATE naviDRProcessIncremental(const cVelocityVector v, const float omega, const uint32_t dt)
+{
+	cNAVI_STATE retVal;
+
+	// Save the current sensor data.
+	currV = v;
+	currOmega = omega;
+
+	// Convert time to seconds.
+	dt_s = (float)dt / 1000;
+
+	// Calculate orientation.
+	naviUpdateOrientation();
+
+	// Calculate position();
+	naviUpdatePosition();
+
+	// Construct navigation state vector.
+	retVal.p   = currP;
+	retVal.phi = currPhi;
+
+	return retVal;
 }
 
 float naviConvertDpsToSI (const float ang_dps)

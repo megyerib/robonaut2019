@@ -29,6 +29,9 @@
 static ACCEL  acceleration;
 static ANGVEL angularVelocity;
 
+static ACCEL  accelOffset;
+static ANGVEL angularOffset;
+
 static cVEC_ACCEL a;
 static float omega;
 static cNAVI_STATE naviState;
@@ -39,13 +42,17 @@ static cNAVI_STATE naviState;
 //! @brief	Initializes the Task_Navigation task.
 void TaskInit_Navigation(void)
 {
+	inertTriggerMeasurement();
+
 	semDrNavi = xSemaphoreCreateBinary();
 	if(semDrNavi != NULL)
 	{
 		xSemaphoreGive(semDrNavi);
-
-		inertTriggerMeasurement();
 	}
+
+	// Measurements.
+	accelOffset   = inertGetAccel();		// g
+	angularOffset = inertGetAngVel();		// dps
 
 	xTaskCreate(Task_Navigation,
 				"TASK_NAVIGATION",
@@ -75,7 +82,7 @@ void Task_Navigation(void* p)
 		omega = naviConvertDpsToSI(angularVelocity.omega_z);
 
 		// Calculate the actual position and orientation.
-		naviState = naviDRNaviProcess(a, omega, TASK_DELAY_16_MS);
+		naviState = naviDRProcessInertial(a, omega, TASK_DELAY_16_MS);
 
 		//traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
 		//traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
