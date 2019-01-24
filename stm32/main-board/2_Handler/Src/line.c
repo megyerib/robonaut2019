@@ -26,27 +26,36 @@
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 static LINE_SENSOR_OUT front_tmp;
-static int16_t prev_line = 0;
+static LINE_SENSOR_OUT rear_tmp;
 
-static UFRAME_RX_STM uframeStm;
+static int16_t prev_line_front = 0; // For racing line only (which is front)
+
+static UFRAME_RX_STM uframeStmFront;
+static UFRAME_RX_STM uframeStmRear;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void uframeReceive(uint8_t* nextchar);
-static void uframeProcess(uint8_t* buf, uint8_t size);
+static void uframeReceiveFront(uint8_t* nextchar);
+static void uframeProcessFront(uint8_t* buf, uint8_t size);
+static void uframeReceiveRear(uint8_t* nextchar);
+static void uframeProcessRear(uint8_t* buf, uint8_t size);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void lineInit()
 {
-	uframeStm.state = init;
-	uframeStm.receive = uframeReceive;
-	uframeStm.process = uframeProcess;
+	uframeStmFront.state = init;
+	uframeStmFront.receive = uframeReceiveFront;
+	uframeStmFront.process = uframeProcessFront;
 
-	uartFrameRxStm(&uframeStm);
+	uframeStmRear.state = init;
+	uframeStmRear.receive = uframeReceiveRear;
+	uframeStmRear.process = uframeProcessRear;
+
+	uartFrameRxStm(&uframeStmRear);
 }
 
-LINE lineGet()
+float lineGetSingle()
 {
     LINE_SENSOR_OUT front;
     int16_t x_front = 0;
@@ -60,19 +69,25 @@ LINE lineGet()
         x_front += front.lines[i];
     x_front /= front.cnt;
 
-    LINE ret =
-    {
-        .d = x_front,
-        .theta = 0
-    };
+    int16_t ret_mm;
 
 	// Lost line
 	if (front.cnt == 0)
-		ret.d = prev_line;
+		ret_mm = prev_line_front;
 
-	prev_line = ret.d;
+	prev_line_front = ret_mm;
 
-    return ret;
+    return (float) ret_mm / 1000.0f;
+}
+
+LINE_SENSOR_OUT lineGetRawFront()
+{
+	return front_tmp;
+}
+
+LINE_SENSOR_OUT lineGetRawRear()
+{
+	return rear_tmp;
 }
 
 Arc lineGetArc(uint16_t r_mm, ArcDir dir)
@@ -107,21 +122,39 @@ RoadSignal lineGetRoadSignal()
 
 void bspLineFrontRxCpltCallback (void)
 {
-	uartFrameRxStm(&uframeStm);
+	uartFrameRxStm(&uframeStmFront);
+}
+
+void bspLineRearRxCpltCallback (void)
+{
+	uartFrameRxStm(&uframeStmRear);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-static void uframeReceive(uint8_t* nextchar)
+static void uframeReceiveFront(uint8_t* nextchar)
 {
 	bspUartReceive_IT(Uart_LineFront, nextchar, 1);
 }
 
-static void uframeProcess(uint8_t* buf, uint8_t size)
+static void uframeProcessFront(uint8_t* buf, uint8_t size)
 {
 	if (size == sizeof(LINE_SENSOR_OUT))
 	{
 		front_tmp = *((LINE_SENSOR_OUT*) buf);
+	}
+}
+
+static void uframeReceiveRear(uint8_t* nextchar)
+{
+	bspUartReceive_IT(Uart_LineRear, nextchar, 1);
+}
+
+static void uframeProcessRear(uint8_t* buf, uint8_t size)
+{
+	if (size == sizeof(LINE_SENSOR_OUT))
+	{
+		rear_tmp = *((LINE_SENSOR_OUT*) buf);
 	}
 }
 

@@ -103,7 +103,7 @@ static void Task_LineFollow (void* p)
     	}*/
 
     	// Get new measurements of the line p distance.
-    	p_meas = lineGet().d;
+    	p_meas = lineGetSingle();
     	traceBluetooth(BCM_LOG_LINE_D, &p_meas);
 
     	// Calculate control error.

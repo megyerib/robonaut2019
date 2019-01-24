@@ -94,8 +94,6 @@ void Task_steeringDemo(void* p)
 
 	while(1)
     {
-		speed = speedGet();
-
 		// REMOTE CONTROL __________________________________
 
 		if (remoteGetState())
@@ -118,7 +116,7 @@ void Task_steeringDemo(void* p)
 
 		prevline = line_pos;
 
-		line_pos = (float) lineGet().d;
+		line_pos = lineGetSingle() / 1000; // m -> mm
 
 		line_diff = line_pos - prevline;
 
