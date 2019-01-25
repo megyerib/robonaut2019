@@ -48,6 +48,7 @@ static int16_t ret_angvel[3];
 
 static int i_reg;
 
+// Calibration parameters for the acceleration measurement.
 static float Xgain = 1.0;
 static float Xofs  = 0.0;
 static float XtoY  = 0.0;
@@ -61,7 +62,13 @@ static float Zofs  = 0.0;
 static float ZtoX  = 0.0;
 static float ZtoY  = 0.0;
 
+// Calibration data (inverted) to calculate the true acceleration from the measured ones.
 static cMATRIX_3X3 invParams;
+
+// Gyroscope offsets.
+static float WxOfs;
+static float WyOfs;
+static float WzOfs;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -82,16 +89,23 @@ void inertInit()
 	WriteRegBlocking(CTRL10_C, 0x38); // Gyro X, Y, Z axes enabled
 	WriteRegBlocking(CTRL2_G, 0x60);  // Gyro = 416Hz (High-Performance mode)
 
-	invParams.a1[0] = 1.0;
-	invParams.a1[1] = 0.0;
-	invParams.a1[2] = 0.0;
-	invParams.a2[0] = 0.0;
-	invParams.a2[1] = 1.0;
-	invParams.a2[2] = 0.0;
-	invParams.a3[0] = 0.0;
-	invParams.a3[1] = 0.0;
-	invParams.a3[2] = 1.0;
-
+	// Last valid calibration:
+	//               - 2019.01.25. 12:23 by Joci
+	// acceleration:
+	invParams.a1[0] = 0.103275834;
+	invParams.a1[1] = -0.00021038;
+	invParams.a1[2] = 0.000890583;
+	invParams.a2[0] = 0.000563969;
+	invParams.a2[1] = 0.104217378;
+	invParams.a2[2] = 0.00234628;
+	invParams.a3[0] = 0.002363388;
+	invParams.a3[1] = -0.003682367;
+	invParams.a3[2] = 0.103042739;
+	//
+	// gyroscope:
+	WxOfs = 614;
+	WyOfs = 340;
+	WzOfs = 342;
 }
 
 ACCEL inertGetAccel()
@@ -104,6 +118,7 @@ ACCEL inertGetAccel()
     measuredAcc.a_y = ret_accel[0] *  XL_C; // Y =  X
     measuredAcc.a_z = ret_accel[2] * -XL_C; // Z = -Z
 
+    // Calculate the true acceleration from the measured ones with the calibration parameters.
     trueAcc.a_x =   invParams.a1[0] * (measuredAcc.a_x - Xofs)
     			  + invParams.a1[1] * (measuredAcc.a_y - Yofs)
 				  + invParams.a1[2] * (measuredAcc.a_z - Zofs);
@@ -119,14 +134,19 @@ ACCEL inertGetAccel()
 
 ANGVEL inertGetAngVel()
 {
-	ANGVEL ret;
+	ANGVEL measuredAngVel;
+	ANGVEL treuAngVel;
 
-	// TODO
-	ret.omega_x = ret_angvel[1] * -G_C;
-	ret.omega_y = ret_angvel[0] *  G_C;
-	ret.omega_z = ret_angvel[2] * -G_C;
+	measuredAngVel.omega_x = ret_angvel[1] * -G_C;
+	measuredAngVel.omega_y = ret_angvel[0] *  G_C;
+	measuredAngVel.omega_z = ret_angvel[2] * -G_C;
 
-	return ret;
+	// Get rid of the offset error. Calibration was made in standing-still only.
+	treuAngVel.omega_x = measuredAngVel.omega_x - WxOfs;
+	treuAngVel.omega_y = measuredAngVel.omega_y - WyOfs;
+	treuAngVel.omega_z = measuredAngVel.omega_z - WzOfs;
+
+	return treuAngVel;
 }
 
 void inertTriggerMeasurement()

@@ -51,7 +51,13 @@ static float arrZtoX[2];
 static float arrZtoY[2];
 
 static GPIO_PinState blueBtn = GPIO_PIN_SET;
+static bool pressed = false;
+static bool enable  = false;
+
 static uint8_t measurementIndex = 0;
+
+static ANGVEL Wofs;
+static bool ofsSaved = false;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -79,20 +85,40 @@ void Task_InertialCalibration(void* p)
 	while (1)
 	{
 		blueBtn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+		if (pressed == false && blueBtn == GPIO_PIN_RESET)
+		{
+			vTaskDelay(30);
+			blueBtn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+			if (blueBtn == GPIO_PIN_RESET)
+			{
+				pressed = true;
+				enable = true;
+			}
+		}
+		else if (pressed == true && blueBtn == GPIO_PIN_SET)
+		{
+			vTaskDelay(30);
+			blueBtn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+			if (blueBtn == GPIO_PIN_SET)
+			{
+				pressed = false;
+			}
+		}
 
-		if (blueBtn == GPIO_PIN_RESET && measurementIndex == 1)
+		if (enable == true && measurementIndex == 1)
 		{
 			// Set the inertial sensor in [0, 0, -1]. 6-point tumble calibration 6th measurement.
 			// AccX5 = -ZtoX + Xofs, AccY5 = -ZtoY + Yofs, AccZ4 = -Zgain + Zofs
 			temp = inertGetAccel();
 
-			AccX[4] = temp.a_x;
-			AccY[4] = temp.a_y;
-			AccZ[4] = temp.a_z;
+			AccX[5] = temp.a_x;
+			AccY[5] = temp.a_y;
+			AccZ[5] = temp.a_z;
 
 			measurementIndex = 2;
+			enable = false;
 		}
-		else if (blueBtn == GPIO_PIN_RESET && measurementIndex == 2)
+		else if (enable == true && measurementIndex == 2)
 		{
 			// Set the inertial sensor in [-1, 0, 0]. 6-point tumble calibration 2nd measurement.
 			// AccX2 = -Xgain + Xofs, AccY2 = -XtoY + Yofs, AccZ2 = -XtoZ + Zofs
@@ -103,8 +129,9 @@ void Task_InertialCalibration(void* p)
 			AccZ[1] = temp.a_z;
 
 			measurementIndex = 3;
+			enable = false;
 		}
-		else if (blueBtn == GPIO_PIN_RESET && measurementIndex == 3)
+		else if (enable == true && measurementIndex == 3)
 		{
 			// Set the inertial sensor in [0, 0, +1]. 6-point tumble calibration 5th measurement.
 			// AccX5 = ZtoX + Xofs, AccY5 = ZtoY + Yofs, AccZ4 = Zgain + Zofs
@@ -115,8 +142,9 @@ void Task_InertialCalibration(void* p)
 			AccZ[4] = temp.a_z;
 
 			measurementIndex = 4;
+			enable = false;
 		}
-		else if (blueBtn == GPIO_PIN_RESET && measurementIndex == 4)
+		else if (enable == true && measurementIndex == 4)
 		{
 			// Set the inertial sensor in [+1, 0, 0]. 6-point tumble calibration 1st measurement.
 			// AccX1 = Xgain + Xofs, AccY1 = XtoY + Yofs, AccZ1 = XtoZ + Zofs
@@ -127,8 +155,9 @@ void Task_InertialCalibration(void* p)
 			AccZ[0] = temp.a_z;
 
 			measurementIndex = 5;
+			enable = false;
 		}
-		else if (blueBtn == GPIO_PIN_RESET && measurementIndex == 5)
+		else if (enable == true && measurementIndex == 5)
 		{
 			// Set the inertial sensor in [0, +1, 0]. 6-point tumble calibration 3rd measurement.
 			// AccX3 = YtoZ + Xofs, AccY3 = Ygain + Yofs, AccZ3 = YtoZ + Zofs
@@ -139,8 +168,9 @@ void Task_InertialCalibration(void* p)
 			AccZ[2] = temp.a_z;
 
 			measurementIndex = 6;
+			enable = false;
 		}
-		else if(blueBtn == GPIO_PIN_RESET && measurementIndex == 6)
+		else if(enable == true && measurementIndex == 6)
 		{
 			// Set the inertial sensor in [0, -1, 0]. 6-point tumble calibration 4th measurement.
 			// AccX4 = -YtoZ + Xofs, AccY4 = -Ygain + Yofs, AccZ4 = -YtoZ + Zofs
@@ -151,6 +181,7 @@ void Task_InertialCalibration(void* p)
 			AccZ[3] = temp.a_z;
 
 			measurementIndex = 7;
+			enable = false;
 		}
 		else if(measurementIndex == 7)
 		{
@@ -188,11 +219,25 @@ void Task_InertialCalibration(void* p)
 			// NO measurement
 
 			// Start calibration
-			if (blueBtn == GPIO_PIN_RESET)
+			if (enable == true)
 			{
 				measurementIndex = 1;
 			}
 		}
+
+		if (ofsSaved == false && measurementIndex != 0)
+		{
+			Wofs = inertGetAngVel();
+
+			ofsSaved = true;
+		}
+
+		/*else if (angulCalibFinished == false && accelCalibFinished == true)
+		{
+
+
+		}*/
+
 
 		inertTriggerMeasurement();
 
@@ -231,13 +276,13 @@ static void inertCal_CalculateGain()
 	Xgain = (arrXgain[0] + arrXgain[1]) /  2.0;
 
 	// Ygain1 = AccY3-Yofs, Ygain2 = -AccY4+Yofs  -> Ygain = avg(Ygain1, Ygain2)
-	arrYgain[2] = AccY[2] - Yofs;
-	arrYgain[3] = -AccY[3] + Yofs;
+	arrYgain[0] = AccY[2] - Yofs;
+	arrYgain[1] = -AccY[3] + Yofs;
 	Ygain = (arrYgain[0] + arrYgain[1]) /  2.0;
 
 	// Zgain1 = AccZ5-Zofs, Zgain2 = -AccZ6+Zofs  -> Zgain = avg(Zgain1, Zgain2)
-	arrZgain[4] = AccZ[4] - Zofs;
-	arrZgain[5] = -AccZ[5] + Zofs;
+	arrZgain[0] = AccZ[4] - Zofs;
+	arrZgain[1] = -AccZ[5] + Zofs;
 	Zgain = (arrZgain[0] + arrZgain[1]) /  2.0;
 }
 
@@ -248,8 +293,8 @@ static void inertCal_CalculateCrossAxisGain()
 	arrXtoY[1] = -AccY[1] + Yofs;
 	XtoY = (arrXtoY[0] + arrXtoY[1]) /  2.0;
 
-	// XtoZ1 = AccZ2-Zofs, XtoZ2 = -AccZ2+Zofs    -> XtoZ = avg(XtoZ1, XtoZ2)
-	arrXtoZ[0] = AccZ[1] - Zofs;
+	// XtoZ1 = AccZ1-Zofs, XtoZ2 = -AccZ2+Zofs    -> XtoZ = avg(XtoZ1, XtoZ2)
+	arrXtoZ[0] = AccZ[0] - Zofs;
 	arrXtoZ[1] = -AccZ[1] + Zofs;
 	XtoZ = (arrXtoZ[0] + arrXtoZ[1]) /  2.0;
 

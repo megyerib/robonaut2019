@@ -58,13 +58,23 @@ static float currPhi;
 
 static float dt_s;
 
+// TODO app
 static cSEGMENT map[20];
+
+static ANGVEL W;
+static float Phi;
+static float Theta;
+static float Psi;
+static float dPhi;
+static float dTheta;
+static float dPsi;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void naviUpdateOrientation (void);
-static void naviUpdateVelocity 	  (void);
-static void naviUpdatePosition    (void);
+static void naviUpdateOrientationSTM32 (void);
+static void naviUpdateOrientation 	   (void);
+static void naviUpdateVelocity 	  	   (void);
+static void naviUpdatePosition         (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -89,6 +99,13 @@ void naviDRInit (void)
 	currPhi = 0;
 
 	dt_s = 1;
+
+	Phi    = 0;
+	Theta  = 0;
+	Psi    = 0;
+	dPhi   = 0;
+	dTheta = 0;
+	dPsi   = 0;
 }
 
 cNAVI_STATE naviDRProcessInertial (const cVEC_ACCEL a, const float omega, const uint32_t dt)
@@ -104,6 +121,33 @@ cNAVI_STATE naviDRProcessInertial (const cVEC_ACCEL a, const float omega, const 
 
 	// Calculate orientation.
 	naviUpdateOrientation();
+
+	// Calculate velocity.
+	naviUpdateVelocity();
+
+	// Calculate position.
+	naviUpdatePosition();
+
+	// Construct navigation state vector.
+	retVal.p   = currP;
+	retVal.phi = currPhi;
+
+	return retVal;
+}
+
+cNAVI_STATE naviDRProcessInertialSTM32 (const cVEC_ACCEL a, const ANGVEL w, const uint32_t dt)
+{
+	cNAVI_STATE retVal;
+
+	// Save the current sensor data.
+	currA = a;
+	W = w;
+
+	// Convert time to seconds.
+	dt_s = (float)dt / 1000;
+
+	// Calculate orientation.
+	naviUpdateOrientationSTM32();
 
 	// Calculate velocity.
 	naviUpdateVelocity();
@@ -154,8 +198,39 @@ float naviConvertGToSI (const float accel_g)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
+static void naviUpdateOrientationSTM32 (void)
+{
+	////STEP 1
+	// Calculate the derivatives of the angles.
+	// NOTE: if Theta = +- 90deg, then tan(Theta) = +- inf (singularity points)
+
+	// Roll derivative: Phi’ = Wx + Wy * Sin(Phi) * Tan(Theta) + Wz * Cos(Phi) * Tan(Theta)
+	dPhi = W.omega_x + W.omega_y * sinf(Phi) * tanf(Theta) + W.omega_z * cosf(Phi) * tanf(Theta);
+
+	// Pitch derivative: Theta’ = Wy * Cos(Phi) – Wz * Sin(Phi)
+	dTheta = W.omega_y * cosf(Phi) - W.omega_z * sinf(Phi);
+
+	// Yaw derivative: Psi’ = Wy * Sin(Phi) / Cos(Theta) + Wz * Cos(Phi) / Cos(Theta)
+	dPsi = W.omega_y * sinf(Phi) / cosf(Theta) + W.omega_z * cosf(Phi) / cosf(Theta);
+
+	////STEP 2
+	// Update the angles.
+	// Roll: Phi(t+Ts) = Phi(t) + Phi’ * Ts
+	Phi = Phi + dPhi * dt_s;
+
+	// Pitch: Theta(t+Ts) = Theta(t) + Theta’ * Ts
+	Theta =  Theta + dTheta * dt_s;
+
+	// Yaw: Psi(t+Ts) = Psi(t) + Psi’ * Ts
+	Psi = Psi + dPsi * dt_s;
+
+	// Get the Yaw angle and save for further use.
+	prevPhi = Psi;
+	currPhi = Psi;
+}
+
 // omega = [rad/s], dt = [s] -> phi = [rad]
-static void naviUpdateOrientation ()
+static void naviUpdateOrientation (void)
 {
 	float dPhi;
 
@@ -171,7 +246,7 @@ static void naviUpdateOrientation ()
 }
 
 // u, v = [m/s]
-static void naviUpdateVelocity ()
+static void naviUpdateVelocity (void)
 {
 	cVelocityVector dv;
 
