@@ -11,6 +11,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include "handler_common.h"
 #include "inert.h"
 #include "LSM6DS3.h"
 #include "bsp_i2c.h"
@@ -47,6 +48,21 @@ static int16_t ret_angvel[3];
 
 static int i_reg;
 
+static float Xgain = 1.0;
+static float Xofs  = 0.0;
+static float XtoY  = 0.0;
+static float XtoZ  = 0.0;
+static float Ygain = 1.0;
+static float Yofs  = 0.0;
+static float YtoX  = 0.0;
+static float YtoZ  = 0.0;
+static float Zgain = 1.0;
+static float Zofs  = 0.0;
+static float ZtoX  = 0.0;
+static float ZtoY  = 0.0;
+
+static cMATRIX_3X3 invParams;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void WriteRegBlocking(uint8_t regAddr, uint8_t data);
@@ -65,17 +81,40 @@ void inertInit()
 	// Enable gyroscope
 	WriteRegBlocking(CTRL10_C, 0x38); // Gyro X, Y, Z axes enabled
 	WriteRegBlocking(CTRL2_G, 0x60);  // Gyro = 416Hz (High-Performance mode)
+
+	invParams.a1[0] = 1.0;
+	invParams.a1[1] = 0.0;
+	invParams.a1[2] = 0.0;
+	invParams.a2[0] = 0.0;
+	invParams.a2[1] = 1.0;
+	invParams.a2[2] = 0.0;
+	invParams.a3[0] = 0.0;
+	invParams.a3[1] = 0.0;
+	invParams.a3[2] = 1.0;
+
 }
 
 ACCEL inertGetAccel()
 {
-    ACCEL ret;
+    ACCEL measuredAcc;
+    ACCEL trueAcc;
 
-    ret.a_x = ret_accel[1] * -XL_C; // X = -Y
-    ret.a_y = ret_accel[0] *  XL_C; // Y =  X
-    ret.a_z = ret_accel[2] * -XL_C; // Z = -Z
+    // Changing directions to match the car's orientation.
+    measuredAcc.a_x = ret_accel[1] * -XL_C; // X = -Y
+    measuredAcc.a_y = ret_accel[0] *  XL_C; // Y =  X
+    measuredAcc.a_z = ret_accel[2] * -XL_C; // Z = -Z
 
-	return ret;
+    trueAcc.a_x =   invParams.a1[0] * (measuredAcc.a_x - Xofs)
+    			  + invParams.a1[1] * (measuredAcc.a_y - Yofs)
+				  + invParams.a1[2] * (measuredAcc.a_z - Zofs);
+    trueAcc.a_y =   invParams.a2[0] * (measuredAcc.a_x - Xofs)
+    			  + invParams.a2[1] * (measuredAcc.a_y - Yofs)
+				  + invParams.a2[2] * (measuredAcc.a_z - Zofs);
+    trueAcc.a_z = 	invParams.a3[0] * (measuredAcc.a_x - Xofs)
+    		      + invParams.a3[1] * (measuredAcc.a_y - Yofs)
+				  + invParams.a3[2] * (measuredAcc.a_z - Zofs);
+
+	return trueAcc;
 }
 
 ANGVEL inertGetAngVel()
@@ -94,6 +133,49 @@ void inertTriggerMeasurement()
 {
 	i_reg = 0;
 	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i_reg], 1, &((uint8_t*) tmp_reading)[i_reg], 1);
+}
+
+void inert6PointCalibration(
+								const float pXgain,
+								const float pXofs,
+								const float pXtoY,
+								const float pXtoZ,
+								const float pYgain,
+								const float pYofs,
+								const float pYtoX,
+								const float pYtoZ,
+								const float pZgain,
+								const float pZofs,
+								const float pZtoX,
+								const float pZtoY
+							)
+{
+	cMATRIX_3X3 Params;
+
+	Xgain = pXgain;
+	Xofs  = pXofs;
+	XtoY  = pXtoY;
+	XtoZ  = pXtoZ;
+	Ygain = pYgain;
+	Yofs  = pYofs;
+	YtoX  = pYtoX;
+	YtoZ  = pYtoZ;
+	Zgain = pZgain;
+	Zofs  = pZofs;
+	ZtoX  = pZtoX;
+	ZtoY  = pZtoY;
+
+	Params.a1[0] = pXgain;
+	Params.a1[1] = pYtoX;
+	Params.a1[2] = pZtoX;
+	Params.a2[0] = pXtoY;
+	Params.a2[1] = pYgain;
+	Params.a2[2] = pZtoY;
+	Params.a3[0] = pXtoZ;
+	Params.a3[1] = pYtoZ;
+	Params.a3[2] = pZgain;
+
+	invParams = hndlMatrixInversion(Params);
 }
 
 // Callback functions --------------------------------------------------------------------------------------------------

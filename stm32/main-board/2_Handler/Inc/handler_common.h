@@ -24,6 +24,13 @@ typedef struct
 	uint32_t Distance;
 } cMEASUREMENT_DIST;
 
+typedef struct
+{
+	float a1[3];
+	float a2[3];
+	float a3[3];
+} cMATRIX_3X3;
+
 // Variables -----------------------------------------------------------------------------------------------------------
 // Function prototypes -------------------------------------------------------------------------------------------------
 
@@ -65,6 +72,8 @@ void hndlPlaceFractionToAsciiMsg (
 									);
 
 float hndlNumIntegTrapezoidal (const float a, const float b, const float fa, const float fb);
+
+cMATRIX_3X3 hndlMatrixInversion (const cMATRIX_3X3 A);
 
 
 

@@ -177,4 +177,40 @@ float hndlNumIntegTrapezoidal (const float a, const float b, const float fa, con
 	return integral;
 }
 
+cMATRIX_3X3 hndlMatrixInversion (const cMATRIX_3X3 A)
+{
+	cMATRIX_3X3 invA;
+	cMATRIX_3X3 adjA;
+	float detA;
+
+	// det(A)
+	detA =    A.a1[0] * (A.a2[1]*A.a3[2] - A.a2[2]*A.a3[1])
+			- A.a2[0] * (A.a1[1]*A.a3[2] - A.a1[2]*A.a3[1])
+			+ A.a3[0] * (A.a1[1]*A.a2[2] - A.a1[2]*A.a2[1]);
+
+	// Adj A
+	adjA.a1[0] = A.a2[1]*A.a3[2] - A.a2[2]*A.a3[1];
+	adjA.a1[1] = A.a2[2]*A.a3[0] - A.a2[0]*A.a3[2];
+	adjA.a1[2] = A.a2[0]*A.a3[1] - A.a2[1]*A.a3[0];
+	adjA.a2[0] = A.a1[2]*A.a3[1] - A.a1[1]*A.a3[2];
+	adjA.a2[1] = A.a1[0]*A.a3[2] - A.a1[2]*A.a3[0];
+	adjA.a2[2] = A.a1[1]*A.a3[0] - A.a1[0]*A.a3[1];
+	adjA.a3[0] = A.a1[1]*A.a2[2] - A.a1[2]*A.a2[1];
+	adjA.a3[1] = A.a1[2]*A.a2[0] - A.a2[2]*A.a1[0];
+	adjA.a3[2] = A.a1[0]*A.a2[1] - A.a1[1]*A.a2[0];
+
+	// 1/det A *adj A
+	invA.a1[0] = 1.0 / detA * adjA.a1[0];
+	invA.a1[1] = 1.0 / detA * adjA.a1[1];
+	invA.a1[2] = 1.0 / detA * adjA.a1[2];
+	invA.a2[0] = 1.0 / detA * adjA.a2[0];
+	invA.a2[1] = 1.0 / detA * adjA.a2[1];
+	invA.a2[2] = 1.0 / detA * adjA.a2[2];
+	invA.a3[0] = 1.0 / detA * adjA.a3[0];
+	invA.a3[1] = 1.0 / detA * adjA.a3[1];
+	invA.a3[2] = 1.0 / detA * adjA.a3[2];
+
+	return invA;
+}
+
 // Local (static) function definitions ---------------------------------------------------------------------------------
