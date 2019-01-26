@@ -155,6 +155,13 @@ void inertTriggerMeasurement()
 	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i_reg], 1, &((uint8_t*) tmp_reading)[i_reg], 1);
 }
 
+void inertGyroOffsetCalibration (const ANGVEL ofs)
+{
+	WxOfs += ofs.omega_x;
+	WyOfs += ofs.omega_y;
+	WzOfs += ofs.omega_z;
+}
+
 void inert6PointCalibration(
 								const float pXgain,
 								const float pXofs,

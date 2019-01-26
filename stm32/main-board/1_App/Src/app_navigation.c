@@ -71,6 +71,8 @@ void Task_Navigation(void* p)
 
 	// Wait for the first measurement result.
 	vTaskDelay(200);
+	ANGVEL ofs = inertGetAngVel();
+	inertGyroOffsetCalibration(ofs);
 
 	while(1)
 	{
@@ -106,9 +108,17 @@ void Task_Navigation(void* p)
 		}
 
 
-		//traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
-		//traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
-		//traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
+		traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
+		traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
+		traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
+
+		traceBluetooth(BCM_LOG_INERT_ACCEL_X, &acceleration.a_x);
+		traceBluetooth(BCM_LOG_INERT_ACCEL_Y, &acceleration.a_y);
+		traceBluetooth(BCM_LOG_INERT_ACCEL_Z, &acceleration.a_z);
+
+		traceBluetooth(BCM_LOG_INERT_ANG_VEL_X, &angularVelocity.omega_x);
+		traceBluetooth(BCM_LOG_INERT_ANG_VEL_Y, &angularVelocity.omega_y);
+		traceBluetooth(BCM_LOG_INERT_ANG_VEL_Z, &angularVelocity.omega_z);
 
 		inertTriggerMeasurement();
 

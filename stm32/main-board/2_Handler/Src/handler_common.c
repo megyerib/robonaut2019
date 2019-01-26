@@ -104,17 +104,8 @@ void hndlPlaceIntegerToAsciiMsg (uint8_t* const array, const uint32_t value, con
 	// Count the digits.
 	length = hndlGetNumberLength(value);
 
-	// Check if the value is negative.
-	if(neg)
-	{
-		// The first element of the buffer will be "-" so the frame size is less for the aligned data.
-		offset = frameSize - 1 - length;
-	}
-	else
-	{
-		// Align the data to the MSB.
-		offset = frameSize - length;
-	}
+	// Align the data to the MSB.
+	offset = frameSize - length;
 
 	// Convert the vale to an array with the offset.
 	hndlConvertUintToUintArray(array+offset, value, length);

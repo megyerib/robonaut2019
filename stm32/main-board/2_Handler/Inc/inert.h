@@ -40,6 +40,8 @@ ANGVEL inertGetAngVel();
 
 void inertTriggerMeasurement();
 
+void inertGyroOffsetCalibration (const ANGVEL ofs);
+
 void inert6PointCalibration(
 								const float Xgain,
 								const float Xofs,
