@@ -71,10 +71,11 @@ static float dPsi;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void naviUpdateOrientationSTM32 (void);
-static void naviUpdateOrientation 	   (void);
-static void naviUpdateVelocity 	  	   (void);
-static void naviUpdatePosition         (void);
+static void  naviUpdateOrientationSTM32 (void);
+static void  naviUpdateOrientation 	    (void);
+static void  naviUpdateVelocity 	  	(void);
+static void  naviUpdatePosition         (void);
+static float naviNormaliseOrientation   (const float psi);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -225,8 +226,8 @@ static void naviUpdateOrientationSTM32 (void)
 	Psi = Psi + dPsi * dt_s;
 
 	// Get the Yaw angle and save for further use.
-	prevPhi = Psi;
-	currPhi = Psi;
+	prevPhi = naviNormaliseOrientation(Psi);
+	currPhi = naviNormaliseOrientation(Psi);
 }
 
 // omega = [rad/s], dt = [s] -> phi = [rad]
@@ -241,8 +242,8 @@ static void naviUpdateOrientation (void)
 	currPhi = prevPhi + dPhi;
 
 	// Save the current parameters as previous measurement and state for the next iteration
-	prevOmega = currOmega;
-	prevPhi   = currPhi;
+	prevOmega = naviNormaliseOrientation(currOmega);
+	prevPhi   = naviNormaliseOrientation(currPhi);
 }
 
 // u, v = [m/s]
@@ -281,7 +282,38 @@ static void naviUpdatePosition (void)
 	prevP = currP;
 }
 
+static float naviNormaliseOrientation (const float psi)
+{
+	float normOri;
+	float temp = psi;
 
+	if (temp >= 0.0f)
+	{
+		// Positive.
+
+		// Convert into [0; 2PI)
+		while (temp >= 2.0f*PI)
+		{
+			temp -= 2.0f*PI;
+		}
+
+		normOri = temp;
+	}
+	else
+	{
+		// Negative.
+
+		// Convert into (-2PI; 0]
+		while (temp <= -2.0f*PI)
+		{
+			temp += 2.0f*PI;
+		}
+
+		normOri = temp + 2.0f*PI;
+	}
+
+	return normOri;
+}
 /* TODO Do we need this?
 cNedParameters naviDRGetNedCoordinates (void)
 {
