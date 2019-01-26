@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      app_SpeedControl.h
-//!  \brief    
+//!  \file     app_maze.h
+//!  \brief    Contains the logic, how to discover and get out of the labyrinth.
 //!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,9 +14,9 @@
 // Variables -----------------------------------------------------------------------------------------------------------
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-//! @brief  Initializes Task_SpeedControl task.
-void TaskInit_SControl (void);
+//! @brief
+void TaskInit_Maze (void);
 
 
-//! @brief	Task function calculates and controls speed of the motor.
-void Task_SControl (void* p);
+//! @brief
+void Task_Maze (void* p);
