@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file		navigation.c
-//!  \brief
+//!  \brief		This module calculates the navigation informations from the inertial sensor and from the encoder.
 //!  \details	This module is responsible for the navigation of the car. This module implements the simple Dead
 //! 			Reckoning algorithm.
 //!
@@ -9,57 +9,34 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-
 #include "navigation.h"
-#include "math.h"
 #include "handler_common.h"
 #include "bsp_common.h"
+#include <math.h>
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-// TODO move to hndlCommon.h and include to sharp too.
-#define 	WAIT_SEMAPHORE			100		//!< Ticks [ms]
-
+//! Constant used to convert the gravitational acceleration given in gravitational force [g] to SI [m2/s].
 #define     NAVI_F_GRAVY_TO_SI      (9.80665f)
-
+//! Constant used to convert the angular velocity given in degree per seconds [dps] to SI [rad/s].
 #define     NAVI_DPS_TO_SI          (float)(PI/180)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
-
-typedef struct
-{
-	cNAVI_STATE start;
-	cNAVI_STATE end;
-	struct cSEGMENT* left;
-	struct cSEGMENT* midle;
-	struct cSEGMENT* right;
-} cSEGMENT_INFO;
-
-typedef struct
-{
-	cSEGMENT_INFO alfa;
-	cSEGMENT_INFO beta;
-	bool dir;
-} cSEGMENT;
-
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 static cVEC_ACCEL prevA;
-static cVelocityVector prevV;
-static cNedParameters prevP;
+static cVEC_VEL prevV;
+static cNED_COORD prevP;
 static float prevOmega;
 static float prevPhi;
 
 static cVEC_ACCEL currA;
-static cVelocityVector currV;
-static cNedParameters currP;
+static cVEC_VEL currV;
+static cNED_COORD currP;
 static float currOmega;
 static float currPhi;
 
 static float dt_s;
-
-// TODO app
-static cSEGMENT map[20];
 
 static ANGVEL W;
 static float Phi;
@@ -70,6 +47,12 @@ static float dTheta;
 static float dPsi;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
+
+static cNAVI_STATE naviDRProcessInertial      (const cVEC_ACCEL a, const float omega, const uint32_t dt);
+static cNAVI_STATE naviDRProcessInertialSTM32 (const cVEC_ACCEL a, const ANGVEL w, const uint32_t dt);
+
+static cNAVI_STATE naviDRProcessIncremental      (const float v, const float omega, const uint32_t dt);
+static cNAVI_STATE naviDRProcessIncrementalSTM32 (const float v, const ANGVEL w, const uint32_t dt);
 
 static void  naviUpdateOrientationSTM32 (void);
 static void  naviUpdateOrientation 	    (void);
@@ -109,7 +92,84 @@ void naviDRInit (void)
 	dPsi   = 0;
 }
 
-cNAVI_STATE naviDRProcessInertial (const cVEC_ACCEL a, const float omega, const uint32_t dt)
+cNAVI_STATE naviGetNaviDataEnc (const float v, const ANGVEL w, const uint32_t dt, const eNAVI_ENC_MODE mode)
+{
+	cNAVI_STATE retVal;
+
+	switch (mode)
+	{
+		case eNAVI_ENC:
+		{
+			retVal = naviDRProcessIncremental(v, w.omega_z, dt);
+			break;
+		}
+		case eNAVI_ENC_GRAVY_CORR:
+		{
+			retVal = naviDRProcessIncrementalSTM32(v, w, dt);
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
+	return retVal;
+}
+
+cNAVI_STATE naviGetNaviDataInrt (const cVEC_ACCEL a, const ANGVEL w, const uint32_t dt, const eNAVI_INERT_MODE mode)
+{
+	cNAVI_STATE retVal;
+
+	switch (mode)
+	{
+		case eNAVI_INERT:
+		{
+			retVal = naviDRProcessInertial(a, w.omega_z, dt);
+			break;
+		}
+		case eNAVI_INERT_GRAVY_CORR:
+		{
+			retVal = naviDRProcessInertialSTM32(a, w, dt);
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
+	return retVal;
+}
+
+float naviConvertDpsToSI (const float ang_dps)
+{
+	return ang_dps * NAVI_DPS_TO_SI;
+}
+
+float naviConvertGToSI (const float accel_g)
+{
+	return accel_g * NAVI_F_GRAVY_TO_SI;
+}
+
+// Local (static) function definitions ---------------------------------------------------------------------------------
+
+//**********************************************************************************************************************
+//! Calculates the actual navigation state from the sensor data.
+//!
+//! This function executes all of the calculations that are need to determine the actual navigation state from the
+//! previous one. The function updates the current acceleration vector, the angular acceleration and the time quantum.
+//! From these, the function calculates the orientation change and updates the previous value. With the integration of
+//! the acceleration the previous velocity vector can be updated. From the new velocity vector and the new orientation,
+//! the position can be updated. The function collects the new position and orientation value and returns them.
+//!
+//! @param a				[m^2/s]
+//! @param omega			[rad/s]
+//! @param dt				[ms]
+//!
+//! @return
+//**********************************************************************************************************************
+static cNAVI_STATE naviDRProcessInertial (const cVEC_ACCEL a, const float omega, const uint32_t dt)
 {
 	cNAVI_STATE retVal;
 
@@ -136,7 +196,11 @@ cNAVI_STATE naviDRProcessInertial (const cVEC_ACCEL a, const float omega, const 
 	return retVal;
 }
 
-cNAVI_STATE naviDRProcessInertialSTM32 (const cVEC_ACCEL a, const ANGVEL w, const uint32_t dt)
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
+static cNAVI_STATE naviDRProcessInertialSTM32 (const cVEC_ACCEL a, const ANGVEL w, const uint32_t dt)
 {
 	cNAVI_STATE retVal;
 
@@ -163,12 +227,17 @@ cNAVI_STATE naviDRProcessInertialSTM32 (const cVEC_ACCEL a, const ANGVEL w, cons
 	return retVal;
 }
 
-cNAVI_STATE naviDRProcessIncremental(const cVelocityVector v, const float omega, const uint32_t dt)
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
+static cNAVI_STATE naviDRProcessIncremental (const float v, const float omega, const uint32_t dt)
 {
 	cNAVI_STATE retVal;
 
 	// Save the current sensor data.
-	currV = v;
+	currV.u = v;
+	currV.v = 0;
 	currOmega = omega;
 
 	// Convert time to seconds.
@@ -187,18 +256,39 @@ cNAVI_STATE naviDRProcessIncremental(const cVelocityVector v, const float omega,
 	return retVal;
 }
 
-float naviConvertDpsToSI (const float ang_dps)
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
+static cNAVI_STATE naviDRProcessIncrementalSTM32 (const float v, const ANGVEL w, const uint32_t dt)
 {
-	return ang_dps * NAVI_DPS_TO_SI;
+	cNAVI_STATE retVal;
+
+	// Save the current sensor data.
+	currV.u = v;
+	currV.v = 0;
+	W = w;
+
+	// Convert time to seconds.
+	dt_s = (float)dt / 1000;
+
+	// Calculate orientation.
+	naviUpdateOrientationSTM32();
+
+	// Calculate position();
+	naviUpdatePosition();
+
+	// Construct navigation state vector.
+	retVal.p   = currP;
+	retVal.phi = currPhi;
+
+	return retVal;
 }
 
-float naviConvertGToSI (const float accel_g)
-{
-	return accel_g * NAVI_F_GRAVY_TO_SI;
-}
-
-// Local (static) function definitions ---------------------------------------------------------------------------------
-
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
 static void naviUpdateOrientationSTM32 (void)
 {
 	////STEP 1
@@ -230,6 +320,10 @@ static void naviUpdateOrientationSTM32 (void)
 	currPhi = naviNormaliseOrientation(Psi);
 }
 
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
 // omega = [rad/s], dt = [s] -> phi = [rad]
 static void naviUpdateOrientation (void)
 {
@@ -246,10 +340,14 @@ static void naviUpdateOrientation (void)
 	prevPhi   = naviNormaliseOrientation(currPhi);
 }
 
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
 // u, v = [m/s]
 static void naviUpdateVelocity (void)
 {
-	cVelocityVector dv;
+	cVEC_VEL dv;
 
 	// Calculate the velocity change since the last value.
 	dv.u = hndlNumIntegTrapezoidal(0, dt_s, prevA.u, currA.u);
@@ -264,6 +362,10 @@ static void naviUpdateVelocity (void)
 	prevV = currV;
 }
 
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
 // dt = [s] -> n = [m], e = [m]
 static void naviUpdatePosition (void)
 {
@@ -282,6 +384,10 @@ static void naviUpdatePosition (void)
 	prevP = currP;
 }
 
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
 static float naviNormaliseOrientation (const float psi)
 {
 	float normOri;
@@ -314,6 +420,7 @@ static float naviNormaliseOrientation (const float psi)
 
 	return normOri;
 }
+
 /* TODO Do we need this?
 cNedParameters naviDRGetNedCoordinates (void)
 {

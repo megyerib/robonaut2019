@@ -10,6 +10,7 @@
 
 #include "app_maze.h"
 #include "app_common.h"
+#include "navigation.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -22,6 +23,22 @@ typedef enum
 	eSTATE_MAIN_OUT					//! The car is out of the maze
 } eSTATE_MAIN;
 
+typedef struct
+{
+	cNAVI_STATE start;
+	cNAVI_STATE end;
+	struct cSEGMENT* left;
+	struct cSEGMENT* midle;
+	struct cSEGMENT* right;
+} cSEGMENT_INFO;
+
+typedef struct
+{
+	cSEGMENT_INFO alfa;
+	cSEGMENT_INFO beta;
+	bool dir;
+} cSEGMENT;
+
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 //! Flag that indicates if the maze task is finished.
@@ -29,6 +46,10 @@ static bool mazeFinished;
 
 //! This variable indicates the actual state of the main state machine of the maze algorithm.
 static eSTATE_MAIN smMainState;
+
+//! The graph map of the labyrinth.
+static cSEGMENT map[20];
+
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
