@@ -10,7 +10,6 @@
 
 #include "app_maze.h"
 #include "app_common.h"
-#include "main.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -25,14 +24,6 @@ typedef enum
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-//! This button is used in case the car can not complete the Maze. The car will start waiting behind the safety car
-//! to start the speed run.
-static GPIO_PinState btnResetSpeedRun;
-//! GPIO port of the reset speed run button.
-static GPIO_TypeDef* btnResetSRPort;
-//! GPIO pin of the reset speed run button.
-static uint16_t btnResetSRPin;
-
 //! Flag that indicates if the maze task is finished.
 static bool mazeFinished;
 
@@ -44,10 +35,6 @@ static eSTATE_MAIN smMainState;
 
 void TaskInit_Maze (void)
 {
-	btnResetSpeedRun = GPIO_PIN_SET;
-	//btnResetSRPort = GPIOx;
-	//btnResetSRPin = GPIO_PIN_x;
-
 	mazeFinished = false;
 
 	smMainState = eSTATE_MAIN_READY;
@@ -60,11 +47,11 @@ void TaskInit_Maze (void)
 				NULL);
 }
 
-void Task_Maze(void* p)
+void Task_Maze (void* p)
 {
 	(void)p;
 
-	while(1)
+	while (1)
 	{
 		//__________________________________________________STATE MACHINCE______________________________________________
 
@@ -127,14 +114,12 @@ void Task_Maze(void* p)
 
 		//_____________________________________________RESET SPEED RUN BUTTON___________________________________________
 
-		// Check the button.
-		btnResetSpeedRun = HAL_GPIO_ReadPin(btnResetSRPort, btnResetSRPin);
-		if (btnResetSpeedRun == GPIO_PIN_RESET)
-		{
-			// Reset signal received. Skip the maze and signal to the speed run state machine.
-			mazeFinished = true;
-			// TODO signal to the other task: evenbit.
-		}
+		// Check the reset (skip maze run) signal. TODO
+		//if ( event bit set )
+		//{
+		//	// Reset signal received. Skip the maze and signal to the speed run state machine.
+		//	mazeFinished = true;
+		//}
 
 		vTaskDelay(TASK_DELAY_5_MS);
 	}
