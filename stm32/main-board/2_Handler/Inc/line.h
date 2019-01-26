@@ -9,6 +9,7 @@
 // Includes ------------------------------------------------------------------------------------------------------------
 
 #include "stm32f4xx_hal.h"
+#include "line_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -51,6 +52,8 @@ ArcDir;
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 void lineInit();
-LINE lineGet();
+float lineGetSingle();
+LINE_SENSOR_OUT lineGetRawFront();
+LINE_SENSOR_OUT lineGetRawRear();
 Arc lineGetArc(uint16_t r_mm, ArcDir dir);
 RoadSignal lineGetRoadSignal();
