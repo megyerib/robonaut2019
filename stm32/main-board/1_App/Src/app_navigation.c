@@ -16,6 +16,7 @@
 #include "app_common.h"
 
 #include "inert.h"
+#include "speed.h"
 #include "trace.h"
 #include "handler_common.h"
 
@@ -26,12 +27,19 @@
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static ACCEL  acceleration;
-static ANGVEL angularVelocity;
+static ACCEL    acceleration;
+static ANGVEL   angularVelocity;
+static cVEC_VEL velocityEnc;
+
+static ACCEL  accelOffset;
+static ANGVEL angularOffset;
 
 static cVEC_ACCEL a;
-static float omega;
+static ANGVEL w;
+static float v;
 static cNAVI_STATE naviState;
+
+static uint8_t naviMethod = 0;	// DEBUG. It can only be 0,1,2 or 3.
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -39,13 +47,17 @@ static cNAVI_STATE naviState;
 //! @brief	Initializes the Task_Navigation task.
 void TaskInit_Navigation(void)
 {
+	inertTriggerMeasurement();
+
 	semDrNavi = xSemaphoreCreateBinary();
 	if(semDrNavi != NULL)
 	{
 		xSemaphoreGive(semDrNavi);
-
-		inertTriggerMeasurement();
 	}
+
+	// Measurements.
+	accelOffset   = inertGetAccel();		// g
+	angularOffset = inertGetAngVel();		// dps
 
 	xTaskCreate(Task_Navigation,
 				"TASK_NAVIGATION",
@@ -61,26 +73,81 @@ void Task_Navigation(void* p)
 {
 	(void)p;
 
+	// Wait for the first measurement result.
+	vTaskDelay(200);
+	ANGVEL ofs = inertGetAngVel();
+	inertGyroOffsetCalibration(ofs);
+
 	while(1)
 	{
 		// Measurements.
 		acceleration    = inertGetAccel();		// g
 		angularVelocity = inertGetAngVel();		// dps
+		// TODO
+		//velocityEnc     = speedGet();			//
 
+		//_____________________________________________________ CONVERSION _____________________________________________
 		// Parallel with the orientation of the car.
 		a.u = naviConvertGToSI(acceleration.a_x);
 		// Orthogonal with the orientation of the car.
 		a.v = naviConvertGToSI(acceleration.a_y);
+		// TODO
+		a.v = naviConvertGToSI(acceleration.a_z);
+
+		// TODO
+		w.omega_x = naviConvertDpsToSI(angularVelocity.omega_x);
+		// TODO
+		w.omega_y = naviConvertDpsToSI(angularVelocity.omega_y);
 		// Yaw direction in the RPY coordinate-system.
-		omega = naviConvertDpsToSI(angularVelocity.omega_z);
+		w.omega_z = naviConvertDpsToSI(angularVelocity.omega_z);
 
+		//TODO
+		//v = velocityEnc;
+		//______________________________________________________________________________________________________________
+
+		//________________________________________________ NAVIGATION STATE UPDATE _____________________________________
 		// Calculate the actual position and orientation.
-		naviState = naviDRNaviProcess(a, omega, TASK_DELAY_16_MS);
+		if (naviMethod == 0)
+		{
+			// OWN ALGORITHM
+			naviState = naviGetNaviDataInrt(a, w, TASK_DELAY_16_MS, eNAVI_INERT);
+		}
+		else if (naviMethod == 1)
+		{
+			// STM algorithm, gravitational correction
+			naviState = naviGetNaviDataInrt(a, w, TASK_DELAY_16_MS, eNAVI_INERT_GRAVY_CORR);
+		}
+		else if (naviMethod == 2)
+		{
+			// OWN ALGORITHM
+			naviState = naviGetNaviDataEnc(v, w, TASK_DELAY_16_MS, eNAVI_ENC);
+		}
+		else if (naviMethod == 3)
+		{
+			// STM algorithm, gravitational correction
+			naviState = naviGetNaviDataEnc(v, w, TASK_DELAY_16_MS, eNAVI_ENC_GRAVY_CORR);
+		}
+		else
+		{
+			// NOP
+		}
+		//______________________________________________________________________________________________________________
 
-		//traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
-		//traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
-		//traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
+		//___________________________________________________ TRACE ____________________________________________________
+		traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
+		traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
+		traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
 
+		traceBluetooth(BCM_LOG_INERT_ACCEL_X, &acceleration.a_x);
+		traceBluetooth(BCM_LOG_INERT_ACCEL_Y, &acceleration.a_y);
+		traceBluetooth(BCM_LOG_INERT_ACCEL_Z, &acceleration.a_z);
+
+		traceBluetooth(BCM_LOG_INERT_ANG_VEL_X, &angularVelocity.omega_x);
+		traceBluetooth(BCM_LOG_INERT_ANG_VEL_Y, &angularVelocity.omega_y);
+		traceBluetooth(BCM_LOG_INERT_ANG_VEL_Z, &angularVelocity.omega_z);
+		//______________________________________________________________________________________________________________
+
+		// Trigger the next conversion.
 		inertTriggerMeasurement();
 
 		vTaskDelay(TASK_DELAY_16_MS);
@@ -88,98 +155,3 @@ void Task_Navigation(void* p)
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-
-// --------------------------------------------------------------------------//
-
-// TEST
-// Init
-/*
- const double a_m[200] =
-		{
-		1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1
-		};
-
-const double w_m[200] =
-		{
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,PI/2,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-		};
-double u[200];
-double th[200];
-double x;
-double n_m[200];
-double e_m[200];
-VelocityVector v[200];
-AngularVelocity w[200];
-
-u[0] = 0;
-n_m[0] = 0;
-e_m[0] = 0;
-v[0].x = 0;
-v[0].y = 0;
-w[0].omega = 0;
-w[0].time = 0;
-
-int i = 0;
-for(i = 1; i < 190; i++)
-{
-	//x = u[i-1] + ((double)BSP_DELAY_16_MS/1000) * (a_m[i-1] + a_m[i]) / 2;
-	x = u[i-1] + drn_NumInteg_Trapezoidal(0, (double)BSP_DELAY_16_MS/1000, a_m[i-1], a_m[i]);
-	u[i] = x;
-
-	v[i].x = u[i];
-	v[i].y = 0;
-	w[i].omega = w_m[i];
-	w[i].time = 0;
-
-	th[i] = th[i-1] + drn_NumInteg_Trapezoidal(0, (double)BSP_DELAY_16_MS/1000, w_m[i-1], w_m[i]);
-}
-
-volatile VelocityVector tv1;
-volatile AngularVelocity ta2;
-tv1.x = 1.016;
-tv1.y = 0;
-ta2.omega = PI/2;
-ta2.time = 0;
-volatile NED_Parameters test0 =  drn_ReckonNavigation(tv1, ta2, 16);
-test0 =  drn_ReckonNavigation(tv1, ta2, 16);
- */
-
-// TASK
-/*
-	NED_Parameters nedCoordinates;
-
-	uint32_t i = 1;
-
-	nedCoordinates.n = 0;
-	nedCoordinates.e = 0;
-
-	while(1)
-	{
-		if( i < 192 )
-		{
-			nedCoordinates =  drn_ReckonNavigation(v[i], w[i], BSP_DELAY_16_MS);
-			n_m[i] = nedCoordinates.n;
-			e_m[i] = nedCoordinates.e;
-		}
-
-		//printf("A has been integrated to v");
-
-		if(i > 192)
-		{
-			// Car stopped
-			u[199] = 10 + u[198];
-			printf("Finish");
-		}
-		else
-		{
-			i++;
-		}
-
-		vTaskDelay(BSP_DELAY_16_MS);
-	}
- */

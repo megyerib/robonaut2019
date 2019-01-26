@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      scm_SpeedControlModule.h
-//!  \brief    
+//!  \file     app_speedRun.h
+//!  \brief    Contains the logic, how to drive on the speed run path.
 //!  \details
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -14,6 +14,9 @@
 // Variables -----------------------------------------------------------------------------------------------------------
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-void scmInitControllerPI (void);
+//! @brief
+void TaskInit_SpeedRun (void);
 
-double scmControlLoop (double rn);
+
+//! @brief
+void Task_SpeedRun (void* p);

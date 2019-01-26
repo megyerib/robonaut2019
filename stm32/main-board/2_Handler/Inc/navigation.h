@@ -13,9 +13,22 @@
 
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include "inert.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
+
+typedef enum
+{
+	eNAVI_INERT         = 0,
+	eNAVI_INERT_GRAVY_CORR,
+} eNAVI_INERT_MODE;
+
+typedef enum
+{
+	eNAVI_ENC            = 0,
+	eNAVI_ENC_GRAVY_CORR
+} eNAVI_ENC_MODE;
 
 typedef struct
 {
@@ -27,17 +40,17 @@ typedef struct
 {
 	float u;
 	float v;
-} cVelocityVector;
+} cVEC_VEL;
 
 typedef struct
 {
 	float n;
 	float e;
-} cNedParameters;
+} cNED_COORD;
 
 typedef struct
 {
-	cNedParameters p;
+	cNED_COORD p;
 	float phi;
 } cNAVI_STATE;
 
@@ -56,22 +69,17 @@ SemaphoreHandle_t semDrNavi;
 //*********************************************************************************************************************
 void naviDRInit (void);
 
-//*********************************************************************************************************************
-//! Calculates the actual navigation state from the sensor data.
-//!
-//! This function executes all of the calculations that are need to determine the actual navigation state from the
-//! previous one. The function updates the current acceleration vector, the angular acceleration and the time quantum.
-//! From these, the function calculates the orientation change and updates the previous value. With the integration of
-//! the acceleration the previous velocity vector can be updated. From the new velocity vector and the new orientation,
-//! the position can be updated. The function collects the new position and orientation value and returns them.
-//!
-//! @param a				[m^2/s]
-//! @param omega			[rad/s]
-//! @param dt				[ms]
-//!
-//! @return
 //**********************************************************************************************************************
-cNAVI_STATE naviDRNaviProcess (const cVEC_ACCEL a, const float omega, const uint32_t dt);
+//!
+//!
+//**********************************************************************************************************************
+cNAVI_STATE naviGetNaviDataEnc (const float v, const ANGVEL w, const uint32_t dt, const eNAVI_ENC_MODE mode);
+
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
+cNAVI_STATE naviGetNaviDataInrt (const cVEC_ACCEL a, const ANGVEL w, const uint32_t dt, const eNAVI_INERT_MODE mode);
 
 //**********************************************************************************************************************
 //!
@@ -86,7 +94,7 @@ float naviConvertDpsToSI (const float ang_dps);
 float naviConvertGToSI (const float accel_g);
 
 /* TODO Do we need this?
-cNedParameters naviDRGetNedCoordinates (void);
+cNED_COORD naviDRGetNedCoordinates (void);
 
-void naviDRSetNedCoordinates (const cNedParameters coords);
+void naviDRSetNedCoordinates (const cNED_COORD coords);
 */

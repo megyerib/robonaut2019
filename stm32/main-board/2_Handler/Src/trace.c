@@ -11,6 +11,9 @@
 #include "trace.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define		TRACE_MAX_NUMBER_OF_DIGITS		15
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
@@ -353,7 +356,7 @@ cTraceRxBluetoothStruct traceReceiveBluetooth (void)
 static bool traceWrapInteger (uint32_t* const value, const eBluetoothLogMember member, const uint32_t length)
 {
 	bool traced = false;
-	uint8_t buffer[length];
+	uint8_t buffer[TRACE_MAX_NUMBER_OF_DIGITS];
 	uint32_t bound;
 	uint32_t locValue = *value;
 	bool isNegative = false;
@@ -421,9 +424,9 @@ static bool traceWrapFloat (
 							)
 {
 	bool traced = false;
-	uint8_t  buffer[length];
+	uint8_t  buffer[TRACE_MAX_NUMBER_OF_DIGITS];
 	uint32_t mul;
-	uint32_t bound;
+	int32_t  bound;
 	float    locValue = *value;
 
 	// At least one integer digit is need, the value can't be only decimals.
@@ -440,12 +443,12 @@ static bool traceWrapFloat (
 
 		// Determine the value that will be placed into the trace buffer.
 		// Check the sign.
-		if(value < 0)
+		if (*value < 0.0f)
 		{
 			// Negative sign.
 
 			// Determine lower bound for the lowest available value.
-			bound = traceGetBoundCharNum(length-1);
+			bound = traceGetBoundCharNum(length-1) * -1;
 
 			// Check the bound.
 			if(locValue <= bound)

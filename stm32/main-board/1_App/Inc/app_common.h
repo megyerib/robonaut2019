@@ -23,14 +23,19 @@
 
 // TODO rethink priorities
 #define 	DEFAULT_STACK_SIZE 				128
-#define		TASK_CDT_PRIO					tskIDLE_PRIORITY+6
-#define 	TASK_SC_PRIO					tskIDLE_PRIORITY+5
-#define 	TASK_NAVI_PRIO					tskIDLE_PRIORITY+4
+
+#define		TASK_CDT_PRIO					tskIDLE_PRIORITY+4
+#define 	TASK_MAZE_PRIO					tskIDLE_PRIORITY+5
+#define 	TASK_SRUN_PRIO					tskIDLE_PRIORITY+5
+
+#define 	TASK_INRT_CAL_PRIO				tskIDLE_PRIORITY+6
+#define 	TASK_NAVI_PRIO					tskIDLE_PRIORITY+7
+
 #define 	TASK_SHARP_PRIO					tskIDLE_PRIORITY+3
 #define 	TASK_SRV_PRIO					tskIDLE_PRIORITY+2
-#define     TASK_LINE_FOLLOW_PRIO           tskIDLE_PRIORITY+1
-#define     TASK_INERT_PRIO                 tskIDLE_PRIORITY+1
 
+#define     TASK_LINE_FOLLOW_PRIO           tskIDLE_PRIORITY+1
+#define     TASK_INERT_PRIO                 tskIDLE_PRIORITY+7
 #define 	TASK_QSM_PRIO					tskIDLE_PRIORITY+5
 
 // Task delays

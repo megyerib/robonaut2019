@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      app_SpeedControl.h
+//!  \file      app_inertCalibration.h
 //!  \brief    
 //!  \details
 //!
@@ -14,9 +14,9 @@
 // Variables -----------------------------------------------------------------------------------------------------------
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-//! @brief  Initializes Task_SpeedControl task.
-void TaskInit_SControl (void);
+//! @brief
+void TaskInit_InertialCalibration(void);
 
 
-//! @brief	Task function calculates and controls speed of the motor.
-void Task_SControl (void* p);
+//! @brief
+void Task_InertialCalibration(void* p);

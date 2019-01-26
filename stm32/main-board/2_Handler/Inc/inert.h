@@ -39,3 +39,20 @@ ACCEL inertGetAccel();
 ANGVEL inertGetAngVel();
 
 void inertTriggerMeasurement();
+
+void inertGyroOffsetCalibration (const ANGVEL ofs);
+
+void inert6PointCalibration(
+								const float Xgain,
+								const float Xofs,
+								const float XtoY,
+								const float XtoZ,
+								const float Ygain,
+								const float Yofs,
+								const float YtoX,
+								const float YtoZ,
+								const float Zgain,
+								const float Zofs,
+								const float ZtoX,
+								const float ZtoY
+							);
