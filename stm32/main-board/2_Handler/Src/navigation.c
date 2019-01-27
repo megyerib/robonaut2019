@@ -315,6 +315,7 @@ static void naviUpdateOrientationSTM32 (void)
 	// Yaw: Psi(t+Ts) = Psi(t) + Psi’ * Ts
 	Psi = Psi + dPsi * dt_s;
 
+	////STEP 3
 	// Get the Yaw angle and save for further use.
 	prevPhi = naviNormaliseOrientation(Psi);
 	currPhi = naviNormaliseOrientation(Psi);

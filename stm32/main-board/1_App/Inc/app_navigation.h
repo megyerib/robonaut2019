@@ -15,10 +15,10 @@
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 
-//! @brief	Initializes the Task_Servo task.
+//! @brief	Initializes the Task_Navigation task.
 void TaskInit_Navigation(void);
 
 
-//! @brief	Communicates with the Task_Sharp task and moves the  servo.
+//! @brief
 void Task_Navigation(void* p);
 

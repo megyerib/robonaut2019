@@ -29,7 +29,6 @@
 
 static ACCEL    acceleration;
 static ANGVEL   angularVelocity;
-static cVEC_VEL velocityEnc;
 
 static ACCEL  accelOffset;
 static ANGVEL angularOffset;
@@ -83,26 +82,23 @@ void Task_Navigation(void* p)
 		// Measurements.
 		acceleration    = inertGetAccel();		// g
 		angularVelocity = inertGetAngVel();		// dps
-		// TODO
-		//velocityEnc     = speedGet();			//
+		// Velocity of the car (parallel with the movement) from the encoder.
+		v = speedGet();							// m/s
 
 		//_____________________________________________________ CONVERSION _____________________________________________
 		// Parallel with the orientation of the car.
 		a.u = naviConvertGToSI(acceleration.a_x);
 		// Orthogonal with the orientation of the car.
 		a.v = naviConvertGToSI(acceleration.a_y);
-		// TODO
+		// Vertical acceleration.
 		a.v = naviConvertGToSI(acceleration.a_z);
 
-		// TODO
+		// Roll direction in the RPY coordinate-system.
 		w.omega_x = naviConvertDpsToSI(angularVelocity.omega_x);
-		// TODO
+		// Pitch direction in the RPY coordinate-system.
 		w.omega_y = naviConvertDpsToSI(angularVelocity.omega_y);
 		// Yaw direction in the RPY coordinate-system.
 		w.omega_z = naviConvertDpsToSI(angularVelocity.omega_z);
-
-		//TODO
-		//v = velocityEnc;
 		//______________________________________________________________________________________________________________
 
 		//________________________________________________ NAVIGATION STATE UPDATE _____________________________________
@@ -134,10 +130,6 @@ void Task_Navigation(void* p)
 		//______________________________________________________________________________________________________________
 
 		//___________________________________________________ TRACE ____________________________________________________
-		traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
-		traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
-		traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
-
 		traceBluetooth(BCM_LOG_INERT_ACCEL_X, &acceleration.a_x);
 		traceBluetooth(BCM_LOG_INERT_ACCEL_Y, &acceleration.a_y);
 		traceBluetooth(BCM_LOG_INERT_ACCEL_Z, &acceleration.a_z);
@@ -145,6 +137,12 @@ void Task_Navigation(void* p)
 		traceBluetooth(BCM_LOG_INERT_ANG_VEL_X, &angularVelocity.omega_x);
 		traceBluetooth(BCM_LOG_INERT_ANG_VEL_Y, &angularVelocity.omega_y);
 		traceBluetooth(BCM_LOG_INERT_ANG_VEL_Z, &angularVelocity.omega_z);
+
+		traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
+		traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
+		traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
+
+		traceBluetooth(BCM_LOG_ENC_VEL, &v);
 		//______________________________________________________________________________________________________________
 
 		// Trigger the next conversion.
