@@ -68,7 +68,7 @@
 #define BT_LOG_LEN_SRUN_GET_SPEED		/* 44 */	2
 
 //! Calculate the size of the buffer that can hold all of the data.
-#define BCM_LOG_SIZE								(	BT_LOG_LEN_NAVI_N +						\
+#define BT_LOG_SIZE									(	BT_LOG_LEN_NAVI_N +						\
 														BT_LOG_LEN_NAVI_E +						\
 														BT_LOG_LEN_NAVI_PSI +					\
 														BT_LOG_LEN_ENC_V +						\
@@ -106,7 +106,7 @@
 														BT_LOG_LEN_SRUN_ACT_STATE +				\
 														BT_LOG_LEN_SRUN_ACT_P +					\
 														BT_LOG_LEN_SRUN_ACT_KP +				\
-														BT_LOG_LEN_SRUN_ACT_KD					\
+														BT_LOG_LEN_SRUN_ACT_KD +				\
 														BT_LOG_LEN_SRUN_ACT_SPEED +				\
 														BT_LOG_LEN_SRUN_GET_P +					\
 														BT_LOG_LEN_SRUN_GET_KP +				\
@@ -139,10 +139,10 @@ typedef enum
 	BT_LOG_SERVO_ANGLE,         //!<
 
 	BT_LOG_MTR_MAIN_BAT_VOLT,      //!<
-	BT_LOG_MTR__SEC_BAT_VOLT,       //!<
+	BT_LOG_MTR_SEC_BAT_VOLT,       //!<
 	BT_LOG_MTR_MOTOR_CURR,               //!<
-	BT_LOG_MTR__SYS_CURR,					// 20
-	BT_LOG_MTR__SREVO_CURR,           //!<
+	BT_LOG_MTR_SYS_CURR,					// 20
+	BT_LOG_MTR_SERVO_CURR,           //!<
 
 	BT_LOG_LINE_LINE_NBR,    //!<
 	BT_LOG_LINE_MAIN_LINE_POS,           //!<
@@ -159,7 +159,16 @@ typedef enum
 	BT_LOG_MAZE_ACT_SPEED,
 	BT_LOG_MAZE_INCLIN_SEGMENT,
 
-	BT_LOG_SRUN_
+	BT_LOG_SRUN_MAIN_SM,
+	BT_LOG_SRUN_ACT_STATE,
+	BT_LOG_SRUN_ACT_P,
+	BT_LOG_SRUN_ACT_KP,
+	BT_LOG_SRUN_ACT_KD,
+	BT_LOG_SRUN_ACT_SPEED,
+	BT_LOG_SRUN_GET_P,
+	BT_LOG_SRUN_GET_KP,
+	BT_LOG_SRUN_GET_KD,
+	BT_LOG_SRUN_GET_SPEED
 
 } eBluetoothLogMember;
 

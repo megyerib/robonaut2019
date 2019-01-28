@@ -20,22 +20,41 @@
 // Defines -------------------------------------------------------------------------------------------------------------
 
 //!	@brief	Defines for the structure member that how many decimals need to be stored.
-#define TRACE_DECIMALS_SERVO_ANGLE				4
+
+#define TRACE_DECIMALS_NAVI_N					2
+#define TRACE_DECIMALS_NAVI_E					2
+#define TRACE_DECIMALS_NAVI_PSI					4
+#define TRACE_DECIMALS_ENC_V					2
 #define TRACE_DECIMALS_INERT_ACCEL_X			2
 #define TRACE_DECIMALS_INERT_ACCEL_Y			2
 #define TRACE_DECIMALS_INERT_ACCEL_Z			2
 #define TRACE_DECIMALS_INERT_ANG_VEL_X			2
 #define TRACE_DECIMALS_INERT_ANG_VEL_Y			2
 #define TRACE_DECIMALS_INERT_ANG_VEL_Z			2
-#define TRACE_DECIMALS_NAVI_N					2
-#define TRACE_DECIMALS_NAVI_E					2
-#define TRACE_DECIMALS_NAVI_THETA				4
-#define TRACE_DECIMALS_ENC_VEL					2
+#define TRACE_DECIMALS_STEER_WHEEL_ANGLE		4
+#define TRACE_DECIMALS_SERVO_ANGLE				4
+
 #define TRACE_DECIMALS_MTR_MAIN_BAT_VOLT		3
 #define TRACE_DECIMALS_MTR_SEC_BAT_VOLT			3
 #define TRACE_DECIMALS_MTR_CURR					3
-#define TRACE_DECIMALS_CTRL_MTR_CURR			2
 
+#define TRACE_DECIMALS_LINE_MAIN_LINE_POS		3
+#define TRACE_DECIMALS_LINE_SEC_LINE_POS		3
+
+#define TRACE_DECIMALS_MAZE_GET_KP				2
+#define TRACE_DECIMALS_MAZE_GET_KD				2
+#define TRACE_DECIMALS_MAZE_ACT_KP				2
+#define TRACE_DECIMALS_MAZE_ACT_KD				2
+
+#define TRACE_DECIMALS_SRUN_ACT_P				2
+#define TRACE_DECIMALS_SRUN_ACT_KP				2
+#define TRACE_DECIMALS_SRUN_ACT_KD				2
+#define TRACE_DECIMALS_SRUN_GET_P				2
+#define TRACE_DECIMALS_SRUN_GET_KP				2
+#define TRACE_DECIMALS_SRUN_GET_KD				2
+
+
+//____________ RECEVIE END_________________________________________________
 #define TRACE_REC_HEADER						2
 #define TRACE_REC_SIZE							2
 #define TRACE_REC_ACCEL_SIZE					3
