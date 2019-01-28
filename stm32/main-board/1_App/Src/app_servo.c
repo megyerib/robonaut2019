@@ -113,7 +113,7 @@ void Task_Servo(void* p)
 
 		if(rate == 0)
 		{
-			traceBluetooth(BCM_LOG_SERVO_ANGLE, &theta);
+			traceBluetooth(BT_LOG_SERVO_ANGLE, &theta);
 			rate = LOG_RATE;
 		}
 		else

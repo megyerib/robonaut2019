@@ -18,31 +18,54 @@
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 //! Handles of the available message queues
-extern QueueHandle_t qSharpDistance_u32;	// 1
-extern QueueHandle_t qSharpCollWarn_x;
-extern QueueHandle_t qServoAngle_f;
+extern QueueHandle_t qNaviN_f;
+extern QueueHandle_t qNaviE_f;
+extern QueueHandle_t qNaviPSI_f;
+extern QueueHandle_t qEncV_f;
+extern QueueHandle_t qDistToF1_u32;
+extern QueueHandle_t qDistToF2_u32;
+extern QueueHandle_t qDistToF3_u32;
+extern QueueHandle_t qDistSharp1_u32;
 extern QueueHandle_t qInertAccelX_f;
 extern QueueHandle_t qInertAccelY_f;
 extern QueueHandle_t qInertAccelZ_f;
 extern QueueHandle_t qInertAngVelX_f;
 extern QueueHandle_t qInertAngVelY_f;
 extern QueueHandle_t qInertAngVelZ_f;
-extern QueueHandle_t qNaviN_f;				// 10
-extern QueueHandle_t qNaviE_f;
-extern QueueHandle_t qNaviPhi_f;
-extern QueueHandle_t qEncVel_f;
-extern QueueHandle_t qTof1Distance_u32;
-extern QueueHandle_t qTof2Distance_u32;
-extern QueueHandle_t qTof3Distance_u32;
+extern QueueHandle_t qSteerWheelAngle_f;
+extern QueueHandle_t qServoAngle_f;
+
 extern QueueHandle_t qMtrMainBatVolt_f;
 extern QueueHandle_t qMtrSecBatVolt_f;
 extern QueueHandle_t qMtrCurr_f;
-extern QueueHandle_t qMtrSysCurr_u32;		// 20
-extern QueueHandle_t qMtrSrvCurr_u32;
-extern QueueHandle_t qMtrCmdStopEngine_x;
-extern QueueHandle_t qCtrlMtrCurr_f;
-extern QueueHandle_t qLineD_u32;
-extern QueueHandle_t qLineTheta_u32;
+extern QueueHandle_t qMtrSysCurr_u32;
+extern QueueHandle_t qMtrServoCurr_u32;
+
+extern QueueHandle_t qLineLineNbr_u32;
+extern QueueHandle_t qLineMainLinePos_f;
+extern QueueHandle_t qLineSecLinePos_f;
+
+extern QueueHandle_t qMazeMainSM_u32;
+extern QueueHandle_t qMazeGetKp_f;
+extern QueueHandle_t qMazeGetKd_f;
+extern QueueHandle_t qMazeGetSpeed_u32;
+extern QueueHandle_t qMazeSegments_u32;
+extern QueueHandle_t qMazeActState_u32;
+extern QueueHandle_t qMazeActKp_f;
+extern QueueHandle_t qMazeActKd_f;
+extern QueueHandle_t qMazeActSpeed_u32;
+extern QueueHandle_t qMazeInclinSegment_u32;
+
+extern QueueHandle_t qSRunMainSM_u32;
+extern QueueHandle_t qSRunActState_u32;
+extern QueueHandle_t qSRunActP_f;
+extern QueueHandle_t qSRunActKp_f;
+extern QueueHandle_t qSRunActKd_f;
+extern QueueHandle_t qSRunActSpeed_u32;
+extern QueueHandle_t qSRunGetP_f;
+extern QueueHandle_t qSRunGetKp_f;
+extern QueueHandle_t qSRunGetKd_f;
+extern QueueHandle_t qSRunGetSpeed_u32;
 
 extern QueueHandle_t qRecData;
 static cTraceRxBluetoothStruct btRxData;
@@ -108,80 +131,141 @@ void traceBluetooth (const eBluetoothLogMember destination, void* const data)
 	// Select who sent the log request.
 	switch (destination)
 	{
-		case BCM_LOG_SHARP_DISTANCE:		// 1
-			xQueueOverwrite(qSharpDistance_u32, (uint32_t* const)data);
-			break;
-		case BCM_LOG_SHARP_COLLISION_WARNING:
-			xQueueOverwrite(qSharpCollWarn_x, (bool* const)data);
-			break;
-		case BCM_LOG_SERVO_ANGLE:
-			xQueueOverwrite(qServoAngle_f, (float* const)data);
-			break;
-		case BCM_LOG_INERT_ACCEL_X:
-			xQueueOverwrite(qInertAccelX_f, (float* const)data);
-			break;
-		case BCM_LOG_INERT_ACCEL_Y:
-			xQueueOverwrite(qInertAccelY_f, (float* const)data);
-			break;
-		case BCM_LOG_INERT_ACCEL_Z:
-			xQueueOverwrite(qInertAccelZ_f, (float* const)data);
-			break;
-		case BCM_LOG_INERT_ANG_VEL_X:
-			xQueueOverwrite(qInertAngVelX_f, (float* const)data);
-			break;
-		case BCM_LOG_INERT_ANG_VEL_Y:
-			xQueueOverwrite(qInertAngVelY_f, (float* const)data);
-			break;
-		case BCM_LOG_INERT_ANG_VEL_Z:
-			xQueueOverwrite(qInertAngVelZ_f, (float* const)data);
-			break;
-		case BCM_LOG_NAVI_N:				// 10
+		case BT_LOG_NAVI_N:		// 1
 			xQueueOverwrite(qNaviN_f, (float* const)data);
 			break;
-		case BCM_LOG_NAVI_E:
+		case BT_LOG_NAVI_E:
 			xQueueOverwrite(qNaviE_f, (float* const)data);
 			break;
-		case BCM_LOG_NAVI_THETA:
-			xQueueOverwrite(qNaviPhi_f, (float* const)data);
+		case BT_LOG_NAVI_PSI:
+			xQueueOverwrite(qNaviPSI_f, (float* const)data);
 			break;
-		case BCM_LOG_ENC_VEL:
-			xQueueOverwrite(qEncVel_f, (float* const)data);
+		case BT_LOG_ENC_V:
+			xQueueOverwrite(qEncV_f, (float* const)data);
 			break;
-		case BCM_LOG_TOF_1_DISTANCE:
-			xQueueOverwrite(qTof1Distance_u32, (uint32_t* const)data);
+		case BT_LOG_DIST_TOF_1:
+			xQueueOverwrite(qDistToF1_u32, (uint32_t* const)data);
 			break;
-		case BCM_LOG_TOF_2_DISTANCE:
-			xQueueOverwrite(qTof2Distance_u32, (uint32_t* const)data);
+		case BT_LOG_DIST_TOF_2:
+			xQueueOverwrite(qDistToF2_u32, (uint32_t* const)data);
 			break;
-		case BCM_LOG_TOF_3_DISTANCE:
-			xQueueOverwrite(qTof3Distance_u32, (uint32_t* const)data);
+		case BT_LOG_DIST_TOF_3:
+			xQueueOverwrite(qDistToF3_u32, (uint32_t* const)data);
 			break;
-		case BCM_LOG_MTR_MAIN_BAT_VOLT:
+		case BT_LOG_DIST_SHARP_1:
+			xQueueOverwrite(qDistSharp1_u32, (uint32_t* const)data);
+			break;
+		case BT_LOG_INERT_ACCEL_X:
+			xQueueOverwrite(qInertAccelX_f, (float* const)data);
+			break;
+		case BT_LOG_INERT_ACCEL_Y:
+			xQueueOverwrite(qInertAccelY_f, (float* const)data);
+			break;
+		case BT_LOG_INERT_ACCEL_Z:
+			xQueueOverwrite(qInertAccelZ_f, (float* const)data);
+			break;
+		case BT_LOG_INERT_ANG_VEL_X:
+			xQueueOverwrite(qInertAngVelX_f, (float* const)data);
+			break;
+		case BT_LOG_INERT_ANG_VEL_Y:
+			xQueueOverwrite(qInertAngVelY_f, (float* const)data);
+			break;
+		case BT_LOG_INERT_ANG_VEL_Z:
+			xQueueOverwrite(qInertAngVelZ_f, (float* const)data);
+			break;
+		case BT_LOG_STEER_WHEEL_ANGLE:				// 10
+			xQueueOverwrite(qSteerWheelAngle_f, (float* const)data);
+			break;
+		case BT_LOG_SERVO_ANGLE:
+			xQueueOverwrite(qServoAngle_f, (float* const)data);
+			break;
+
+		case BT_LOG_MTR_MAIN_BAT_VOLT:
 			xQueueOverwrite(qMtrMainBatVolt_f, (float* const)data);
 			break;
-		case BCM_LOG_MTR_SEC_BAT_VOLT:
+		case BT_LOG_MTR_SEC_BAT_VOLT:
 			xQueueOverwrite(qMtrSecBatVolt_f, (float* const)data);
 			break;
-		case BCM_LOG_MTR_CURR:
+		case BT_LOG_MTR_MOTOR_CURR:
 			xQueueOverwrite(qMtrCurr_f, (float* const)data);
 			break;
-		case BCM_LOG_MTR_SYS_CURR:			// 20
+		case BT_LOG_MTR_SYS_CURR:
 			xQueueOverwrite(qMtrSysCurr_u32, (uint32_t* const)data);
 			break;
-		case BCM_LOG_MTR_SRV_CURR:
-			xQueueOverwrite(qMtrSrvCurr_u32, (uint32_t* const)data);
+		case BT_LOG_MTR_SERVO_CURR:
+			xQueueOverwrite(qMtrServoCurr_u32, (uint32_t* const)data);
 			break;
-		case BCM_LOG_MTR_CMD_STOP_ENGINE:
-			xQueueOverwrite(qMtrCmdStopEngine_x, (bool* const)data);
+
+		case BT_LOG_LINE_LINE_NBR:
+			xQueueOverwrite(qLineLineNbr_u32, (uint32_t* const)data);
 			break;
-		case BCM_LOG_CTR_MTR_CURR:
-			xQueueOverwrite(qCtrlMtrCurr_f, (float* const)data);
+		case BT_LOG_LINE_MAIN_LINE_POS:
+			xQueueOverwrite(qLineMainLinePos_f, (float* const)data);
 			break;
-		case BCM_LOG_LINE_D:
-			xQueueOverwrite(qLineD_u32, (uint32_t* const)data);
+		case BT_LOG_LINE_SEC_LINE_POS:
+			xQueueOverwrite(qLineSecLinePos_f, (float* const)data);
 			break;
-		case BCM_LOG_LINE_THETA:
-			xQueueOverwrite(qLineTheta_u32, (uint32_t* const)data);
+
+		case BT_LOG_MAZE_MAIN_SM:
+			xQueueOverwrite(qMazeMainSM_u32, (uint32_t* const)data);
+			break;
+		case BT_LOG_MAZE_GET_KP:
+			xQueueOverwrite(qMazeGetKp_f, (float* const)data);
+			break;
+		case BT_LOG_MAZE_GET_KD:
+			xQueueOverwrite(qMazeGetKd_f, (float* const)data);
+			break;
+		case BT_LOG_MAZE_GET_SPEED:
+			xQueueOverwrite(qMazeGetSpeed_u32, (uint32_t* const)data);
+			break;
+		case BT_LOG_MAZE_SEGMENTS:
+			xQueueOverwrite(qMazeSegments_u32, (uint32_t* const)data);
+			break;
+		case BT_LOG_MAZE_ACT_STATE:
+			xQueueOverwrite(qMazeActState_u32, (uint32_t* const)data);
+			break;
+		case BT_LOG_MAZE_ACT_KP:
+			xQueueOverwrite(qMazeActKp_f, (float* const)data);
+			break;
+		case BT_LOG_MAZE_ACT_KD:
+			xQueueOverwrite(qMazeActKd_f, (float* const)data);
+			break;
+		case BT_LOG_MAZE_ACT_SPEED:
+			xQueueOverwrite(qMazeActSpeed_u32, (uint32_t* const)data);
+			break;
+		case BT_LOG_MAZE_INCLIN_SEGMENT:			// 20
+			xQueueOverwrite(qMazeInclinSegment_u32, (uint32_t* const)data);
+			break;
+
+		case BT_LOG_SRUN_MAIN_SM:
+			xQueueOverwrite(qSRunMainSM_u32, (uint32_t* const)data);
+			break;
+		case BT_LOG_SRUN_ACT_STATE:
+			xQueueOverwrite(qSRunActState_u32, (uint32_t* const)data);
+			break;
+		case BT_LOG_SRUN_ACT_P:
+			xQueueOverwrite(qSRunActP_f, (float* const)data);
+			break;
+		case BT_LOG_SRUN_ACT_KP:
+			xQueueOverwrite(qSRunActKp_f, (float* const)data);
+			break;
+		case BT_LOG_SRUN_ACT_KD:
+			xQueueOverwrite(qSRunActKd_f, (float* const)data);
+			break;
+		case BT_LOG_SRUN_ACT_SPEED:
+			xQueueOverwrite(qSRunActSpeed_u32, (uint32_t* const)data);
+			break;
+		case BT_LOG_SRUN_GET_P:
+			xQueueOverwrite(qSRunGetP_f, (float* const)data);
+			break;
+		case BT_LOG_SRUN_GET_KP:
+			xQueueOverwrite(qSRunGetKp_f, (float* const)data);
+			break;
+		case BT_LOG_SRUN_GET_KD:
+			xQueueOverwrite(qSRunGetKd_f, (float* const)data);
+			break;
+		case BT_LOG_SRUN_GET_SPEED:
+			xQueueOverwrite(qSRunGetSpeed_u32, (uint32_t* const)data);
 			break;
 		default:
 			break;
@@ -190,107 +274,191 @@ void traceBluetooth (const eBluetoothLogMember destination, void* const data)
 
 void traceFlushData (void)
 {
-	uint32_t sharpDist        = 0;
-	bool     sharpColWarn     = 0;
-	float   srvAngle          = 0;
-	float   inertAccelX       = 0;
-	float   inertAccelY       = 0;
-	float   inertAccelZ       = 0;
-	float   inertAngVelX      = 0;
-	float   inertAngVelY      = 0;
-	float   inertAngVelZ      = 0;
-	float   naviN             = 0;
-	float   naviE             = 0;
-	float   naviTheta         = 0;
-	float   encVel            = 0;
-	uint32_t tof1Distance     = 0;
-	uint32_t tof2Distance     = 0;
-	uint32_t tof3Distance     = 0;
-	float   mtrMainBatVolt    = 0;
-	float   mtrSecBatVolt     = 0;
-	float   mtrCurr           = 0;
-	uint32_t mtrSysCurr       = 0;
-	uint32_t mtrSrvCurr       = 0;
-	bool     mtrCmdStopEngine = 0;
-	float   ctrlMtrCurr       = 0;
-	uint32_t lineD			  = 0;
-	uint32_t lineTheta		  = 0;
+	float    naviN             = 0;
+	float    naviE             = 0;
+	float    naviPsi           = 0;
+	float    encV              = 0;
+	uint32_t distToF1		   = 0;
+	uint32_t distToF2		   = 0;
+	uint32_t distToF3		   = 0;
+	uint32_t distSharp1		   = 0;
+	float    inertAccelX       = 0;
+	float    inertAccelY       = 0;
+	float    inertAccelZ       = 0;
+	float    inertAngVelX      = 0;
+	float    inertAngVelY      = 0;
+	float    inertAngVelZ      = 0;
+	float    steerWheelAngle   = 0;
+	float    servoAngle        = 0;
+
+	float    mtrMainBatVolt    = 0;
+	float    mtrSecBatVolt     = 0;
+	float    mtrCurr           = 0;
+	uint32_t mtrSysCurr        = 0;
+	uint32_t mtrSrvCurr        = 0;
+
+	uint32_t lineLineNbr	   = 0;
+	float    lineMainLinePos   = 0;
+	float    lineSecLinePos	   = 0;
+
+	uint32_t mazeMainSm		   = 0;
+	float    mazeGetKp		   = 0;
+	float    mazeGetKd		   = 0;
+	uint32_t mazeGetSpeed      = 0;
+	uint32_t mazeSegments      = 0;
+	uint32_t mazeActState	   = 0;
+	float    mazeActKp		   = 0;
+	float    mazeActKd         = 0;
+	uint32_t mazeActSpeed	   = 0;
+	uint32_t mazeInclinSegment = 0;
+
+	uint32_t sRunMainSM        = 0;
+	uint32_t sRunActState	   = 0;
+	float    sRunActP		   = 0;
+	float    sRunActKp		   = 0;
+	float    sRunActKd		   = 0;
+	uint32_t sRunActSpeed      = 0;
+	float    sRunGetP		   = 0;
+	float    sRunGetKp		   = 0;
+	float    sRunGetKd         = 0;
+	uint32_t sRunGetSpeed      = 0;
 
 	// Collect and save the values from the queue into the bluetooth log structure.
-	xQueueReceive(qSharpDistance_u32, &sharpDist, 0);
-	traceWrapInteger(&sharpDist, BCM_LOG_SHARP_DISTANCE, BCM_LOG_LENGHT_SHARP_DISTANCE);
-
-	xQueueReceive(qSharpCollWarn_x, &sharpColWarn, 0);
-	traceWrapBool(&sharpColWarn, BCM_LOG_SHARP_COLLISION_WARNING);
-
-	xQueueReceive(qServoAngle_f, &srvAngle, 0);
-	traceWrapFloat(&srvAngle, TRACE_DECIMALS_SERVO_ANGLE, BCM_LOG_SERVO_ANGLE, BCM_LOG_LENGHT_SERVO_ANGLE);
-
-	xQueueReceive(qInertAccelX_f, &inertAccelX, 0);
-	traceWrapFloat(&inertAccelX, TRACE_DECIMALS_INERT_ACCEL_X, BCM_LOG_INERT_ACCEL_X, BCM_LOG_LENGHT_INERT_ACCEL_X);
-
-	xQueueReceive(qInertAccelY_f, &inertAccelY, 0);
-	traceWrapFloat(&inertAccelY, TRACE_DECIMALS_INERT_ACCEL_Y, BCM_LOG_INERT_ACCEL_Y, BCM_LOG_LENGHT_INERT_ACCEL_Y);
-
-	xQueueReceive(qInertAccelZ_f, &inertAccelZ, 0);
-	traceWrapFloat(&inertAccelZ, TRACE_DECIMALS_INERT_ACCEL_Z, BCM_LOG_INERT_ACCEL_Z, BCM_LOG_LENGHT_INERT_ACCEL_Z);
-
-	xQueueReceive(qInertAngVelX_f, &inertAngVelX, 0);
-	traceWrapFloat(&inertAngVelX, TRACE_DECIMALS_INERT_ANG_VEL_X, BCM_LOG_INERT_ANG_VEL_X, BCM_LOG_LENGHT_INERT_ANG_VEL_X);
-
-	xQueueReceive(qInertAngVelY_f, &inertAngVelY, 0);
-	traceWrapFloat(&inertAngVelY, TRACE_DECIMALS_INERT_ANG_VEL_Y, BCM_LOG_INERT_ANG_VEL_Y, BCM_LOG_LENGHT_INERT_ANG_VEL_Y);
-
-	xQueueReceive(qInertAngVelZ_f, &inertAngVelZ, 0);
-	traceWrapFloat(&inertAngVelZ, TRACE_DECIMALS_INERT_ANG_VEL_Z, BCM_LOG_INERT_ANG_VEL_Z, BCM_LOG_LENGHT_INERT_ANG_VEL_Z);
-
 	xQueueReceive(qNaviN_f, &naviN, 0);
-	traceWrapFloat(&naviN, TRACE_DECIMALS_NAVI_N, BCM_LOG_NAVI_N, BCM_LOG_LENGHT_NAVI_N);
+	traceWrapFloat(&naviN, TRACE_DECIMALS_NAVI_N, BT_LOG_NAVI_N, BT_LOG_LEN_NAVI_N);
 
 	xQueueReceive(qNaviE_f, &naviE, 0);
-	traceWrapFloat(&naviE, TRACE_DECIMALS_NAVI_E, BCM_LOG_NAVI_E, BCM_LOG_LENGHT_NAVI_E);
+	traceWrapFloat(&naviE, TRACE_DECIMALS_NAVI_E, BT_LOG_NAVI_E, BT_LOG_LEN_NAVI_E);
 
-	xQueueReceive(qNaviPhi_f, &naviTheta, 0);
-	traceWrapFloat(&naviTheta, TRACE_DECIMALS_NAVI_THETA, BCM_LOG_NAVI_THETA, BCM_LOG_LENGHT_NAVI_THETA);
+	xQueueReceive(qNaviPSI_f, &naviPsi, 0);
+	traceWrapFloat(&naviPsi, TRACE_DECIMALS_NAVI_PSI, BT_LOG_NAVI_PSI, BT_LOG_LEN_NAVI_PSI);
 
-	xQueueReceive(qEncVel_f, &encVel, 0);
-	traceWrapFloat(&encVel, TRACE_DECIMALS_ENC_VEL, BCM_LOG_ENC_VEL, BCM_LOG_LENGHT_ENC_VEL);
+	xQueueReceive(qEncV_f, &encV, 0);
+	traceWrapFloat(&encV, TRACE_DECIMALS_ENC_V, BT_LOG_ENC_V, BT_LOG_LEN_ENC_V);
 
-	xQueueReceive(qTof1Distance_u32, &tof1Distance, 0);
-	traceWrapInteger(&tof1Distance, BCM_LOG_TOF_1_DISTANCE, BCM_LOG_LENGHT_TOF_1_DISTANCE);
+	xQueueReceive(qDistToF1_u32, &distToF1, 0);
+	traceWrapInteger(&distToF1, BT_LOG_DIST_TOF_1, BT_LOG_LEN_DIST_TOF_1);
 
-	xQueueReceive(qTof2Distance_u32, &tof2Distance, 0);
-	traceWrapInteger(&tof2Distance, BCM_LOG_TOF_2_DISTANCE, BCM_LOG_LENGHT_TOF_2_DISTANCE);
+	xQueueReceive(qDistToF2_u32, &distToF2, 0);
+	traceWrapInteger(&distToF2, BT_LOG_DIST_TOF_2, BT_LOG_LEN_DIST_TOF_2);
 
-	xQueueReceive(qTof3Distance_u32, &tof3Distance, 0);
-	traceWrapInteger(&tof3Distance, BCM_LOG_TOF_3_DISTANCE, BCM_LOG_LENGHT_TOF_3_DISTANCE);
+	xQueueReceive(qDistToF3_u32, &distToF3, 0);
+	traceWrapInteger(&distToF3, BT_LOG_DIST_TOF_3, BT_LOG_LEN_DIST_TOF_3);
+
+	xQueueReceive(qDistSharp1_u32, &distSharp1, 0);
+	traceWrapInteger(&distSharp1, BT_LOG_DIST_SHARP_1, BT_LOG_LEN_DIST_SHARP_1);
+
+	xQueueReceive(qInertAccelX_f, &inertAccelX, 0);
+	traceWrapFloat(&inertAccelX, TRACE_DECIMALS_INERT_ACCEL_X, BT_LOG_INERT_ACCEL_X, BT_LOG_LEN_INERT_ACCEL_X);
+
+	xQueueReceive(qInertAccelY_f, &inertAccelY, 0);
+	traceWrapFloat(&inertAccelY, TRACE_DECIMALS_INERT_ACCEL_Y, BT_LOG_INERT_ACCEL_Y, BT_LOG_LEN_INERT_ACCEL_Y);
+
+	xQueueReceive(qInertAccelZ_f, &inertAccelZ, 0);
+	traceWrapFloat(&inertAccelZ, TRACE_DECIMALS_INERT_ACCEL_Z, BT_LOG_INERT_ACCEL_Z, BT_LOG_LEN_INERT_ACCEL_Z);
+
+	xQueueReceive(qInertAngVelX_f, &inertAngVelX, 0);
+	traceWrapFloat(&inertAngVelX, TRACE_DECIMALS_INERT_ANG_VEL_X, BT_LOG_INERT_ANG_VEL_X, BT_LOG_LEN_INERT_ANG_VEL_X);
+
+	xQueueReceive(qInertAngVelY_f, &inertAngVelY, 0);
+	traceWrapFloat(&inertAngVelY, TRACE_DECIMALS_INERT_ANG_VEL_Y, BT_LOG_INERT_ANG_VEL_Y, BT_LOG_LEN_INERT_ANG_VEL_Y);
+
+	xQueueReceive(qInertAngVelZ_f, &inertAngVelZ, 0);
+	traceWrapFloat(&inertAngVelZ, TRACE_DECIMALS_INERT_ANG_VEL_Z, BT_LOG_INERT_ANG_VEL_Z, BT_LOG_LEN_INERT_ANG_VEL_Z);
+
+	xQueueReceive(qSteerWheelAngle_f, &steerWheelAngle, 0);
+	traceWrapFloat(&steerWheelAngle, TRACE_DECIMALS_STEER_WHEEL_ANGLE, BT_LOG_STEER_WHEEL_ANGLE, BT_LOG_LEN_STEER_WHEEL_ANGLE);
+
+	xQueueReceive(qServoAngle_f, &servoAngle, 0);
+	traceWrapFloat(&servoAngle, TRACE_DECIMALS_SERVO_ANGLE, BT_LOG_SERVO_ANGLE, BT_LOG_LEN_SERVO_ANGLE);
+
 
 	xQueueReceive(qMtrMainBatVolt_f, &mtrMainBatVolt, 0);
-	traceWrapFloat(&mtrMainBatVolt, TRACE_DECIMALS_MTR_MAIN_BAT_VOLT, BCM_LOG_MTR_MAIN_BAT_VOLT, BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT);
+	traceWrapFloat(&mtrMainBatVolt, TRACE_DECIMALS_MTR_MAIN_BAT_VOLT, BT_LOG_MTR_MAIN_BAT_VOLT, BT_LOG_LEN_MTR_MAIN_BAT_VOLT);
 
 	xQueueReceive(qMtrSecBatVolt_f, &mtrSecBatVolt, 0);
-	traceWrapFloat(&mtrSecBatVolt, TRACE_DECIMALS_MTR_SEC_BAT_VOLT, BCM_LOG_MTR_SEC_BAT_VOLT, BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT);
+	traceWrapFloat(&mtrSecBatVolt, TRACE_DECIMALS_MTR_SEC_BAT_VOLT, BT_LOG_MTR_SEC_BAT_VOLT, BT_LOG_LEN_MTR_SEC_BAT_VOLT);
 
 	xQueueReceive(qMtrCurr_f, &mtrCurr, 0);
-	traceWrapFloat(&mtrCurr, TRACE_DECIMALS_MTR_CURR, BCM_LOG_MTR_CURR, BCM_LOG_LENGHT_MTR_CURR);
+	traceWrapFloat(&mtrCurr, TRACE_DECIMALS_MTR_CURR, BT_LOG_MTR_MOTOR_CURR, BT_LOG_LEN_MTR_MOTOR_CURR);
 
 	xQueueReceive(qMtrSysCurr_u32, &mtrSysCurr, 0);
-	traceWrapInteger(&mtrSysCurr, BCM_LOG_MTR_SYS_CURR, BCM_LOG_LENGHT_MTR_SYS_CURR);
+	traceWrapInteger(&mtrSysCurr, BT_LOG_MTR_SYS_CURR, BT_LOG_LEN_MTR_SYS_CURR);
 
-	xQueueReceive(qMtrSrvCurr_u32, &mtrSrvCurr, 0);
-	traceWrapInteger(&mtrSrvCurr, BCM_LOG_MTR_SRV_CURR, BCM_LOG_LENGHT_MTR_SRV_CURR);
+	xQueueReceive(qMtrServoCurr_u32, &mtrSrvCurr, 0);
+	traceWrapInteger(&mtrSrvCurr, BT_LOG_MTR_SERVO_CURR, BT_LOG_LEN_MTR_SERVO_CURR);
 
-	xQueueReceive(qMtrCmdStopEngine_x, &mtrCmdStopEngine, 0);
-	traceWrapBool(&mtrCmdStopEngine, BCM_LOG_MTR_CMD_STOP_ENGINE);
 
-	xQueueReceive(qCtrlMtrCurr_f, &ctrlMtrCurr, 0);
-	traceWrapFloat(&ctrlMtrCurr, TRACE_DECIMALS_CTRL_MTR_CURR, BCM_LOG_CTR_MTR_CURR, BCM_LOG_LENGHT_CTRL_MTR_CURR);
+	xQueueReceive(qLineLineNbr_u32, &lineLineNbr, 0);
+	traceWrapInteger(&lineLineNbr, BT_LOG_LINE_LINE_NBR, BT_LOG_LEN_LINE_LINE_NBR);
 
-	xQueueReceive(qLineD_u32, &lineD, 0);
-	traceWrapInteger(&lineD, BCM_LOG_LINE_D, BCM_LOG_LENGHT_LINE_D);
+	xQueueReceive(qLineMainLinePos_f, &lineMainLinePos, 0);
+	traceWrapFloat(&lineMainLinePos, TRACE_DECIMALS_LINE_MAIN_LINE_POS, BT_LOG_LINE_MAIN_LINE_POS, BT_LOG_LEN_LINE_MAIN_LINE_POS);
 
-	xQueueReceive(qLineTheta_u32, &lineTheta, 0);
-	traceWrapInteger(&lineTheta, BCM_LOG_LINE_THETA, BCM_LOG_LENGHT_LINE_THETA);
+	xQueueReceive(qLineSecLinePos_f, &lineSecLinePos, 0);
+	traceWrapFloat(&lineSecLinePos, TRACE_DECIMALS_LINE_SEC_LINE_POS, BT_LOG_LINE_SEC_LINE_POS, BT_LOG_LEN_LINE_SEC_LINE_POS);
+
+
+	xQueueReceive(qMazeMainSM_u32, &mazeMainSm, 0);
+	traceWrapInteger(&mazeMainSm, BT_LOG_MAZE_MAIN_SM, BT_LOG_LEN_MAZE_MAIN_SM);
+
+	xQueueReceive(qMazeGetKp_f, &mazeGetKp, 0);
+	traceWrapFloat(&mazeGetKp, TRACE_DECIMALS_MAZE_GET_KP, BT_LOG_MAZE_GET_KP, BT_LOG_LEN_MAZE_GET_KP);
+
+	xQueueReceive(qMazeGetKd_f, &mazeGetKd, 0);
+	traceWrapFloat(&mazeGetKd, TRACE_DECIMALS_MAZE_GET_KD, BT_LOG_MAZE_GET_KD, BT_LOG_LEN_MAZE_GET_KD);
+
+	xQueueReceive(qMazeGetSpeed_u32, &mazeGetSpeed, 0);
+	traceWrapInteger(&mazeGetSpeed, BT_LOG_MAZE_GET_SPEED, BT_LOG_LEN_MAZE_GET_SPEED);
+
+	xQueueReceive(qMazeSegments_u32, &mazeSegments, 0);
+	traceWrapInteger(&mazeSegments, BT_LOG_MAZE_SEGMENTS, BT_LOG_LEN_MAZE_SEGENTS);
+
+	xQueueReceive(qMazeActState_u32, &mazeActState, 0);
+	traceWrapInteger(&mazeActState, BT_LOG_MAZE_ACT_STATE, BT_LOG_LEN_MAZE_ACT_STATE);
+
+	xQueueReceive(qMazeActKp_f, &mazeActKp, 0);
+	traceWrapFloat(&mazeActKp, TRACE_DECIMALS_MAZE_ACT_KP, BT_LOG_MAZE_ACT_KP, BT_LOG_LEN_MAZE_ACT_KP);
+
+	xQueueReceive(qMazeActKd_f, &mazeActKd, 0);
+	traceWrapFloat(&mazeActKd, TRACE_DECIMALS_MAZE_ACT_KD, BT_LOG_MAZE_ACT_KD, BT_LOG_LEN_MAZE_ACT_KD);
+
+	xQueueReceive(qMazeActSpeed_u32, &mazeActSpeed, 0);
+	traceWrapInteger(&mazeActSpeed, BT_LOG_MAZE_ACT_SPEED, BT_LOG_LEN_MAZE_ACT_SPEED);
+
+	xQueueReceive(qMazeInclinSegment_u32, &mazeInclinSegment, 0);
+	traceWrapInteger(&mazeInclinSegment, BT_LOG_MAZE_INCLIN_SEGMENT, BT_LOG_LEN_MAZE_INCLIN_SEGMENT);
+
+
+	xQueueReceive(qSRunMainSM_u32, &sRunMainSM, 0);
+	traceWrapInteger(&sRunMainSM, BT_LOG_SRUN_MAIN_SM, BT_LOG_LEN_SRUN_MAIN_SM);
+
+	xQueueReceive(qSRunActState_u32, &sRunActState, 0);
+	traceWrapInteger(&sRunActState, BT_LOG_SRUN_ACT_STATE, BT_LOG_LEN_SRUN_ACT_STATE);
+
+	xQueueReceive(qSRunActP_f, &sRunActP, 0);
+	traceWrapFloat(&sRunActP, TRACE_DECIMALS_SRUN_ACT_P, BT_LOG_SRUN_ACT_P, BT_LOG_LEN_SRUN_ACT_P);
+
+	xQueueReceive(qSRunActKp_f, &sRunActKp, 0);
+	traceWrapFloat(&sRunActKp, TRACE_DECIMALS_SRUN_ACT_KP, BT_LOG_SRUN_ACT_KP, BT_LOG_LEN_SRUN_ACT_KP);
+
+	xQueueReceive(qSRunActKd_f, &sRunActKd, 0);
+	traceWrapFloat(&sRunActKd, TRACE_DECIMALS_SRUN_ACT_KD, BT_LOG_SRUN_ACT_KD, BT_LOG_LEN_SRUN_ACT_KD);
+
+	xQueueReceive(qSRunActSpeed_u32, &sRunActSpeed, 0);
+	traceWrapInteger(&sRunActSpeed, BT_LOG_SRUN_ACT_SPEED, BT_LOG_LEN_SRUN_ACT_SPEED);
+
+	xQueueReceive(qSRunGetP_f, &sRunGetP, 0);
+	traceWrapFloat(&sRunGetP, TRACE_DECIMALS_SRUN_GET_P, BT_LOG_SRUN_GET_P, BT_LOG_LEN_SRUN_GET_P);
+
+	xQueueReceive(qSRunGetKp_f, &sRunGetKp, 0);
+	traceWrapFloat(&sRunGetKp, TRACE_DECIMALS_SRUN_GET_KP, BT_LOG_SRUN_GET_KP, BT_LOG_LEN_SRUN_GET_KP);
+
+	xQueueReceive(qSRunGetKd_f, &sRunGetKd, 0);
+	traceWrapFloat(&sRunGetKd, TRACE_DECIMALS_SRUN_GET_KD, BT_LOG_SRUN_GET_KD, BT_LOG_LEN_SRUN_GET_KD);
+
+	xQueueReceive(qSRunGetSpeed_u32, &sRunGetSpeed, 0);
+	traceWrapInteger(&sRunGetSpeed, BT_LOG_SRUN_GET_SPEED, BT_LOG_LEN_SRUN_GET_SPEED);
 
 	// Send out the bluetooth log.
 	bspBtBufferFlush();

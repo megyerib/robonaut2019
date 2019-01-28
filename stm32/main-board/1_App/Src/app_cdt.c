@@ -20,31 +20,54 @@
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-QueueHandle_t qSharpDistance_u32;		// 1
-QueueHandle_t qSharpCollWarn_x;
-QueueHandle_t qServoAngle_f;
+QueueHandle_t qNaviN_f;
+QueueHandle_t qNaviE_f;
+QueueHandle_t qNaviPSI_f;
+QueueHandle_t qEncV_f;
+QueueHandle_t qDistToF1_u32;
+QueueHandle_t qDistToF2_u32;
+QueueHandle_t qDistToF3_u32;
+QueueHandle_t qDistSharp1_u32;
 QueueHandle_t qInertAccelX_f;
 QueueHandle_t qInertAccelY_f;
 QueueHandle_t qInertAccelZ_f;
 QueueHandle_t qInertAngVelX_f;
 QueueHandle_t qInertAngVelY_f;
 QueueHandle_t qInertAngVelZ_f;
-QueueHandle_t qNaviN_f;					// 10
-QueueHandle_t qNaviE_f;
-QueueHandle_t qNaviPhi_f;
-QueueHandle_t qEncVel_f;
-QueueHandle_t qTof1Distance_u32;
-QueueHandle_t qTof2Distance_u32;
-QueueHandle_t qTof3Distance_u32;
+QueueHandle_t qSteerWheelAngle_f;
+QueueHandle_t qServoAngle_f;
+
 QueueHandle_t qMtrMainBatVolt_f;
 QueueHandle_t qMtrSecBatVolt_f;
 QueueHandle_t qMtrCurr_f;
-QueueHandle_t qMtrSysCurr_u32;			// 20
-QueueHandle_t qMtrSrvCurr_u32;
-QueueHandle_t qMtrCmdStopEngine_x;
-QueueHandle_t qCtrlMtrCurr_f;
-QueueHandle_t qLineD_u32;
-QueueHandle_t qLineTheta_u32;
+QueueHandle_t qMtrSysCurr_u32;
+QueueHandle_t qMtrServoCurr_u32;
+
+QueueHandle_t qLineLineNbr_u32;
+QueueHandle_t qLineMainLinePos_f;
+QueueHandle_t qLineSecLinePos_f;
+
+QueueHandle_t qMazeMainSM_u32;
+QueueHandle_t qMazeGetKp_f;
+QueueHandle_t qMazeGetKd_f;
+QueueHandle_t qMazeGetSpeed_u32;
+QueueHandle_t qMazeSegments_u32;
+QueueHandle_t qMazeActState_u32;
+QueueHandle_t qMazeActKp_f;
+QueueHandle_t qMazeActKd_f;
+QueueHandle_t qMazeActSpeed_u32;
+QueueHandle_t qMazeInclinSegment_u32;
+
+QueueHandle_t qSRunMainSM_u32;
+QueueHandle_t qSRunActState_u32;
+QueueHandle_t qSRunActP_f;
+QueueHandle_t qSRunActKp_f;
+QueueHandle_t qSRunActKd_f;
+QueueHandle_t qSRunActSpeed_u32;
+QueueHandle_t qSRunGetP_f;
+QueueHandle_t qSRunGetKp_f;
+QueueHandle_t qSRunGetKd_f;
+QueueHandle_t qSRunGetSpeed_u32;
 
 uint8_t btRxBuffer[TRACE_REC_MSG_SIZE];
 
@@ -60,7 +83,7 @@ bool usbRec = false;
 
 extern UART_HandleTypeDef huart5;
 uint8_t usbRxBuffer[TRACE_REC_MSG_SIZE];
-uint8_t usbTxBuffer[BCM_LOG_SIZE+5];
+uint8_t usbTxBuffer[BT_LOG_SIZE+5];
 cMEASUREMENT_DIST sharp;
 double servo = 60;
 double encVel = 0;
@@ -79,34 +102,57 @@ void TaskInit_CarDiagnosticsTool(void)
 {
 	traceInit();
 
-	qSharpDistance_u32  = xQueueCreate( 1, sizeof( uint32_t ) );	// 1
-	qSharpCollWarn_x    = xQueueCreate( 1, sizeof( bool ) );
-	qServoAngle_f       = xQueueCreate( 1, sizeof( float ) );
-	qInertAccelX_f	    = xQueueCreate( 1, sizeof( float ) );
-	qInertAccelY_f 	    = xQueueCreate( 1, sizeof( float ) );
-	qInertAccelZ_f	    = xQueueCreate( 1, sizeof( float ) );
-	qInertAngVelX_f	    = xQueueCreate( 1, sizeof( float ) );
-	qInertAngVelY_f     = xQueueCreate( 1, sizeof( float ) );
-	qInertAngVelZ_f	    = xQueueCreate( 1, sizeof( float ) );
-	qNaviN_f		    = xQueueCreate( 1, sizeof( float ) );		// 10
-	qNaviE_f		    = xQueueCreate( 1, sizeof( float ) );
-	qNaviPhi_f	        = xQueueCreate( 1, sizeof( float ) );
-	qEncVel_f		    = xQueueCreate( 1, sizeof( float ) );
-	qTof1Distance_u32   = xQueueCreate( 1, sizeof( uint32_t ) );
-	qTof2Distance_u32   = xQueueCreate( 1, sizeof( uint32_t ) );
-	qTof3Distance_u32   = xQueueCreate( 1, sizeof( uint32_t ) );
-	qMtrMainBatVolt_f   = xQueueCreate( 1, sizeof( float ) );
-	qMtrSecBatVolt_f    = xQueueCreate( 1, sizeof( float ) );
-	qMtrCurr_f		    = xQueueCreate( 1, sizeof( float ) );
-	qMtrSysCurr_u32	    = xQueueCreate( 1, sizeof( uint32_t ) );	// 20
-	qMtrSrvCurr_u32     = xQueueCreate( 1, sizeof( uint32_t ) );
-	qMtrCmdStopEngine_x = xQueueCreate( 1, sizeof( bool ) );
-	qCtrlMtrCurr_f		= xQueueCreate( 1, sizeof( float ) );
-	qLineD_u32			= xQueueCreate( 1, sizeof( uint32_t ) );
-	qLineTheta_u32		= xQueueCreate( 1, sizeof( uint32_t ) );
+	qNaviN_f       			= xQueueCreate( 1, sizeof( float ) );		// 1
+	qNaviE_f       			= xQueueCreate( 1, sizeof( float ) );
+	qNaviPSI_f     		 	= xQueueCreate( 1, sizeof( float ) );
+	qEncV_f  				= xQueueCreate( 1, sizeof( float ) );
+	qDistToF1_u32   	 	= xQueueCreate( 1, sizeof( uint32_t ) );
+	qDistToF2_u32       	= xQueueCreate( 1, sizeof( uint32_t ) );
+	qDistToF3_u32	    	= xQueueCreate( 1, sizeof( uint32_t ) );
+	qDistSharp1_u32 	    = xQueueCreate( 1, sizeof( uint32_t ) );
+	qInertAccelX_f		    = xQueueCreate( 1, sizeof( float ) );
+	qInertAccelY_f	   		= xQueueCreate( 1, sizeof( float ) );		// 10
+	qInertAccelZ_f	    	= xQueueCreate( 1, sizeof( float ) );
+	qInertAngVelX_f	   		= xQueueCreate( 1, sizeof( float ) );
+	qInertAngVelY_f     	= xQueueCreate( 1, sizeof( float ) );
+	qInertAngVelZ_f	    	= xQueueCreate( 1, sizeof( float ) );
+	qSteerWheelAngle_f	    = xQueueCreate( 1, sizeof( float ) );
+	qServoAngle_f		    = xQueueCreate( 1, sizeof( float ) );		// 16
+
+	qMtrMainBatVolt_f	    = xQueueCreate( 1, sizeof( float ) );		// 17
+	qMtrSecBatVolt_f   		= xQueueCreate( 1, sizeof( float ) );
+	qMtrCurr_f		    	= xQueueCreate( 1, sizeof( float ) );
+	qMtrSysCurr_u32	    	= xQueueCreate( 1, sizeof( uint32_t ) );
+	qMtrServoCurr_u32     	= xQueueCreate( 1, sizeof( uint32_t ) );	// 21
+
+	qLineLineNbr_u32		= xQueueCreate( 1, sizeof( uint32_t ) );	// 22
+	qLineMainLinePos_f		= xQueueCreate( 1, sizeof( float ) );
+	qLineSecLinePos_f		= xQueueCreate( 1, sizeof( float ) );		// 24
+
+	qMazeMainSM_u32		    = xQueueCreate( 1, sizeof( uint32_t ) );	// 25
+	qMazeGetKp_f		    = xQueueCreate( 1, sizeof( float ) );
+	qMazeGetKd_f		    = xQueueCreate( 1, sizeof( float ) );
+	qMazeGetSpeed_u32   	= xQueueCreate( 1, sizeof( uint32_t ) );
+	qMazeSegments_u32		= xQueueCreate( 1, sizeof( uint32_t ) );
+	qMazeActState_u32   	= xQueueCreate( 1, sizeof( uint32_t ) );	// 30
+	qMazeActKp_f		    = xQueueCreate( 1, sizeof( float ) );
+	qMazeActKd_f		    = xQueueCreate( 1, sizeof( float ) );
+	qMazeActSpeed_u32  		= xQueueCreate( 1, sizeof( uint32_t ) );
+	qMazeInclinSegment_u32  = xQueueCreate( 1, sizeof( uint32_t ) );	// 34
+
+	qSRunMainSM_u32   		= xQueueCreate( 1, sizeof( uint32_t ) );		// 35
+	qSRunActState_u32   	= xQueueCreate( 1, sizeof( uint32_t ) );
+	qSRunActP_f		    	= xQueueCreate( 1, sizeof( float ) );
+	qSRunActKp_f		    = xQueueCreate( 1, sizeof( float ) );
+	qSRunActKd_f		    = xQueueCreate( 1, sizeof( float ) );
+	qSRunActSpeed_u32   	= xQueueCreate( 1, sizeof( uint32_t ) );
+	qSRunGetP_f		    	= xQueueCreate( 1, sizeof( float ) );
+	qSRunGetKp_f		    = xQueueCreate( 1, sizeof( float ) );
+	qSRunGetKd_f		    = xQueueCreate( 1, sizeof( float ) );
+	qSRunGetSpeed_u32   	= xQueueCreate( 1, sizeof( uint32_t ) );		// 44
 
 	// Atollic debug queues
-	vQueueAddToRegistry(qNaviN_f,		   "qNaviN_f");
+	/*vQueueAddToRegistry(qNaviN_f,		   "qNaviN_f");
 	vQueueAddToRegistry(qNaviE_f,  		   "qNaviE_f");
 	vQueueAddToRegistry(qNaviPhi_f,   	   "qNaviPhi_f");
 	vQueueAddToRegistry(qEncVel_f, 		   "EncVel");
@@ -114,7 +160,7 @@ void TaskInit_CarDiagnosticsTool(void)
 	vQueueAddToRegistry(qTof2Distance_u32, "Tof2Dist");
 	vQueueAddToRegistry(qTof3Distance_u32, "Tof3Dist");
 	vQueueAddToRegistry(qMtrSrvCurr_u32,   "MtrSrvCurr");
-	vQueueAddToRegistry(qCtrlMtrCurr_f,    "CtrlMtrCurr");
+	vQueueAddToRegistry(qCtrlMtrCurr_f,    "CtrlMtrCurr");*/
 
 	qRecData = xQueueCreate( 1, sizeof( cTraceRxBluetoothStruct ) );
 
@@ -127,7 +173,7 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	xTaskCreate(Task_CarDiagnosticsTool,
 				"TASK_CAR_DIAGNOSTICS_TOOL",
-				DEFAULT_STACK_SIZE+180 ,
+				DEFAULT_STACK_SIZE+300 ,
 				NULL,
 				TASK_CDT_PRIO,
 				NULL);
@@ -142,12 +188,12 @@ void Task_CarDiagnosticsTool(void* p)
 	bspUartReceive_IT(Uart_USB, usbRxBuffer, TRACE_REC_MSG_SIZE);
 	bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);
 
-	uint8_t btSentMessage[BCM_LOG_SIZE+7];
+	uint8_t btSentMessage[BT_LOG_SIZE+7];
 
 	while (1)
 	{
 		traceFlushData();
-		bspUartTransmit_IT(Uart_USB, btSentMessage, BCM_LOG_SIZE+7);
+		bspUartTransmit_IT(Uart_USB, btSentMessage, BT_LOG_SIZE+7);
 
 		vTaskDelay(200);
 	}

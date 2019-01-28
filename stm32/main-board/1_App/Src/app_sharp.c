@@ -58,16 +58,16 @@ void Task_Sharp (void* p)
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			xEventGroupClearBits(event_sharp, 1);
-			traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &noWarning);
+			//traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &noWarning);
 		}
 		else
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			xEventGroupSetBits(event_sharp, 1);
-			traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &warning);
+			//traceBluetooth(BCM_LOG_SHARP_COLLISION_WARNING, &warning);
 		}
 
-		traceBluetooth(BCM_LOG_SHARP_DISTANCE, &sharp.Distance);
+		traceBluetooth(BT_LOG_DIST_SHARP_1, &sharp.Distance);
 
 		vTaskDelay(TASK_DELAY_40_MS);
 	}

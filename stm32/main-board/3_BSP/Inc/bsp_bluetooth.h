@@ -18,60 +18,100 @@
 // Defines -------------------------------------------------------------------------------------------------------------
 
 //!	Defines for the (byte) length of the individual trace objects. Example: 123 ->  Length = 3.
-#define BCM_LOG_LENGHT_SHARP_DISTANCE				5	//!< 1.
-#define BCM_LOG_LENGHT_SHARP_COLLISION_WARNING		1   //!<
-#define BCM_LOG_LENGHT_SERVO_ANGLE					5   //!<
-#define BCM_LOG_LENGHT_INERT_ACCEL_X				4	//!< can be negative
-#define BCM_LOG_LENGHT_INERT_ACCEL_Y				4	//!< can be negative
-#define BCM_LOG_LENGHT_INERT_ACCEL_Z				4	//!< can be negative
-#define BCM_LOG_LENGHT_INERT_ANG_VEL_X				4	//!< can be negative
-#define BCM_LOG_LENGHT_INERT_ANG_VEL_Y				4	//!< can be negative
-#define BCM_LOG_LENGHT_INERT_ANG_VEL_Z				4	//!< can be negative
-#define BCM_LOG_LENGHT_NAVI_N						5	//!< 10. can be negative
-#define BCM_LOG_LENGHT_NAVI_E						5	//!< can be negative
-#define BCM_LOG_LENGHT_NAVI_THETA					5   //!<
-#define BCM_LOG_LENGHT_ENC_VEL						5	//!< can be negative
-#define BCM_LOG_LENGHT_TOF_1_DISTANCE				5   //!<
-#define BCM_LOG_LENGHT_TOF_2_DISTANCE				5   //!<
-#define BCM_LOG_LENGHT_TOF_3_DISTANCE				5   //!<
-#define BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT			5   //!<
-#define BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT				5   //!<
-#define BCM_LOG_LENGHT_MTR_CURR						9   //!<
-#define BCM_LOG_LENGHT_MTR_SYS_CURR					4	//!< 20.
-#define BCM_LOG_LENGHT_MTR_SRV_CURR					4   //!<
-#define BCM_LOG_LENGHT_MTR_CMD_STOP_ENGINE			1   //!<
-#define BCM_LOG_LENGHT_CTRL_MTR_CURR				6   //!<
-#define BCM_LOG_LENGHT_LINE_D						3   //!<
-#define BCM_LOG_LENGHT_LINE_THETA					3   //!<
+#define BT_LOG_LEN_NAVI_N				/* 1 */		5	//!<
+#define BT_LOG_LEN_NAVI_E							5	//!<
+#define BT_LOG_LEN_NAVI_PSI							5   //!<
+#define BT_LOG_LEN_ENC_V							4   //!<
+#define BT_LOG_LEN_DIST_TOF_1						4	//!<
+#define BT_LOG_LEN_DIST_TOF_2						4	//!<
+#define BT_LOG_LEN_DIST_TOF_3						4	//!<
+#define BT_LOG_LEN_DIST_SHARP_1						4	//!<
+#define BT_LOG_LEN_INERT_ACCEL_X					6	//!<
+#define BT_LOG_LEN_INERT_ACCEL_Y		/* 10 */	6	//!<
+#define BT_LOG_LEN_INERT_ACCEL_Z					6	//!<
+#define BT_LOG_LEN_INERT_ANG_VEL_X					6	//!<
+#define BT_LOG_LEN_INERT_ANG_VEL_Y					6   //!<
+#define BT_LOG_LEN_INERT_ANG_VEL_Z					6	//!<
+#define BT_LOG_LEN_STEER_WHEEL_ANGLE				5   //!<
+#define BT_LOG_LEN_SERVO_ANGLE			/* 16 */	5   /* sum 81 */ //!<
 
+#define BT_LOG_LEN_MTR_MAIN_BAT_VOLT	/* 17 */	5   //!<
+#define BT_LOG_LEN_MTR_SEC_BAT_VOLT					5   //!<
+#define BT_LOG_LEN_MTR_MOTOR_CURR					9   //!<
+#define BT_LOG_LEN_MTR_SYS_CURR						4   //!<
+#define BT_LOG_LEN_MTR_SERVO_CURR		/* 21 */	4	/* sum 108 */ //!<
 
+#define BT_LOG_LEN_LINE_LINE_NBR		/* 22 */	2   //!<
+#define BT_LOG_LEN_LINE_MAIN_LINE_POS				6   //!<
+#define BT_LOG_LEN_LINE_SEC_LINE_POS	/* 24 */	6   /* sum 122 */ //!<
+
+#define BT_LOG_LEN_MAZE_MAIN_SM			/* 25 */	1
+#define BT_LOG_LEN_MAZE_GET_KP						5
+#define BT_LOG_LEN_MAZE_GET_KD						5
+#define BT_LOG_LEN_MAZE_GET_SPEED					2
+#define BT_LOG_LEN_MAZE_SEGENTS						12
+#define BT_LOG_LEN_MAZE_ACT_STATE		/* 30 */	1
+#define BT_LOG_LEN_MAZE_ACT_KP						5
+#define BT_LOG_LEN_MAZE_ACT_KD						5
+#define BT_LOG_LEN_MAZE_ACT_SPEED					2
+#define BT_LOG_LEN_MAZE_INCLIN_SEGMENT	/* 34 */	2   /* sum 162 */
+
+#define BT_LOG_LEN_SRUN_MAIN_SM			/* 35 */	2
+#define BT_LOG_LEN_SRUN_ACT_STATE					2
+#define BT_LOG_LEN_SRUN_ACT_P						6
+#define BT_LOG_LEN_SRUN_ACT_KP						5
+#define BT_LOG_LEN_SRUN_ACT_KD						5
+#define BT_LOG_LEN_SRUN_ACT_SPEED		/* 40 */	2
+#define BT_LOG_LEN_SRUN_GET_P						6
+#define BT_LOG_LEN_SRUN_GET_KP						5
+#define BT_LOG_LEN_SRUN_GET_KD						5
+#define BT_LOG_LEN_SRUN_GET_SPEED		/* 44 */	2   /* sum 202 */
 
 //! Calculate the size of the buffer that can hold all of the data.
-#define BCM_LOG_SIZE								(	BCM_LOG_LENGHT_SHARP_DISTANCE +				\
-														BCM_LOG_LENGHT_SHARP_COLLISION_WARNING +	\
-														BCM_LOG_LENGHT_SERVO_ANGLE +				\
-														BCM_LOG_LENGHT_INERT_ACCEL_X +				\
-														BCM_LOG_LENGHT_INERT_ACCEL_Y +				\
-														BCM_LOG_LENGHT_INERT_ACCEL_Z +				\
-														BCM_LOG_LENGHT_INERT_ANG_VEL_X +			\
-														BCM_LOG_LENGHT_INERT_ANG_VEL_Y +			\
-														BCM_LOG_LENGHT_INERT_ANG_VEL_Z +			\
-														BCM_LOG_LENGHT_NAVI_N +						\
-														BCM_LOG_LENGHT_NAVI_E +						\
-														BCM_LOG_LENGHT_NAVI_THETA +					\
-														BCM_LOG_LENGHT_ENC_VEL +					\
-														BCM_LOG_LENGHT_TOF_1_DISTANCE +				\
-														BCM_LOG_LENGHT_TOF_2_DISTANCE +				\
-														BCM_LOG_LENGHT_TOF_3_DISTANCE +				\
-														BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT +			\
-														BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT +			\
-														BCM_LOG_LENGHT_MTR_CURR +					\
-														BCM_LOG_LENGHT_MTR_SYS_CURR +				\
-														BCM_LOG_LENGHT_MTR_SRV_CURR +				\
-														BCM_LOG_LENGHT_MTR_CMD_STOP_ENGINE +		\
-														BCM_LOG_LENGHT_CTRL_MTR_CURR +				\
-														BCM_LOG_LENGHT_LINE_D +						\
-														BCM_LOG_LENGHT_LINE_THETA					\
+#define BT_LOG_SIZE									(	BT_LOG_LEN_NAVI_N +						\
+														BT_LOG_LEN_NAVI_E +						\
+														BT_LOG_LEN_NAVI_PSI +					\
+														BT_LOG_LEN_ENC_V +						\
+														BT_LOG_LEN_DIST_TOF_1 +					\
+														BT_LOG_LEN_DIST_TOF_2 +					\
+														BT_LOG_LEN_DIST_TOF_3 +					\
+														BT_LOG_LEN_DIST_SHARP_1 +				\
+														BT_LOG_LEN_INERT_ACCEL_X +				\
+														BT_LOG_LEN_INERT_ACCEL_Y +				\
+														BT_LOG_LEN_INERT_ACCEL_Z +				\
+														BT_LOG_LEN_INERT_ANG_VEL_X +			\
+														BT_LOG_LEN_INERT_ANG_VEL_Y +			\
+														BT_LOG_LEN_INERT_ANG_VEL_Z +			\
+														BT_LOG_LEN_STEER_WHEEL_ANGLE +			\
+														BT_LOG_LEN_SERVO_ANGLE +				\
+														BT_LOG_LEN_MTR_MAIN_BAT_VOLT +			\
+														BT_LOG_LEN_MTR_SEC_BAT_VOLT +			\
+														BT_LOG_LEN_MTR_MOTOR_CURR +				\
+														BT_LOG_LEN_MTR_SYS_CURR +				\
+														BT_LOG_LEN_MTR_SERVO_CURR +				\
+														BT_LOG_LEN_LINE_LINE_NBR +				\
+														BT_LOG_LEN_LINE_MAIN_LINE_POS +			\
+														BT_LOG_LEN_LINE_SEC_LINE_POS +			\
+														BT_LOG_LEN_MAZE_MAIN_SM +				\
+														BT_LOG_LEN_MAZE_GET_KP +				\
+														BT_LOG_LEN_MAZE_GET_KD +				\
+														BT_LOG_LEN_MAZE_GET_SPEED +				\
+														BT_LOG_LEN_MAZE_SEGENTS +				\
+														BT_LOG_LEN_MAZE_ACT_STATE +				\
+														BT_LOG_LEN_MAZE_ACT_KP +				\
+														BT_LOG_LEN_MAZE_ACT_KD +				\
+														BT_LOG_LEN_MAZE_ACT_SPEED +				\
+														BT_LOG_LEN_MAZE_INCLIN_SEGMENT +		\
+														BT_LOG_LEN_SRUN_MAIN_SM +				\
+														BT_LOG_LEN_SRUN_ACT_STATE +				\
+														BT_LOG_LEN_SRUN_ACT_P +					\
+														BT_LOG_LEN_SRUN_ACT_KP +				\
+														BT_LOG_LEN_SRUN_ACT_KD +				\
+														BT_LOG_LEN_SRUN_ACT_SPEED +				\
+														BT_LOG_LEN_SRUN_GET_P +					\
+														BT_LOG_LEN_SRUN_GET_KP +				\
+														BT_LOG_LEN_SRUN_GET_KD +				\
+														BT_LOG_LEN_SRUN_GET_SPEED				\
 													)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -81,61 +121,108 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 typedef enum
 {
-	BCM_LOG_SHARP_DISTANCE 			= 0,	// 1
-	BCM_LOG_SHARP_COLLISION_WARNING,
-	BCM_LOG_SERVO_ANGLE,
-	BCM_LOG_INERT_ACCEL_X,
-	BCM_LOG_INERT_ACCEL_Y,
-	BCM_LOG_INERT_ACCEL_Z,
-	BCM_LOG_INERT_ANG_VEL_X,
-	BCM_LOG_INERT_ANG_VEL_Y,
-	BCM_LOG_INERT_ANG_VEL_Z,
-	BCM_LOG_NAVI_N,							// 10
-	BCM_LOG_NAVI_E,
-	BCM_LOG_NAVI_THETA,
-	BCM_LOG_ENC_VEL,
-	BCM_LOG_TOF_1_DISTANCE,
-	BCM_LOG_TOF_2_DISTANCE,
-	BCM_LOG_TOF_3_DISTANCE,
-	BCM_LOG_MTR_MAIN_BAT_VOLT,
-	BCM_LOG_MTR_SEC_BAT_VOLT,
-	BCM_LOG_MTR_CURR,
-	BCM_LOG_MTR_SYS_CURR,					// 20
-	BCM_LOG_MTR_SRV_CURR,
-	BCM_LOG_MTR_CMD_STOP_ENGINE,
-	BCM_LOG_CTR_MTR_CURR,
-	BCM_LOG_LINE_D,
-	BCM_LOG_LINE_THETA
+	BT_LOG_NAVI_N 			= 0,	// 1
+	BT_LOG_NAVI_E,				//!<
+	BT_LOG_NAVI_PSI,            //!<
+	BT_LOG_ENC_V,          //!<
+	BT_LOG_DIST_TOF_1,          //!<
+	BT_LOG_DIST_TOF_2,          //!<
+	BT_LOG_DIST_TOF_3,        //!<
+	BT_LOG_DIST_SHARP_1,        //!<
+	BT_LOG_INERT_ACCEL_X,        //!<
+	BT_LOG_INERT_ACCEL_Y,							// 10
+	BT_LOG_INERT_ACCEL_Z,                 //!<
+	BT_LOG_INERT_ANG_VEL_X,             //!<
+	BT_LOG_INERT_ANG_VEL_Y,                //!<
+	BT_LOG_INERT_ANG_VEL_Z,         //!<
+	BT_LOG_STEER_WHEEL_ANGLE,         //!<
+	BT_LOG_SERVO_ANGLE,         //!<
+
+	BT_LOG_MTR_MAIN_BAT_VOLT,      //!<
+	BT_LOG_MTR_SEC_BAT_VOLT,       //!<
+	BT_LOG_MTR_MOTOR_CURR,               //!<
+	BT_LOG_MTR_SYS_CURR,					// 20
+	BT_LOG_MTR_SERVO_CURR,           //!<
+
+	BT_LOG_LINE_LINE_NBR,    //!<
+	BT_LOG_LINE_MAIN_LINE_POS,           //!<
+	BT_LOG_LINE_SEC_LINE_POS,                 //!<
+
+	BT_LOG_MAZE_MAIN_SM,
+	BT_LOG_MAZE_GET_KP,
+	BT_LOG_MAZE_GET_KD,
+	BT_LOG_MAZE_GET_SPEED,
+	BT_LOG_MAZE_SEGMENTS,
+	BT_LOG_MAZE_ACT_STATE,
+	BT_LOG_MAZE_ACT_KP,
+	BT_LOG_MAZE_ACT_KD,
+	BT_LOG_MAZE_ACT_SPEED,
+	BT_LOG_MAZE_INCLIN_SEGMENT,
+
+	BT_LOG_SRUN_MAIN_SM,
+	BT_LOG_SRUN_ACT_STATE,
+	BT_LOG_SRUN_ACT_P,
+	BT_LOG_SRUN_ACT_KP,
+	BT_LOG_SRUN_ACT_KD,
+	BT_LOG_SRUN_ACT_SPEED,
+	BT_LOG_SRUN_GET_P,
+	BT_LOG_SRUN_GET_KP,
+	BT_LOG_SRUN_GET_KD,
+	BT_LOG_SRUN_GET_SPEED
+
 } eBluetoothLogMember;
 
 //!	@brief	Structure that hold all of the data of the log trace that needs to be sent out.
 typedef struct
 {
-	uint8_t sharpDistant[BCM_LOG_LENGHT_SHARP_DISTANCE];						//!< distance in cm
-	uint8_t sharpCollisionWarning[BCM_LOG_LENGHT_SHARP_COLLISION_WARNING];		//!< status flag
-	uint8_t servoAngle[BCM_LOG_LENGHT_SERVO_ANGLE];								//!< angle in rad
-	uint8_t inertAccelX[BCM_LOG_LENGHT_INERT_ACCEL_X];							//!< acceleration
-	uint8_t inertAccelY[BCM_LOG_LENGHT_INERT_ACCEL_Y];							//!< acceleration
-	uint8_t inertAccelZ[BCM_LOG_LENGHT_INERT_ACCEL_Z];							//!< acceleration
-	uint8_t inertAngVelX[BCM_LOG_LENGHT_INERT_ANG_VEL_X];	                    //!< angular acceleration
-	uint8_t inertAngVelY[BCM_LOG_LENGHT_INERT_ANG_VEL_Y];                       //!< angular acceleration
-	uint8_t inertAngVelZ[BCM_LOG_LENGHT_INERT_ANG_VEL_Z];                       //!< angular acceleration
-	uint8_t naviN[BCM_LOG_LENGHT_NAVI_E];										//!< coordinate
-	uint8_t naviE[BCM_LOG_LENGHT_NAVI_E];										//!< coordinate
-	uint8_t naviTheta[BCM_LOG_LENGHT_NAVI_THETA];								//!< angle
-	uint8_t encVel[BCM_LOG_LENGHT_ENC_VEL];										//!< velocity
-	uint8_t tof1Distance[BCM_LOG_LENGHT_TOF_1_DISTANCE];                        //!< distance
-	uint8_t tof2Distance[BCM_LOG_LENGHT_TOF_2_DISTANCE];                        //!< distance
-	uint8_t tof3Distance[BCM_LOG_LENGHT_TOF_3_DISTANCE];                        //!< distance
-	uint8_t mtrMainBatVolt[BCM_LOG_LENGHT_MTR_MAIN_BAT_VOLT];					//!< voltage in V
-	uint8_t mtrSecBatVolt[BCM_LOG_LENGHT_MTR_SEC_BAT_VOLT];						//!< voltage in V
-	uint8_t mtrCurr[BCM_LOG_LENGHT_MTR_CURR];									//!< current
-	uint8_t mtrSysCurr[BCM_LOG_LENGHT_MTR_SYS_CURR];							//!< current in mA
-	uint8_t mtrSrvCurr[BCM_LOG_LENGHT_MTR_SRV_CURR];							//!< current in mA
-	uint8_t mtrCmdStopEngine[BCM_LOG_LENGHT_MTR_CMD_STOP_ENGINE];				//!< command flag
-	uint8_t ctrMtrCurr[BCM_LOG_LENGHT_CTRL_MTR_CURR];							//!< current
-	uint8_t lineD[BCM_LOG_LENGHT_LINE_D];										//!< ? in mm
-	uint8_t lineTheta[BCM_LOG_LENGHT_LINE_THETA];								//!< angle in deg
+	uint8_t naviN[BT_LOG_LEN_NAVI_N];										//!<
+	uint8_t naviE[BT_LOG_LEN_NAVI_E];										//!<
+	uint8_t naviPsi[BT_LOG_LEN_NAVI_PSI];									//!<
+	uint8_t encV[BT_LOG_LEN_ENC_V];											//!<
+	uint8_t distToF1[BT_LOG_LEN_DIST_TOF_1];								//!<
+	uint8_t distToF2[BT_LOG_LEN_DIST_TOF_2];								//!<
+	uint8_t distToF3[BT_LOG_LEN_DIST_TOF_3];	                   			//!<
+	uint8_t distSharp1[BT_LOG_LEN_DIST_SHARP_1];                    	    //!<
+	uint8_t inertAccX[BT_LOG_LEN_INERT_ACCEL_X];                       		//!<
+	uint8_t inertAccY[BT_LOG_LEN_INERT_ACCEL_Y];							//!<
+	uint8_t inertAccZ[BT_LOG_LEN_INERT_ACCEL_Z];							//!<
+	uint8_t inertAngVelX[BT_LOG_LEN_INERT_ANG_VEL_X];						//!<
+	uint8_t inertAngVelY[BT_LOG_LEN_INERT_ANG_VEL_Y];						//!<
+	uint8_t inertAngVelZ[BT_LOG_LEN_INERT_ANG_VEL_Z];                       //!<
+	uint8_t steerWheelAngle[BT_LOG_LEN_STEER_WHEEL_ANGLE];                  //!<
+	uint8_t servoAngle[BT_LOG_LEN_SERVO_ANGLE];                        		//!<
+
+	uint8_t mtrMainBatVolt[BT_LOG_LEN_MTR_MAIN_BAT_VOLT];					//!<
+	uint8_t mtrSecBatVolt[BT_LOG_LEN_MTR_SEC_BAT_VOLT];						//!<
+	uint8_t mtrCurr[BT_LOG_LEN_MTR_MOTOR_CURR];								//!<
+	uint8_t mtrSysCurr[BT_LOG_LEN_MTR_SYS_CURR];							//!<
+	uint8_t mtrSrvCurr[BT_LOG_LEN_MTR_SERVO_CURR];							//!<
+
+	uint8_t lineLineNbr[BT_LOG_LEN_LINE_LINE_NBR];							//!<
+	uint8_t lineMainLinePos[BT_LOG_LEN_LINE_MAIN_LINE_POS];					//!<
+	uint8_t lineSecLinePos[BT_LOG_LEN_LINE_SEC_LINE_POS];					//!<
+
+	uint8_t mazeMainSM[BT_LOG_LEN_MAZE_MAIN_SM];							//!<
+	uint8_t mazeGetKp[BT_LOG_LEN_MAZE_GET_KP];								//!<
+	uint8_t mazeGetKd[BT_LOG_LEN_MAZE_GET_KD];								//!<
+	uint8_t mazeGetSpeed[BT_LOG_LEN_MAZE_GET_SPEED];						//!<
+	uint8_t mazeSegments[BT_LOG_LEN_MAZE_SEGENTS];							//!<
+	uint8_t mazeActState[BT_LOG_LEN_MAZE_ACT_STATE];						//!<
+	uint8_t mazeActKp[BT_LOG_LEN_MAZE_ACT_KP];								//!<
+	uint8_t mazeActKd[BT_LOG_LEN_MAZE_ACT_KD];								//!<
+	uint8_t mazeActSpeed[BT_LOG_LEN_MAZE_ACT_SPEED];						//!<
+	uint8_t mazeInclinSegment[BT_LOG_LEN_MAZE_INCLIN_SEGMENT];				//!<
+
+	uint8_t sRunMainSm[BT_LOG_LEN_SRUN_MAIN_SM];							//!<
+	uint8_t sRunActState[BT_LOG_LEN_SRUN_ACT_STATE];						//!<
+	uint8_t sRunActP[BT_LOG_LEN_SRUN_ACT_P];								//!<
+	uint8_t sRunActKp[BT_LOG_LEN_SRUN_ACT_KP];								//!<
+	uint8_t sRunActKd[BT_LOG_LEN_SRUN_ACT_KD];								//!<
+	uint8_t sRunActSpeed[BT_LOG_LEN_SRUN_ACT_SPEED];						//!<
+	uint8_t sRunGetP[BT_LOG_LEN_SRUN_GET_P];								//!<
+	uint8_t sRunGetKp[BT_LOG_LEN_SRUN_GET_KP];								//!<
+	uint8_t sRunGetKd[BT_LOG_LEN_SRUN_GET_KD];								//!<
+	uint8_t sRunGetSpeed[BT_LOG_LEN_SRUN_GET_SPEED];						//!<
 } cBluetoothLog;
 
 //TODO IDEA: trace the connection informations
