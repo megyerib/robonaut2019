@@ -33,17 +33,17 @@
 #define BT_LOG_LEN_INERT_ANG_VEL_Y					6   //!<
 #define BT_LOG_LEN_INERT_ANG_VEL_Z					6	//!<
 #define BT_LOG_LEN_STEER_WHEEL_ANGLE				5   //!<
-#define BT_LOG_LEN_SERVO_ANGLE			/* 16 */	5   //!<
+#define BT_LOG_LEN_SERVO_ANGLE			/* 16 */	5   /* sum 81 */ //!<
 
 #define BT_LOG_LEN_MTR_MAIN_BAT_VOLT	/* 17 */	5   //!<
 #define BT_LOG_LEN_MTR_SEC_BAT_VOLT					5   //!<
 #define BT_LOG_LEN_MTR_MOTOR_CURR					9   //!<
 #define BT_LOG_LEN_MTR_SYS_CURR						4   //!<
-#define BT_LOG_LEN_MTR_SERVO_CURR		/* 21 */	4	//!<
+#define BT_LOG_LEN_MTR_SERVO_CURR		/* 21 */	4	/* sum 108 */ //!<
 
 #define BT_LOG_LEN_LINE_LINE_NBR		/* 22 */	2   //!<
 #define BT_LOG_LEN_LINE_MAIN_LINE_POS				6   //!<
-#define BT_LOG_LEN_LINE_SEC_LINE_POS	/* 24 */	6   //!<
+#define BT_LOG_LEN_LINE_SEC_LINE_POS	/* 24 */	6   /* sum 122 */ //!<
 
 #define BT_LOG_LEN_MAZE_MAIN_SM			/* 25 */	1
 #define BT_LOG_LEN_MAZE_GET_KP						5
@@ -54,7 +54,7 @@
 #define BT_LOG_LEN_MAZE_ACT_KP						5
 #define BT_LOG_LEN_MAZE_ACT_KD						5
 #define BT_LOG_LEN_MAZE_ACT_SPEED					2
-#define BT_LOG_LEN_MAZE_INCLIN_SEGMENT	/* 34 */	2
+#define BT_LOG_LEN_MAZE_INCLIN_SEGMENT	/* 34 */	2   /* sum 162 */
 
 #define BT_LOG_LEN_SRUN_MAIN_SM			/* 35 */	2
 #define BT_LOG_LEN_SRUN_ACT_STATE					2
@@ -65,7 +65,7 @@
 #define BT_LOG_LEN_SRUN_GET_P						6
 #define BT_LOG_LEN_SRUN_GET_KP						5
 #define BT_LOG_LEN_SRUN_GET_KD						5
-#define BT_LOG_LEN_SRUN_GET_SPEED		/* 44 */	2
+#define BT_LOG_LEN_SRUN_GET_SPEED		/* 44 */	2   /* sum 202 */
 
 //! Calculate the size of the buffer that can hold all of the data.
 #define BT_LOG_SIZE									(	BT_LOG_LEN_NAVI_N +						\
