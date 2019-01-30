@@ -25,10 +25,10 @@
 //**********************************************************************************************************************
 typedef enum
 {
-	eSTATE_MAIN_READY       = 0,		//! Start position and car waits for a trigger.
-	eSTATE_MAIN_DISCOVER,				//! The car is driving through the maze, finding crossings and segments.
-	eSTATE_MAIN_INCLINATION,			//! The car has discovered the maze, it has to leave it now.
-	eSTATE_MAIN_OUT						//! The car is out of the maze
+	eSTATE_MAIN_READY       = 0,		//!< Start position and car waits for a trigger.
+	eSTATE_MAIN_DISCOVER,				//!< The car is driving through the maze, finding crossings and segments.
+	eSTATE_MAIN_INCLINATION,			//!< The car has discovered the maze, it has to leave it now.
+	eSTATE_MAIN_OUT						//!< The car is out of the maze
 } eSTATE_MAIN;
 
 //**********************************************************************************************************************
@@ -36,8 +36,8 @@ typedef enum
 //**********************************************************************************************************************
 typedef struct
 {
-	cPD_CONTROLLER_PARAMS discover;		//! Contains the control parameters of the Discover state.
-	cPD_CONTROLLER_PARAMS inclination;	//! Contains the control parameters of the Inclination state.
+	cPD_CONTROLLER_PARAMS discover;		//!< Contains the control parameters of the Discover state.
+	cPD_CONTROLLER_PARAMS inclination;	//!< Contains the control parameters of the Inclination state.
 } cMAZE_PD_CONTROL_PARAM_LIST;
 
 //**********************************************************************************************************************
@@ -129,7 +129,7 @@ static uint32_t txInclinSegment;
 
 static void 	MazeMainStateMachine   (void);
 static void 	MazeProcessRecCommands (void);
-static void 	MazeCheckRemote		   (void);
+static void 	MazeCheckRemote		   (void);		// TODO REMOVE
 static void 	MazeTraceInformations  (void);
 static uint32_t MazeSegmentsConverter  (void);
 
