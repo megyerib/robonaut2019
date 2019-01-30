@@ -80,6 +80,7 @@ static bool traceWrapFloat (
 								const eBluetoothLogMember member,
 								const uint32_t 			  length
 							);
+static bool traceWrapBoolArray 		 (uint32_t* const value, const eBluetoothLogMember member, const uint32_t length );
 static uint32_t traceUnwrapInteger 	 (uint8_t* const buffer, uint32_t begin, uint32_t size);
 static bool 	traceUnwrapBool 	 (uint8_t* const buffer, uint32_t begin);
 static float 	traceUnwrapFloat 	 (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals);
@@ -375,7 +376,7 @@ void traceFlushData (void)
 	traceWrapInteger(&mazeGetSpeed, BT_LOG_MAZE_GET_SPEED, BT_LOG_LEN_MAZE_GET_SPEED);
 
 	xQueueReceive(qMazeSegments_u32, &mazeSegments, 0);
-	traceWrapInteger(&mazeSegments, BT_LOG_MAZE_SEGMENTS, BT_LOG_LEN_MAZE_SEGENTS);
+	traceWrapBoolArray(&mazeSegments, BT_LOG_MAZE_SEGMENTS, BT_LOG_LEN_MAZE_SEGENTS);
 
 	xQueueReceive(qMazeActState_u32, &mazeActState, 0);
 	traceWrapInteger(&mazeActState, BT_LOG_MAZE_ACT_STATE, BT_LOG_LEN_MAZE_ACT_STATE);
@@ -642,6 +643,43 @@ static bool traceWrapFloat (
 		// Save the buffer into the trace buffer.
 		traced = bspLogMemberUpdate(member, buffer, length);
 	}
+
+	return traced;
+}
+
+//**********************************************************************************************************************
+//! @param value
+//! @param member
+//! @param length
+//! @return
+//**********************************************************************************************************************
+static bool traceWrapBoolArray (uint32_t* const value, const eBluetoothLogMember member, const uint32_t length )
+{
+	bool traced = false;
+	uint8_t buffer[TRACE_MAX_NUMBER_OF_DIGITS];
+	uint32_t locValue = *value;
+	int i;
+
+	// Empty the buffer.
+	memset(buffer, 0, sizeof(buffer));
+
+	for (i = 0; i < length; i++)
+	{
+		if (locValue % 2 == 0)
+		{
+			buffer[length-1-i] = 0 + '0';
+		}
+		else
+		{
+			buffer[length-1-i] = 1 + '0';
+			locValue--;
+		}
+
+		locValue /= 2;
+	}
+
+	// Save the buffer into the bluetooth log structure.
+	traced = bspLogMemberUpdate(member, buffer, length);
 
 	return traced;
 }
