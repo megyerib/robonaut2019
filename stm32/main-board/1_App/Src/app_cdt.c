@@ -165,6 +165,27 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	vQueueAddToRegistry(qRecData, "RecData");
 
+	cTRACE_RX_DATA init;
+	init.StopCar 			= 0;	// 1
+	init.MazeMainSMReset	= 0;
+	init.MazeMainSMResetTo 	= 0;
+	init.MazeGetState		= 0;
+	init.MazeSetState		= 0;
+	init.MazeSetKp			= 0;
+	init.MazeSetKd			= 0;
+	init.MazeSetSpeed		= 0;
+	init.SRunTryOvertake	= 0;
+	init.SRunHardReset		= 0;	// 10
+	init.SRunSoftReset		= 0;
+	init.SRunSoftResetTo	= 0;
+	init.SRunGetState		= 0;
+	init.SRunSetState		= 0;
+	init.SRunSetP			= 0;
+	init.SRunSetKp			= 0;
+	init.SRunSetKd			= 0;
+	init.SRunSetSpeed		= 0;	// 18
+	xQueueOverwrite(qRecData, &init);
+
 	//______________________________________________________________________ TASK CREATE
 
 	xTaskCreate(Task_CarDiagnosticsTool,

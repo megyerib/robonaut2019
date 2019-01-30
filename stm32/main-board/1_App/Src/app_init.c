@@ -17,6 +17,8 @@
 #include "app_navigation.h"
 #include "app_cdt.h"
 #include "app_inertCalibration.h"
+#include "app_maze.h"
+#include "app_speedRun.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -50,6 +52,9 @@ static void appInit()
 	//TaskInit_InertialCalibration();
 	TaskInit_Navigation();
 	//TaskInit_steeringDemo();
+
+	TaskInit_Maze();
+	TaskInit_SpeedRun();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

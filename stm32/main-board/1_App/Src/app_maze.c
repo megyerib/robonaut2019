@@ -8,28 +8,41 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include "FreeRTOS.h"
+#include "event_groups.h"
 #include "app_maze.h"
 #include "app_common.h"
 #include "navigation.h"
 #include "trace.h"
+#include "remote.h"
+#include "main.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
+//**********************************************************************************************************************
+//! States of the main state machine of the maze algorithm.
+//**********************************************************************************************************************
 typedef enum
 {
-	eSTATE_MAIN_READY       = 0,	//! Start position and car waits for a trigger.
-	eSTATE_MAIN_DISCOVER,			//! The car is driving through the maze, finding crossings and segments.
-	eSTATE_MAIN_INCLINATION,		//! The car has discovered the maze, it has to leave it now.
-	eSTATE_MAIN_OUT					//! The car is out of the maze
+	eSTATE_MAIN_READY       = 0,		//! Start position and car waits for a trigger.
+	eSTATE_MAIN_DISCOVER,				//! The car is driving through the maze, finding crossings and segments.
+	eSTATE_MAIN_INCLINATION,			//! The car has discovered the maze, it has to leave it now.
+	eSTATE_MAIN_OUT						//! The car is out of the maze
 } eSTATE_MAIN;
 
+//**********************************************************************************************************************
+//! List that contain all of the control parameters.
+//**********************************************************************************************************************
 typedef struct
 {
-	cPD_CONTROLLER_PARAMS discover;
-	cPD_CONTROLLER_PARAMS inclination;
+	cPD_CONTROLLER_PARAMS discover;		//! Contains the control parameters of the Discover state.
+	cPD_CONTROLLER_PARAMS inclination;	//! Contains the control parameters of the Inclination state.
 } cMAZE_PD_CONTROL_PARAM_LIST;
 
+//**********************************************************************************************************************
+//!
+//**********************************************************************************************************************
 typedef struct
 {
 	cNAVI_STATE start;
@@ -39,6 +52,9 @@ typedef struct
 	struct cSEGMENT* right;
 } cSEGMENT_INFO;
 
+//**********************************************************************************************************************
+//!
+//**********************************************************************************************************************
 typedef struct
 {
 	cSEGMENT_INFO alfa;
@@ -48,6 +64,9 @@ typedef struct
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
+//! Event flag (first bit) that indicates if we have left the maze.
+EventGroupHandle_t event_MazeOut;
+
 //! Flag that indicates if the maze task is finished.
 static bool mazeFinished;
 
@@ -56,43 +75,62 @@ static eSTATE_MAIN smMainState;
 
 //! The graph map of the labyrinth.
 static cSEGMENT map[20];
-
-//TODO comment
+//! A list of the discoverable segments. A bit is set when the segment was found and the car has driven it through.
 static bool segements[12];
-
-//TODO comment
+//! The number of the segment where the exit point is to be found.
 static uint32_t inclinSegment;
 
-// TODO comment
+//! The controller parameters of the actual state in which the car is currently.
 static cPD_CONTROLLER_PARAMS actualParams;
+//! List of the controller parameters for all of the main states.
 static cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
-// TODO comment
+//! Structure that contain the received serial data.
 static cTRACE_RX_DATA rxData;
-static bool 	recMainSMReset;
+//! Flag that indicates if the car must be stopped.
+static bool	recStopCar;
+//! Flag that indicates if the main state machine must be reset.
+static bool recMainSMReset;
+//! Holds the state into which the main state machine must be reset.
 static uint32_t recMainSMResetTo;
+//! Request for the control parameters of a valid state.
 static uint32_t recGetState;
+//! A state that's parameters has to be changed.
 static uint32_t recSetState;
-static float	recSetKp;
-static float	recSetKd;
+//! New Kp parameter for the selected state.
+static float recSetKp;
+//! New Kd parameter for the selected state.
+static float recSetKd;
+//! New Speed parameter for the selected state.
 static uint32_t recSetSpeed;
 
-// TODO comment
+//! Holds the actual state of the main state machine.
 static uint32_t txMainSM;
+//! Holds the Kp parameter of the requested state.
 static float 	txGetKp;
+//! Holds the Kd parameter of the requested state.
 static float 	txGetKd;
+//! Holds the Speed parameter of the requested state.
 static float 	txGetSpeed;
+//! Contains the information about the segments if they are discovered or not.
 static uint32_t txSegments;
+//! Holds the actual state of the car.
 static uint32_t txActState;
+//! Holds the Kp parameter of the actual state.
 static float    txActKp;
+//! Holds the Kd parameter of the actual state.
 static float    txActKd;
+//! Holds the Speed parameter of the actual state.
 static uint32_t txActSpeed;
+//! Hold the number of the segment on which the exit point is present.
 static uint32_t txInclinSegment;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void 	ProcessReceivedCommand (void);
-static void 	TraceMazeInformations  (void);
+static void 	MazeMainStateMachine   (void);
+static void 	MazeProcessRecCommands (void);
+static void 	MazeCheckRemote		   (void);
+static void 	MazeTraceInformations  (void);
 static uint32_t MazeSegmentsConverter  (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -101,8 +139,25 @@ void TaskInit_Maze (void)
 {
 	mazeFinished = false;
 
+	// Start in the Ready state.
 	smMainState = eSTATE_MAIN_READY;
 
+	// Reset trackers.
+	memset(segements, 0, 12);
+	inclinSegment = 0;
+
+	// Initial parameters of the Discover state.
+	paramList.discover.Kp	 = 1;
+	paramList.discover.Kd	 = 1;
+	paramList.discover.Speed = 0;
+
+	// Initial parameters of the Discover state.
+	paramList.inclination.Kp	 = 1;
+	paramList.inclination.Kd	 = 1;
+	paramList.inclination.Speed = 0;
+
+	event_MazeOut = xEventGroupCreate();
+	xEventGroupClearBits(event_MazeOut, 1);
 
 	xTaskCreate(Task_Maze,
 				"TASK_MAZE",
@@ -118,79 +173,36 @@ void Task_Maze (void* p)
 
 	while (1)
 	{
-		//___________________________________________RECEIVE/PROCESS PARAMETERS_________________________________________
-		ProcessReceivedCommand();
+		// Process the received parameters.
+		MazeProcessRecCommands();
 
-		//__________________________________________________STATE MACHINE_______________________________________________
+		// Check for the remote controller signal.
+		MazeCheckRemote();
 
-		// Run the state machine until the job is done.
-		if (mazeFinished == false)
+		// Run the state machine until the job is done or stop signal received.
+		if (mazeFinished == false && recStopCar == false)
 		{
-			switch (smMainState)
-			{
-				case eSTATE_MAIN_READY:
-				{
-					// Standing in the start position and radio trigger.
+			MazeMainStateMachine();
+		}
+		else if (recStopCar == true)
+		{
+			// Stop signal is received, stop the car.
 
-					// Trigger received -> DISCOVER state.
-					smMainState = eSTATE_MAIN_DISCOVER;
-					break;
-				}
-				case eSTATE_MAIN_DISCOVER:
-				{
-					// Map making, navigation, path tracking.
-
-					// All of the segments are discovered and reached -> INCLINATION state.
-					smMainState = eSTATE_MAIN_INCLINATION;
-					break;
-				}
-				case eSTATE_MAIN_INCLINATION:
-				{
-					//____________________________________________STEP 1________________________________________________
-					// Plan a path to the exit
-
-					// Drive to the exit
-
-					//____________________________________________STEP 2________________________________________________
-					// At the exit find the markings and slow down.
-
-					// Steer in the direction if the markings until the car leaves the lines (45deg).
-
-					// Check the distance sensor for collision and go until the new line is found. If collision warning,
-					// then stop.
-
-					// New lines found -> OUT state.
-					smMainState = eSTATE_MAIN_OUT;
-					break;
-				}
-				case eSTATE_MAIN_OUT:
-				{
-					// Stop/Park behind the safety-car.
-
-					// Maze task is finished.
-					mazeFinished = true;
-					break;
-				}
-				default:
-				{
-					// ERROR: Not valid state. Stop!
-
-					break;
-				}
-			}
 		}
 
-		//_______________________________________RESET BUTTON / CHANGE TO SPEED RUN_____________________________________
+		// Indicate if the maze is finished and signal the app_speedRun to start. If hard reset is present, then skip
+		// the maze and start the speed run.
+		if (mazeFinished == true || xEventGroupGetBits(event_MazeOut) > 0)
+		{
+			// Reset signal received. Skip the maze and signal to the speed run state machine.
+			mazeFinished = true;
+			xEventGroupSetBits(event_MazeOut, 0);
 
-		// Check the reset (skip maze run) signal. TODO
-		//if ( event bit set )
-		//{
-		//	// Reset signal received. Skip the maze and signal to the speed run state machine.
-		//	mazeFinished = true;
-		//}
+			smMainState = eSTATE_MAIN_OUT;
+		}
 
-		//_____________________________________________________TRACE____________________________________________________
-		TraceMazeInformations();
+		// Trace out the necessary infos.
+		MazeTraceInformations();
 
 		vTaskDelay(TASK_DELAY_5_MS);
 	}
@@ -198,7 +210,81 @@ void Task_Maze (void* p)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-static void ProcessReceivedCommand (void)
+//**********************************************************************************************************************
+//! This function holds the main state machine that can navigate through the labyrinth.
+//!
+//! The main state machine has 4 states: Ready, Discover, Inclination, Out. The car starts in the Ready state and waits
+//! for a trigger (remote, start gate). On trigger the car gets into the Discover state. In this state the car runs
+//! through the labyrinth looking for the segments and the inclination point. When this point and all of the segments
+//! are found and discovered, then the car gets into the Inclination state. Now the car plans a route to leave the
+//! labyrinth and changes lane to the speed run route, behind the safety car. This is the Out state.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void MazeMainStateMachine (void)
+{
+	switch (smMainState)
+	{
+		case eSTATE_MAIN_READY:
+		{
+			// Standing in the start position and radio trigger.
+
+			// Trigger received -> DISCOVER state.
+			smMainState = eSTATE_MAIN_DISCOVER;
+			break;
+		}
+		case eSTATE_MAIN_DISCOVER:
+		{
+			// Map making, navigation, path tracking.
+
+			// All of the segments are discovered and reached -> INCLINATION state.
+			smMainState = eSTATE_MAIN_INCLINATION;
+			break;
+		}
+		case eSTATE_MAIN_INCLINATION:
+		{
+			//____________________________________________STEP 1________________________________________________
+			// Plan a path to the exit
+
+			// Drive to the exit
+
+			//____________________________________________STEP 2________________________________________________
+			// At the exit find the markings and slow down.
+
+			// Steer in the direction if the markings until the car leaves the lines (45deg).
+
+			// Check the distance sensor for collision and go until the new line is found. If collision warning,
+			// then stop.
+
+			// New lines found -> OUT state.
+			smMainState = eSTATE_MAIN_OUT;
+			break;
+		}
+		case eSTATE_MAIN_OUT:
+		{
+			// Stop/Park behind the safety-car.
+
+			// Maze task is finished.
+			mazeFinished = true;
+			break;
+		}
+		default:
+		{
+			// NOP
+			break;
+		}
+	}
+}
+
+//**********************************************************************************************************************
+//!	This function translates the commands of the CDT application and answers them.
+//!
+//! This function updates the received data structure. According to the command it can reset the main state machine,
+//! provide specific parameters to be returned and it can also modify existing control parameters.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void MazeProcessRecCommands (void)
 {
 	// Get the received data.
 	rxData = traceGetRxData();
@@ -258,7 +344,36 @@ static void ProcessReceivedCommand (void)
 	}
 }
 
-static void TraceMazeInformations  (void)
+//**********************************************************************************************************************
+//!	This function checks if the remote signal is present.
+//!
+//! The function turns the green led on (LD2) if the remote signal is present and resets the #recStopCar flag so the
+//! car can run.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void MazeCheckRemote	(void)
+{
+	if (remoteGetState())
+	{
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+		recStopCar |= false;
+	}
+	else
+	{
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+		recStopCar |= true;
+	}
+}
+
+//**********************************************************************************************************************
+//! This function collects the information about the maze app and send out them.
+//!
+//!
+//!
+//! @return -
+//**********************************************************************************************************************
+static void MazeTraceInformations  (void)
 {
 	txMainSM        = smMainState;
 	txSegments      = MazeSegmentsConverter();
@@ -280,6 +395,13 @@ static void TraceMazeInformations  (void)
 	traceBluetooth(BT_LOG_MAZE_INCLIN_SEGMENT, &txInclinSegment);
 }
 
+//**********************************************************************************************************************
+//!	This function convert a bool array to a integer.
+//!
+//! The bit will represent a value of 2 power and summed together.
+//!
+//! @return AN integer value that holds the informations of a 12 bit flag array.
+//**********************************************************************************************************************
 static uint32_t MazeSegmentsConverter  (void)
 {
 	uint32_t retVal = 0;
