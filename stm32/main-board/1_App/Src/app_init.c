@@ -13,6 +13,10 @@
 
 // App layer headers
 #include "app_steeringDemo.h"
+#include "app_sharp.h"
+#include "app_navigation.h"
+#include "app_cdt.h"
+#include "app_inertCalibration.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -41,7 +45,11 @@ void Init()
 //! Initialize app layer modules
 static void appInit()
 {
-	TaskInit_steeringDemo();
+	TaskInit_CarDiagnosticsTool();
+	TaskInit_Sharp();
+	//TaskInit_InertialCalibration();
+	TaskInit_Navigation();
+	//TaskInit_steeringDemo();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

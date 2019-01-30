@@ -70,8 +70,6 @@ extern QueueHandle_t qSRunGetSpeed_u32;
 
 //_______________________________________________ RX SIDE
 extern QueueHandle_t qRecData;
-static cTRACE_RX_DATA btRxData;
-//TODO
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -429,7 +427,7 @@ void traceFlushData (void)
 	bspBtBufferFlush();
 }
 
-cTRACE_RX_DATA traceProcessRxData (uint8_t* const buffer)
+void traceProcessRxData (uint8_t* const buffer)
 {
 	cTRACE_RX_DATA rxData;
 	uint8_t rxDataSize = 0;
@@ -438,9 +436,9 @@ cTRACE_RX_DATA traceProcessRxData (uint8_t* const buffer)
 	index += TRACE_REC_HEADER;
 
 	rxDataSize = traceUnwrapInteger(buffer, index, TRACE_REC_SIZE);
-	index = TRACE_REC_SIZE;
+	index += TRACE_REC_SIZE;
 
-	if (rxDataSize == TRACE_REC_MSG_SIZE)
+	if (TRACE_REC_MSG_SIZE == rxDataSize + TRACE_REC_HEADER + TRACE_REC_SIZE)
 	{
 		rxData.StopCar = traceUnwrapBool(buffer, index);
 		index += TRACE_REC_STOP_CAR;
@@ -499,15 +497,16 @@ cTRACE_RX_DATA traceProcessRxData (uint8_t* const buffer)
 		index += TRACE_REC_SRUN_SET_SPEED;
 	}
 
-	return rxData;
+	xQueueOverwrite(qRecData, &rxData);
 }
 
-// TODO
-cTRACE_RX_DATA traceReceiveBluetooth (void)
+cTRACE_RX_DATA traceGetRxData (void)
 {
-	xQueueReceive(qRecData, &btRxData, 0);
+	cTRACE_RX_DATA retStruct;
 
-	return btRxData;
+	xQueuePeek(qRecData, &retStruct, 0);
+
+	return retStruct;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

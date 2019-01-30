@@ -173,7 +173,7 @@ void TaskInit_CarDiagnosticsTool(void)
 
 	xTaskCreate(Task_CarDiagnosticsTool,
 				"TASK_CAR_DIAGNOSTICS_TOOL",
-				DEFAULT_STACK_SIZE+300 ,
+				DEFAULT_STACK_SIZE+350 ,
 				NULL,
 				TASK_CDT_PRIO,
 				NULL);
@@ -199,9 +199,10 @@ void Task_CarDiagnosticsTool(void* p)
 		{
 			usbRec = false;
 
-			//recData = traceProcessRxData(btRxBuffer);
+			traceProcessRxData(usbRxBuffer);
 
-			//xQueueOverwrite(qRecData, (void*) &recData);
+			recData = traceGetRxData();
+			//xQueuePeek(qRecData, &recData, 0);
 
 			bspUartReceive_IT(Uart_USB, usbRxBuffer, TRACE_REC_MSG_SIZE);
 		}

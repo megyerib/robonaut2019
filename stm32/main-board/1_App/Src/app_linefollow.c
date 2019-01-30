@@ -91,7 +91,7 @@ static void Task_LineFollow (void* p)
     while (1)
     {
     	// TODO
-    	recBtData = traceReceiveBluetooth();
+    	recBtData = traceGetRxData();
     	/*if (recBtData.RecCmdPdKp_x == true)
     	{
         	controllerPdConfigure(&contrPD, recBtData.RecDataPdKp_d, Td, T);
