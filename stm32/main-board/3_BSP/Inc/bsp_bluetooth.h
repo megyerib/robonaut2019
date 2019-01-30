@@ -17,6 +17,8 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
+// TODO comment
+
 //!	Defines for the (byte) length of the individual trace objects. Example: 123 ->  Length = 3.
 #define BT_LOG_LEN_NAVI_N				/* 1 */		5	//!<
 #define BT_LOG_LEN_NAVI_E							5	//!<
@@ -121,32 +123,32 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 typedef enum
 {
-	BT_LOG_NAVI_N 			= 0,	// 1
-	BT_LOG_NAVI_E,				//!<
-	BT_LOG_NAVI_PSI,            //!<
-	BT_LOG_ENC_V,          //!<
-	BT_LOG_DIST_TOF_1,          //!<
-	BT_LOG_DIST_TOF_2,          //!<
-	BT_LOG_DIST_TOF_3,        //!<
-	BT_LOG_DIST_SHARP_1,        //!<
-	BT_LOG_INERT_ACCEL_X,        //!<
-	BT_LOG_INERT_ACCEL_Y,							// 10
-	BT_LOG_INERT_ACCEL_Z,                 //!<
-	BT_LOG_INERT_ANG_VEL_X,             //!<
-	BT_LOG_INERT_ANG_VEL_Y,                //!<
+	BT_LOG_NAVI_N 			= 0,			// 1
+	BT_LOG_NAVI_E,					//!<
+	BT_LOG_NAVI_PSI,            	//!<
+	BT_LOG_ENC_V,         			//!<
+	BT_LOG_DIST_TOF_1,         		//!<
+	BT_LOG_DIST_TOF_2,          	//!<
+	BT_LOG_DIST_TOF_3,        		//!<
+	BT_LOG_DIST_SHARP_1,        	//!<
+	BT_LOG_INERT_ACCEL_X,        	//!<
+	BT_LOG_INERT_ACCEL_Y,					// 10
+	BT_LOG_INERT_ACCEL_Z,           //!<
+	BT_LOG_INERT_ANG_VEL_X,         //!<
+	BT_LOG_INERT_ANG_VEL_Y,         //!<
 	BT_LOG_INERT_ANG_VEL_Z,         //!<
-	BT_LOG_STEER_WHEEL_ANGLE,         //!<
-	BT_LOG_SERVO_ANGLE,         //!<
+	BT_LOG_STEER_WHEEL_ANGLE,       //!<
+	BT_LOG_SERVO_ANGLE,         	//!<
 
-	BT_LOG_MTR_MAIN_BAT_VOLT,      //!<
-	BT_LOG_MTR_SEC_BAT_VOLT,       //!<
-	BT_LOG_MTR_MOTOR_CURR,               //!<
+	BT_LOG_MTR_MAIN_BAT_VOLT,       //!<
+	BT_LOG_MTR_SEC_BAT_VOLT,        //!<
+	BT_LOG_MTR_MOTOR_CURR,          //!<
 	BT_LOG_MTR_SYS_CURR,					// 20
-	BT_LOG_MTR_SERVO_CURR,           //!<
+	BT_LOG_MTR_SERVO_CURR,          //!<
 
-	BT_LOG_LINE_LINE_NBR,    //!<
-	BT_LOG_LINE_MAIN_LINE_POS,           //!<
-	BT_LOG_LINE_SEC_LINE_POS,                 //!<
+	BT_LOG_LINE_LINE_NBR,    		//!<
+	BT_LOG_LINE_MAIN_LINE_POS,      //!<
+	BT_LOG_LINE_SEC_LINE_POS,       //!<
 
 	BT_LOG_MAZE_MAIN_SM,
 	BT_LOG_MAZE_GET_KP,
@@ -244,42 +246,58 @@ bool connected;
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
+//**********************************************************************************************************************
 //! Initializes the bluetooth communication module.
+//**********************************************************************************************************************
 void bspBluetoothInit (void);
 
+//**********************************************************************************************************************
 //! Checks the bluetooth connection.
 //!
 //! @return			True if connected, False if not connected
+//**********************************************************************************************************************
 bool bspBluetoothConnected (void);
 
+//**********************************************************************************************************************
 //!	Resets the bluetooth module.
+//**********************************************************************************************************************
 void bspResetBluetooth (void);
 
+//**********************************************************************************************************************
 //! Builds up a connection with a given bluetooth device with this (car) board.
 //!
 //! @return			True if successfully connected, False if could not connet
+//**********************************************************************************************************************
 bool bspTryConnectToCar (void);
 
+//**********************************************************************************************************************
 //!	Send out the log structure through Bluetooth UART.
+//**********************************************************************************************************************
 void bspBtBufferFlush (void);
 
+//**********************************************************************************************************************
 //!	Stores a given uint8_t array to the bluetotth log structure.
 //!
 //! @param member	enum of a given log slot
 //! @param array	array that holds the characters that has to be stored
 //! @param len		how many characters has to be saved
 //! @return			True if successfully stored, False if could not store
+//**********************************************************************************************************************
 bool bspLogMemberUpdate (const eBluetoothLogMember member, uint8_t* const array, const uint32_t len);
 
+//**********************************************************************************************************************
 //! Sends out a uint8_t array through Bluetooth with interrupt.
 //!
 //! @param txBuffer	characters will be sent out
 //! @param length	how many characters will be sent out
+//**********************************************************************************************************************
 void bspBtSend (uint8_t* const txBuffer, const uint16_t length);
 
+//**********************************************************************************************************************
 //! Receives a given number of characters and stores in an array.
 //!
 //! @param rxBuffer	array that will store the characters
 //! @param length	how many characters will be received
+//**********************************************************************************************************************
 void bspBtReceive (uint8_t* const rxBuffer, const uint16_t length);
 

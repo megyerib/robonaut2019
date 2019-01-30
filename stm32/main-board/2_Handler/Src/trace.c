@@ -647,8 +647,8 @@ static bool traceWrapFloat (
 }
 
 //**********************************************************************************************************************
-//! Determines a power of 10 that can be used as a bound. With this the vlaue can be satured so it can be sent out in a
-//! given lenght and decimals value.
+//! Determines a power of 10 that can be used as a bound. With this the value can be saturated so it can be sent out in
+//! a given length and decimals value.
 //!
 //! @param digits		how many digit the value consist of
 //! @return				the calculated bound
@@ -667,7 +667,7 @@ static uint32_t traceGetBoundCharNum (const uint32_t digits)
 }
 
 //**********************************************************************************************************************
-//! TODO
+//! TODO comment
 //! @param buffer
 //! @param begin
 //! @param size
@@ -688,7 +688,7 @@ static uint32_t traceUnwrapInteger (uint8_t* const buffer, uint32_t begin, uint3
 }
 
 //**********************************************************************************************************************
-//! TODO
+//! TODO comment
 //! @param buffer
 //! @param begin
 //! @return
@@ -712,7 +712,7 @@ static bool traceUnwrapBool (uint8_t* const buffer, uint32_t begin)
 }
 
 //**********************************************************************************************************************
-//! TODO
+//! TODO comment
 //! @param buffer
 //! @param begin
 //! @param size

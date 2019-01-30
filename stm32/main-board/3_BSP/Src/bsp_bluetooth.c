@@ -8,7 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include <bsp_bluetooth.h>
+#include "bsp_bluetooth.h"
 #include "usart.h"
 #include "bsp_uart.h"
 
@@ -20,9 +20,6 @@ cBluetoothLog btLog;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-//! Reads out the module structure that holds the bluetooth logs.
-//!
-//! @param log		this will get the values
 static void bcmLogGet (cBluetoothLog* const log);
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -139,7 +136,7 @@ void bspBtBufferFlush (void)
 
 	// Send out the message
 	bspUartTransmit_IT(Uart_Bluetooth, btBuffer, bufSize);
-	// TODO for qt debug
+	// TODO BtFlush send out on usb too.
 	bspUartTransmit_IT(Uart_USB, btBuffer, bufSize);
 }
 
@@ -305,6 +302,11 @@ void bspBtReceive (uint8_t* const rxBuffer, const uint16_t length)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
+//**********************************************************************************************************************
+//! Reads out the module structure that holds the bluetooth logs.
+//!
+//! @param log		this will get the values
+//**********************************************************************************************************************
 void bcmLogGet (cBluetoothLog* const log)
 {
 	// Copy the log structure into the pointer

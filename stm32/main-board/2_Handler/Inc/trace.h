@@ -16,8 +16,9 @@
 #include "task.h"
 #include "queue.h"
 
-
 // Defines -------------------------------------------------------------------------------------------------------------
+
+//TODO Collect trace defines.
 
 //!	@brief	Defines for the structure member that how many decimals need to be stored.
 //______________________________________________________________________ TX SIDE
@@ -159,12 +160,12 @@ void traceBluetooth (const eBluetoothLogMember destination, void* const data);
 void traceFlushData (void);
 
 //**********************************************************************************************************************
-//! @return
+//! @return	TODO comment
 //**********************************************************************************************************************
 cTRACE_RX_DATA traceGetRxData (void);
 
 //**********************************************************************************************************************
 //! @param buffer
-//! @return
+//! @return	TODO comment
 //**********************************************************************************************************************
 void traceProcessRxData (uint8_t* const buffer);
