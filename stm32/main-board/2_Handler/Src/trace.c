@@ -438,7 +438,7 @@ void traceProcessRxData (uint8_t* const buffer)
 	rxDataSize = traceUnwrapInteger(buffer, index, TRACE_REC_SIZE);
 	index += TRACE_REC_SIZE;
 
-	if (TRACE_REC_MSG_SIZE == rxDataSize + TRACE_REC_HEADER + TRACE_REC_SIZE)
+	if (buffer[0] == 'B' && buffer[1] == 'B' && TRACE_REC_MSG_SIZE == rxDataSize + TRACE_REC_HEADER + TRACE_REC_SIZE)
 	{
 		rxData.StopCar = traceUnwrapBool(buffer, index);
 		index += TRACE_REC_STOP_CAR;
