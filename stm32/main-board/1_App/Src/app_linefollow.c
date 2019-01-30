@@ -40,7 +40,7 @@ static double T;		// sec
 
 static cFirstOrderTF contrPD;
 
-static cTraceRxBluetoothStruct recBtData;
+static cTRACE_RX_DATA recBtData;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 

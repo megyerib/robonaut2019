@@ -72,7 +72,7 @@ QueueHandle_t qSRunGetSpeed_u32;
 uint8_t btRxBuffer[TRACE_REC_MSG_SIZE];
 
 QueueHandle_t qRecData;
-cTraceRxBluetoothStruct recData;
+cTRACE_RX_DATA recData;
 bool btReceived = false;
 double cntr = 0;
 
@@ -89,7 +89,7 @@ double servo = 60;
 double encVel = 0;
 double motor = 0;
 
-cTraceRxBluetoothStruct usbStruct;
+cTRACE_RX_DATA usbStruct;
 
 // END___________________________-
 
@@ -162,7 +162,7 @@ void TaskInit_CarDiagnosticsTool(void)
 	vQueueAddToRegistry(qMtrSrvCurr_u32,   "MtrSrvCurr");
 	vQueueAddToRegistry(qCtrlMtrCurr_f,    "CtrlMtrCurr");*/
 
-	qRecData = xQueueCreate( 1, sizeof( cTraceRxBluetoothStruct ) );
+	qRecData = xQueueCreate( 1, sizeof( cTRACE_RX_DATA ) );
 
 	vQueueAddToRegistry(qRecData, "RecData");
 
@@ -186,16 +186,28 @@ void Task_CarDiagnosticsTool(void* p)
 	(void)p;
 
 	bspUartReceive_IT(Uart_USB, usbRxBuffer, TRACE_REC_MSG_SIZE);
-	bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);
+	//bspUartReceive_IT(Uart_Bluetooth, btRxBuffer, TRACE_REC_MSG_SIZE);
 
 	uint8_t btSentMessage[BT_LOG_SIZE+7];
 
 	while (1)
 	{
 		traceFlushData();
-		bspUartTransmit_IT(Uart_USB, btSentMessage, BT_LOG_SIZE+7);
+		//bspUartTransmit_IT(Uart_USB, btSentMessage, BT_LOG_SIZE+7);
 
-		vTaskDelay(200);
+		if (usbRec == true)
+		{
+			usbRec = false;
+
+			//recData = traceProcessRxData(btRxBuffer);
+
+			//xQueueOverwrite(qRecData, (void*) &recData);
+
+			bspUartReceive_IT(Uart_USB, usbRxBuffer, TRACE_REC_MSG_SIZE);
+		}
+
+		bspUartReceive_IT(Uart_USB, usbRxBuffer, TRACE_REC_MSG_SIZE);
+		vTaskDelay(100);
 	}
 
 /*	sharp = sharpGetMeasurement();

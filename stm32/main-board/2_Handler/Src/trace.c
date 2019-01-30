@@ -18,6 +18,7 @@
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 //! Handles of the available message queues
+//_______________________________________________ TX SIDE
 extern QueueHandle_t qNaviN_f;
 extern QueueHandle_t qNaviE_f;
 extern QueueHandle_t qNaviPSI_f;
@@ -67,71 +68,35 @@ extern QueueHandle_t qSRunGetKp_f;
 extern QueueHandle_t qSRunGetKd_f;
 extern QueueHandle_t qSRunGetSpeed_u32;
 
+//_______________________________________________ RX SIDE
 extern QueueHandle_t qRecData;
-static cTraceRxBluetoothStruct btRxData;
+static cTRACE_RX_DATA btRxData;
+//TODO
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-//! Converts a integer value to a unit8_t array so it can be sent out on bluetooth.
-//!
-//! @param value		value that will be sent out
-//! @param member		determines which how sent and what type of data
-//! @param length		how many character has to be sent out
-//! @return				was the conversion successful or not
 static bool traceWrapInteger (uint32_t* const value, const eBluetoothLogMember member, const uint32_t length);
-
-//! Converts a bool value to a unit8_t array so it can be sent out on bluetooth.
-//!
-//! @param value		value that will be sent out
-//! @param member		determines which how sent and what type of data
-//! @return				was the conversion successful or not
-static bool traceWrapBool (bool* const value, const eBluetoothLogMember member);
-
-//!	Converts a bool value to a unit8_t array so it can be sent out on bluetooth.
-//!
-//! @param value		value that will be sent out
-//! @param decimals		how many decimals of the double has to be sent out
-//! @param member		determines which how sent and what type of data
-//! @param length		how many character has to be sent out
-//! @return				was the conversion successful or not
 static bool traceWrapFloat (
 								float* const 			  value,
 								const uint32_t 			  decimals,
 								const eBluetoothLogMember member,
 								const uint32_t 			  length
 							);
-
-//! Determines a power of 10 that can be used as a bound. With this the vlaue can be satured so it can be sent out in a
-//! given lenght and decimals value.
-//!
-//! @param digits		how many digit the value consist of
-//! @return				the calculated bound
+static uint32_t traceUnwrapInteger 	 (uint8_t* const buffer, uint32_t begin, uint32_t size);
+static bool 	traceUnwrapBool 	 (uint8_t* const buffer, uint32_t begin);
+static float 	traceUnwrapFloat 	 (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals);
 static uint32_t traceGetBoundCharNum (const uint32_t digits);
-
-static uint32_t traceUnwrapInteger (uint8_t* const buffer, uint32_t begin, uint32_t size);
-
-static bool traceUnwrapBool (uint8_t* const buffer, uint32_t begin);
-
-static float traceUnwrapFloat (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void traceInit (void)
-{
-	/* TODO DEBUG
-	uint8_t buff[12] = "0010-1053809";
-
-	uint32_t i = traceUnwrapInteger(buff, 1, 3);
-	bool x = traceUnwrapBool(buff, 0);
-	double d = traceUnwrapDouble(buff, 4, 8, 4);*/
-}
+void traceInit (void) {}
 
 void traceBluetooth (const eBluetoothLogMember destination, void* const data)
 {
 	// Select who sent the log request.
 	switch (destination)
 	{
-		case BT_LOG_NAVI_N:		// 1
+		case BT_LOG_NAVI_N:
 			xQueueOverwrite(qNaviN_f, (float* const)data);
 			break;
 		case BT_LOG_NAVI_E:
@@ -173,7 +138,7 @@ void traceBluetooth (const eBluetoothLogMember destination, void* const data)
 		case BT_LOG_INERT_ANG_VEL_Z:
 			xQueueOverwrite(qInertAngVelZ_f, (float* const)data);
 			break;
-		case BT_LOG_STEER_WHEEL_ANGLE:				// 10
+		case BT_LOG_STEER_WHEEL_ANGLE:
 			xQueueOverwrite(qSteerWheelAngle_f, (float* const)data);
 			break;
 		case BT_LOG_SERVO_ANGLE:
@@ -233,7 +198,7 @@ void traceBluetooth (const eBluetoothLogMember destination, void* const data)
 		case BT_LOG_MAZE_ACT_SPEED:
 			xQueueOverwrite(qMazeActSpeed_u32, (uint32_t* const)data);
 			break;
-		case BT_LOG_MAZE_INCLIN_SEGMENT:			// 20
+		case BT_LOG_MAZE_INCLIN_SEGMENT:
 			xQueueOverwrite(qMazeInclinSegment_u32, (uint32_t* const)data);
 			break;
 
@@ -464,55 +429,81 @@ void traceFlushData (void)
 	bspBtBufferFlush();
 }
 
-cTraceRxBluetoothStruct traceProcessRxData (uint8_t* const buffer)
+cTRACE_RX_DATA traceProcessRxData (uint8_t* const buffer)
 {
-	cTraceRxBluetoothStruct dataSruct;
+	cTRACE_RX_DATA rxData;
 	uint8_t rxDataSize = 0;
 	uint8_t index = 0;
 
-	rxDataSize = traceUnwrapInteger(buffer, 2, 2);
-	index = 4;
+	index += TRACE_REC_HEADER;
+
+	rxDataSize = traceUnwrapInteger(buffer, index, TRACE_REC_SIZE);
+	index = TRACE_REC_SIZE;
 
 	if (rxDataSize == TRACE_REC_MSG_SIZE)
 	{
-		dataSruct.RecCmdStop = traceUnwrapBool(buffer, index);
-		index++;
+		rxData.StopCar = traceUnwrapBool(buffer, index);
+		index += TRACE_REC_STOP_CAR;
 
-		dataSruct.RecCmdFollowLine = traceUnwrapBool(buffer, index);
-		index++;
 
-		dataSruct.RecCmdSelfTest = traceUnwrapBool(buffer, index);
-		index++;
+		rxData.MazeMainSMReset = traceUnwrapBool(buffer, index);
+		index += TRACE_REC_MAZE_MAIN_SM_RESET;
 
-		dataSruct.RecCmdAccelerate = traceUnwrapBool(buffer, index);
-		index++;
+		rxData.MazeMainSMResetTo = traceUnwrapInteger(buffer, index, TRACE_REC_MAZE_MAIN_SM_RESET_TO);
+		index += TRACE_REC_MAZE_MAIN_SM_RESET_TO;
 
-		dataSruct.RecDataAccelerate = traceUnwrapInteger(buffer, index, TRACE_REC_ACCEL_SIZE);
-		index += TRACE_REC_ACCEL_SIZE;
+		rxData.MazeGetState = traceUnwrapInteger(buffer, index, TRACE_REC_MAZE_GET_STATE);
+		index += TRACE_REC_MAZE_GET_STATE;
 
-		dataSruct.RecCmdSteer = traceUnwrapBool(buffer, index);
-		index++;
+		rxData.MazeSetState = traceUnwrapInteger(buffer, index, TRACE_REC_MAZE_SET_STATE);
+		index += TRACE_REC_MAZE_SET_STATE;
 
-		dataSruct.RecDataSteer = traceUnwrapInteger(buffer, index, TRACE_REC_STEER_SIZE);
-		index += TRACE_REC_STEER_SIZE;
+		rxData.MazeSetKp = traceUnwrapFloat(buffer, index, TRACE_REC_MAZE_SET_KP, TRACE_DECIMALS_MAZE_SET_KP);
+		index += TRACE_REC_MAZE_SET_KP;
 
-		dataSruct.RecCmdPdTd = traceUnwrapBool(buffer, index);
-		index++;
+		rxData.MazeSetKd = traceUnwrapFloat(buffer, index, TRACE_REC_MAZE_SET_KD, TRACE_DECIMALS_MAZE_SET_KD);
+		index += TRACE_REC_MAZE_SET_KD;
 
-		dataSruct.RecDataPdTd_d = traceUnwrapFloat(buffer, index, TRACE_REC_PD_TD_SIZE, TRACE_REC_PD_TD_DECIMALS);
-		index += TRACE_REC_PD_TD_SIZE;
+		rxData.MazeSetSpeed = traceUnwrapInteger(buffer, index, TRACE_REC_MAZE_SET_SPEED);
+		index += TRACE_REC_MAZE_SET_SPEED;
 
-		dataSruct.RecCmdPdKp_x = traceUnwrapBool(buffer, index);
-		index++;
 
-		dataSruct.RecDataPdKp_d = traceUnwrapFloat(buffer, index, TRACE_REC_PD_KP_SIZE, TRACE_REC_PD_KP_DECIMALS);
-		index += TRACE_REC_PD_KP_SIZE;
+		rxData.SRunTryOvertake = traceUnwrapBool(buffer, index);
+		index += TRACE_REC_SRUN_TRY_OVERTAKE;
+
+		rxData.SRunHardReset = traceUnwrapBool(buffer, index);
+		index += TRACE_REC_SRUN_HARD_RESET;
+
+		rxData.SRunSoftReset = traceUnwrapBool(buffer, index);
+		index += TRACE_REC_SRUN_SOFT_RESET;
+
+		rxData.SRunSoftResetTo = traceUnwrapInteger(buffer, index, TRACE_REC_SRUN_SOFT_RESET_TO);
+		index += TRACE_REC_SRUN_SOFT_RESET_TO;
+
+		rxData.SRunGetState = traceUnwrapInteger(buffer, index, TRACE_REC_SRUN_GET_STATE);
+		index += TRACE_REC_SRUN_GET_STATE;
+
+		rxData.SRunSetState = traceUnwrapInteger(buffer, index, TRACE_REC_SRUN_SET_STATE);
+		index += TRACE_REC_SRUN_SET_STATE;
+
+		rxData.SRunSetP = traceUnwrapFloat(buffer, index, TRACE_REC_SRUN_SET_P, TRACE_DECIMALS_SRUN_SET_P);
+		index += TRACE_REC_SRUN_SET_P;
+
+		rxData.SRunSetKp = traceUnwrapFloat(buffer, index, TRACE_REC_SRUN_SET_KP, TRACE_DECIMALS_SRUN_SET_KP);
+		index += TRACE_REC_SRUN_SET_KP;
+
+		rxData.SRunSetKd = traceUnwrapFloat(buffer, index, TRACE_REC_SRUN_SET_KD, TRACE_DECIMALS_SRUN_SET_KD);
+		index += TRACE_DECIMALS_SRUN_SET_KD;
+
+		rxData.SRunSetSpeed = traceUnwrapInteger(buffer, index, TRACE_REC_SRUN_SET_SPEED);
+		index += TRACE_REC_SRUN_SET_SPEED;
 	}
 
-	return dataSruct;
+	return rxData;
 }
 
-cTraceRxBluetoothStruct traceReceiveBluetooth (void)
+// TODO
+cTRACE_RX_DATA traceReceiveBluetooth (void)
 {
 	xQueueReceive(qRecData, &btRxData, 0);
 
@@ -521,6 +512,14 @@ cTraceRxBluetoothStruct traceReceiveBluetooth (void)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
+//**********************************************************************************************************************
+//! Converts a integer value to a unit8_t array so it can be sent out on bluetooth.
+//!
+//! @param value		value that will be sent out
+//! @param member		determines which how sent and what type of data
+//! @param length		how many character has to be sent out
+//! @return				was the conversion successful or not
+//**********************************************************************************************************************
 static bool traceWrapInteger (uint32_t* const value, const eBluetoothLogMember member, const uint32_t length)
 {
 	bool traced = false;
@@ -570,20 +569,15 @@ static bool traceWrapInteger (uint32_t* const value, const eBluetoothLogMember m
 	return traced;
 }
 
-static bool traceWrapBool (bool* const value, const eBluetoothLogMember member)
-{
-	bool traced = false;
-	uint8_t buffer;
-
-	// Convert the bool value to ASCII character.
-	buffer = (uint8_t)(*value) + 0x30;
-
-	// Save the value to the bluetooth log structure.
-	traced = bspLogMemberUpdate(member, &buffer, 1);
-
-	return traced;
-}
-
+//**********************************************************************************************************************
+//!	Converts a bool value to a unit8_t array so it can be sent out on bluetooth.
+//!
+//! @param value		value that will be sent out
+//! @param decimals		how many decimals of the double has to be sent out
+//! @param member		determines which how sent and what type of data
+//! @param length		how many character has to be sent out
+//! @return				was the conversion successful or not
+//**********************************************************************************************************************
 static bool traceWrapFloat (
 								float* const 			  value,
 								const uint32_t 			  decimals,
@@ -653,6 +647,13 @@ static bool traceWrapFloat (
 	return traced;
 }
 
+//**********************************************************************************************************************
+//! Determines a power of 10 that can be used as a bound. With this the vlaue can be satured so it can be sent out in a
+//! given lenght and decimals value.
+//!
+//! @param digits		how many digit the value consist of
+//! @return				the calculated bound
+//**********************************************************************************************************************
 static uint32_t traceGetBoundCharNum (const uint32_t digits)
 {
 	uint32_t upBound = 1;
@@ -666,6 +667,13 @@ static uint32_t traceGetBoundCharNum (const uint32_t digits)
 	return upBound;
 }
 
+//**********************************************************************************************************************
+//! TODO
+//! @param buffer
+//! @param begin
+//! @param size
+//! @return
+//**********************************************************************************************************************
 static uint32_t traceUnwrapInteger (uint8_t* const buffer, uint32_t begin, uint32_t size)
 {
 	uint32_t retVal = 0;
@@ -680,6 +688,12 @@ static uint32_t traceUnwrapInteger (uint8_t* const buffer, uint32_t begin, uint3
 	return retVal;
 }
 
+//**********************************************************************************************************************
+//! TODO
+//! @param buffer
+//! @param begin
+//! @return
+//**********************************************************************************************************************
 static bool traceUnwrapBool (uint8_t* const buffer, uint32_t begin)
 {
 	bool retVal = false;
@@ -698,6 +712,14 @@ static bool traceUnwrapBool (uint8_t* const buffer, uint32_t begin)
 	return retVal;
 }
 
+//**********************************************************************************************************************
+//! TODO
+//! @param buffer
+//! @param begin
+//! @param size
+//! @param decimals
+//! @return
+//**********************************************************************************************************************
 static float traceUnwrapFloat (uint8_t* const buffer, uint32_t begin, uint32_t size, uint32_t decimals)
 {
 	uint32_t digits;
