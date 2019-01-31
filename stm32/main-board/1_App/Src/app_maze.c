@@ -16,6 +16,9 @@
 #include "trace.h"
 #include "remote.h"
 #include "main.h"
+#include "motor.h"
+#include "line.h"
+#include "bsp_servo.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -125,6 +128,13 @@ static uint32_t txActSpeed;
 //! Hold the number of the segment on which the exit point is present.
 static uint32_t txInclinSegment;
 
+static float line_prevPos;
+static float line_pos;
+static float line_diff;
+static float servo_angle;
+static float P_modifier;
+static float D_modifier;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void 	MazeMainStateMachine   (void);
@@ -132,6 +142,7 @@ static void 	MazeProcessRecCommands (void);
 static void 	MazeCheckRemote		   (void);		// TODO REMOVE
 static void 	MazeTraceInformations  (void);
 static uint32_t MazeSegmentsConverter  (void);
+static void		MazeCntrLineFollow	   (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -187,7 +198,8 @@ void Task_Maze (void* p)
 		else if (recStopCar == true)
 		{
 			// Stop signal is received, stop the car.
-
+			actualParams.Speed = 0;
+			motorSetDutyCycle(0);
 		}
 
 		// Indicate if the maze is finished and signal the app_speedRun to start. If hard reset is present, then skip
@@ -200,6 +212,9 @@ void Task_Maze (void* p)
 
 			smMainState = eSTATE_MAIN_OUT;
 		}
+
+		// Detect line and control the servo and the speed of the car.
+		MazeCntrLineFollow();
 
 		// Trace out the necessary infos.
 		MazeTraceInformations();
@@ -228,13 +243,22 @@ static void MazeMainStateMachine (void)
 		case eSTATE_MAIN_READY:
 		{
 			// Standing in the start position and radio trigger.
+			actualParams.Speed = 0;
 
-			// Trigger received -> DISCOVER state.
-			smMainState = eSTATE_MAIN_DISCOVER;
+			if (true)
+			{
+				// Trigger received -> DISCOVER state.
+				smMainState = eSTATE_MAIN_DISCOVER;
+			}
 			break;
 		}
 		case eSTATE_MAIN_DISCOVER:
 		{
+			// Load in the control parameters.
+			actualParams.Kp = paramList.discover.Kp;
+			actualParams.Kd = paramList.discover.Kd;
+			actualParams.Speed = paramList.discover.Speed;
+
 			// Map making, navigation, path tracking.
 
 			// All of the segments are discovered and reached -> INCLINATION state.
@@ -243,6 +267,11 @@ static void MazeMainStateMachine (void)
 		}
 		case eSTATE_MAIN_INCLINATION:
 		{
+			// Load in control parameters.
+			actualParams.Kp = paramList.inclination.Kp;
+			actualParams.Kd = paramList.inclination.Kd;
+			actualParams.Speed = paramList.inclination.Speed;
+
 			//____________________________________________STEP 1________________________________________________
 			// Plan a path to the exit
 
@@ -263,6 +292,7 @@ static void MazeMainStateMachine (void)
 		case eSTATE_MAIN_OUT:
 		{
 			// Stop/Park behind the safety-car.
+			actualParams.Speed = 0;
 
 			// Maze task is finished.
 			mazeFinished = true;
@@ -274,6 +304,28 @@ static void MazeMainStateMachine (void)
 			break;
 		}
 	}
+}
+
+//**********************************************************************************************************************
+//!
+//!
+//! @return -
+//**********************************************************************************************************************
+static void	MazeCntrLineFollow (void)
+{
+	// Detect line.
+	line_prevPos = line_pos;
+	line_pos = lineGetSingle() / 1000; // m -> mm
+	line_diff = line_pos - line_prevPos;
+
+	// Control the servo.
+	P_modifier = line_pos  * actualParams.Kp;
+	D_modifier = line_diff * actualParams.Kd;
+	servo_angle = -0.75f * (P_modifier + D_modifier);
+
+	// Actuate.
+	motorSetDutyCycle(actualParams.Speed);
+	servoSetAngle(servo_angle);
 }
 
 //**********************************************************************************************************************
