@@ -38,7 +38,7 @@ typedef enum
 
 	carDirNum
 }
-CAR_DIR;
+CAR_DIR; // Autó haladási iránya
 
 typedef enum
 {
@@ -48,21 +48,21 @@ typedef enum
 
 	exitTypeNum
 }
-EXIT_TYPE;
+EXIT_TYPE; // Kanyarkijárat típusa
 
 typedef enum
 {
-	dirRight,
-	dirLeft,
+	exitDirRight,
+	exitDirLeft,
 
-	dirNum
+	exitDirNum
 }
-DIR;
+EXIT_DIR; // Lekanyarodás iránya
 
 typedef struct
 {
 	uint8_t     exitVisited[exitTypeNum];
-	DIR         direction;
+	EXIT_DIR         direction;
 	cNAVI_STATE position;
 }
 JUNCTION;
@@ -75,31 +75,41 @@ typedef struct
 	EXIT_TYPE endExit;
 	float     length;
 }
-EDGE;
+PATH;
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 static JUNCTION junctions[JUNCTION_NUM_MAX];
-
 static int junction_num = 0;
 
-static int junctionDetected = 0; // Most
-static int exitDetectedFw   = 0; // Elõre; Az aktuális szakaszon
-static int exitDetectedBw   = 0; // Visszafele; Az aktuális szakaszon
-static int exitFound        = 0; // Úgy általában
+static int junctionDetected = 0;
 
-static EDGE exitEdge;
+static struct {            // Keresztezõdés, amiben éppen állunk
 
-static int currentVertex = 0;
+	CAR_DIR   orientation; // Merre áll az autó?
+	EXIT_DIR  type;        // Right/left
+	EXIT_TYPE entry;       // Hol jöttünk be?
+
+} currentJunction;
+
+static int exitDetected     = 0; // Kijárat észlelve az aktuális szakaszon
+static CAR_DIR exitDir;          // Kijárat orientációja az aktuális haladási irányhoz képest
+
+static struct {
+
+	int  found;
+	PATH path;
+
+} exit;
 
 static CAR_DIR carDirection = carDirForward;
 
 EXIT_TYPE pathExit; // Az a keresztezõdés-kijárat (típus), amelyiken az út végén elindulunk.
 
-EDGE edges[EDGE_NUM_MAX];
+PATH edges[EDGE_NUM_MAX];
 int edge_num = 0;
 
-EDGE currentEdge;
+PATH currentEdge;
 
 int path[PATH_MAX_LEN];
 int path_len = 0;
@@ -114,9 +124,9 @@ static void handleJunction();
 static int whichJunctionIsThis(cNAVI_STATE curNs);
 static void registerPath();
 static int isPathVisited();
-static void addJunction(cNAVI_STATE pos, DIR d);
-static void chooseExit(EXIT_TYPE exitType, DIR exitDir);
-static void switchLine(DIR d);
+static void addJunction(cNAVI_STATE pos, EXIT_DIR d);
+static void chooseExit(EXIT_TYPE exitType, EXIT_DIR exitDir);
+static void switchLine(EXIT_DIR d);
 static void calcPath(int junction, EXIT_TYPE exit);
 static void registerExit();
 static void addForwardEdges();
@@ -172,8 +182,14 @@ static int isMazeComplete()
 
 static void checkRoadSignal()
 {
-	// TODO
+	// TODO (Full saját modul?)
 	// Set junctionDetected, exitFound
+
+	junctionDetected; // Most
+	currentJunction;
+
+	exitDetected; // Kijárat észlelve az aktuális szakaszon
+	exitDir;          // Kijárat orientációja az aktuális haladási irányhoz képest
 }
 
 static void followLine()
@@ -183,7 +199,7 @@ static void followLine()
 
 static void calcExitPath()
 {
-	calcPath(exitEdge.startJunction, exitEdge.startExit);
+	calcPath(exit.path.startJunction, exit.path.startExit);
 }
 
 // This is where the fun begins
@@ -191,13 +207,19 @@ static void handleJunction()
 {
 	int recentlyVisited = junction_num;
 	cNAVI_STATE curNs; // TODO
-	DIR jDir = 0; // TODO keresztezõdés irányának meghatározása
+	EXIT_DIR jDir = 0; // TODO keresztezõdés irányának meghatározása
+
+	// 1. Keresztezõdés számának megállapítása
+	int curJunction = whichJunctionIsThis(curNs);
 
 	// Még nem voltunk itt
-	if (whichJunctionIsThis(curNs) == JUNCTION_NOT_DISCOVERED)
+	if (curJunction == JUNCTION_NOT_DISCOVERED)
 	{
 		addJunction(curNs, jDir);
+		curJunction = junction_num - 1; // utolsó keresztezõdés száma
 	}
+
+	// 2. Orientáció megállapítása TODO
 
 	// Út regisztrálása,
 	// Ha még nem voltunk itt és már nem a rajt után vagyunk
@@ -205,7 +227,7 @@ static void handleJunction()
 	{
 		registerPath();
 
-		if (!exitFound && (exitDetectedFw || exitDetectedBw))
+		if (!exit.found && exitDetected)
 		{
 			registerExit();
 		}
@@ -254,7 +276,7 @@ static void registerPath()
 	addForwardEdges();
 }
 
-static int isPathVisited(EDGE e)
+static int isPathVisited(PATH e)
 {
 	int startVisited = junctions[e.startJunction].exitVisited[e.startExit];
 	int endVisited   = junctions[e.endJunction  ].exitVisited[e.endExit  ];
@@ -300,7 +322,7 @@ static void addForwardEdges()
 	// olyan párját is, aminél a végpontok fel vannak cserélve.
 }*/
 
-static void addJunction(cNAVI_STATE pos, DIR d)
+static void addJunction(cNAVI_STATE pos, EXIT_DIR d)
 {
 	junctions[junction_num].position = pos;
 
@@ -319,29 +341,29 @@ static void addJunction(cNAVI_STATE pos, DIR d)
 //             ^
 //   A keresztezõdés közepe
 //
-static void chooseExit(EXIT_TYPE exitType, DIR exitDir)
+static void chooseExit(EXIT_TYPE exitType, EXIT_DIR exitDir)
 {
-	static const DIR exits[2][dirNum][exitTypeNum] =
+	static const EXIT_DIR exits[2][exitDirNum][exitTypeNum] =
 	{ { {               // |Ori|Crvdir | Exit  |
 			            // +---+-------+-------+
-		dirLeft,        // | ^ | right | front |
+		exitDirLeft,    // | ^ | right | front |
 		DONTCARE,       // | ^ | right | rear  |
-		dirRight        // | ^ | right | side  |
+		exitDirRight    // | ^ | right | side  |
 		},{             // |   |       |       |
-		dirRight,       // | ^ | left  | front |
+		exitDirRight,   // | ^ | left  | front |
 		DONTCARE,       // | ^ | left  | rear  |
-		dirLeft         // | ^ | left  | side  |
+		exitDirLeft     // | ^ | left  | side  |
 		} },{ {         // |   |       |       |
-		dirRight,       // | v | right | front |
+		exitDirRight,   // | v | right | front |
 		DONTCARE,       // | v | right | rear  |
-		dirLeft         // | v | right | side  |
+		exitDirLeft     // | v | right | side  |
 		},{             // |   |       |       |
-		dirLeft,        // | v | left  | front |
+		exitDirLeft,    // | v | left  | front |
 		DONTCARE,       // | v | left  | rear  |
-		dirRight        // | v | left  | side  |
+		exitDirRight    // | v | left  | side  |
 	} } };              // +---+-------+-------+
 
-	static const CAR_DIR car_dir[2][dirNum][exitTypeNum] =
+	static const CAR_DIR car_dir[2][exitDirNum][exitTypeNum] =
 	{ { {               // |Ori|Crvdir | Exit  |
 					    // +---+-------+-------+
 		carDirForward,  // | ^ | right | front |
@@ -361,12 +383,12 @@ static void chooseExit(EXIT_TYPE exitType, DIR exitDir)
 		carDirBackward  // | v | left  | side  |
 	} } };              // +---+-------+-------+
 
-	int orientation = ((currentVertex & JUNCTION_DIR_MASK) == 0);
+	int orientation = currentJunction.orientation;
 	switchLine(exits[orientation][exitDir][exitType]);
 	carDirection = car_dir[orientation][exitDir][exitType];
 }
 
-static void switchLine(DIR d)
+static void switchLine(EXIT_DIR d)
 {
 	// TODO
 	// TODO arra is figyelni kell, ha éppen nem érzékeli mindkét vonalat a szenzor
@@ -382,20 +404,20 @@ static void calcPath(int junction, EXIT_TYPE exit)
 // A következõ keresztezõdésbe éréskor hívódik meg.
 static void registerExit()
 {
-	if (exitDetectedFw)
+	if (1) // TODO orientation
 	{
-		exitEdge = currentEdge;
+		exit.path = currentEdge;
 	}
 	else // Irány megfordítása
 	{
-		exitEdge.startJunction = currentEdge.endJunction   & JUNCTION_DIR_MASK;
-		exitEdge.endJunction   = currentEdge.startJunction & JUNCTION_DIR_MASK;
+		exit.path.startJunction = currentEdge.endJunction   & JUNCTION_DIR_MASK;
+		exit.path.endJunction   = currentEdge.startJunction & JUNCTION_DIR_MASK;
 
-		exitEdge.startExit = currentEdge.endExit;
-		exitEdge.endExit   = currentEdge.startExit;
+		exit.path.startExit = currentEdge.endExit;
+		exit.path.endExit   = currentEdge.startExit;
 	}
 
-	exitFound = 1;
+	exit.found = 1;
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
