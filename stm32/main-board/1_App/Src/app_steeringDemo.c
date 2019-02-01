@@ -59,7 +59,7 @@ static void setParams_brakeIn();
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-cTraceRxBluetoothStruct recData;
+cTRACE_RX_DATA btRxData;
 
 // Global function definitions -----------------------------------------------------------------------------------------
 

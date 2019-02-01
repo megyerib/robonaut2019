@@ -130,19 +130,19 @@ void Task_Navigation(void* p)
 		//______________________________________________________________________________________________________________
 
 		//___________________________________________________ TRACE ____________________________________________________
-		traceBluetooth(BCM_LOG_INERT_ACCEL_X, &acceleration.a_x);
-		traceBluetooth(BCM_LOG_INERT_ACCEL_Y, &acceleration.a_y);
-		traceBluetooth(BCM_LOG_INERT_ACCEL_Z, &acceleration.a_z);
+		traceBluetooth(BT_LOG_NAVI_N, &naviState.p.n);
+		traceBluetooth(BT_LOG_NAVI_E, &naviState.p.e);
+		traceBluetooth(BT_LOG_NAVI_PSI, &naviState.phi);
 
-		traceBluetooth(BCM_LOG_INERT_ANG_VEL_X, &angularVelocity.omega_x);
-		traceBluetooth(BCM_LOG_INERT_ANG_VEL_Y, &angularVelocity.omega_y);
-		traceBluetooth(BCM_LOG_INERT_ANG_VEL_Z, &angularVelocity.omega_z);
+		traceBluetooth(BT_LOG_ENC_V, &v);
 
-		traceBluetooth(BCM_LOG_NAVI_N, &naviState.p.n);
-		traceBluetooth(BCM_LOG_NAVI_E, &naviState.p.e);
-		traceBluetooth(BCM_LOG_NAVI_THETA, &naviState.phi);
+		traceBluetooth(BT_LOG_INERT_ACCEL_X, &acceleration.a_x);
+		traceBluetooth(BT_LOG_INERT_ACCEL_Y, &acceleration.a_y);
+		traceBluetooth(BT_LOG_INERT_ACCEL_Z, &acceleration.a_z);
 
-		traceBluetooth(BCM_LOG_ENC_VEL, &v);
+		traceBluetooth(BT_LOG_INERT_ANG_VEL_X, &angularVelocity.omega_x);
+		traceBluetooth(BT_LOG_INERT_ANG_VEL_Y, &angularVelocity.omega_y);
+		traceBluetooth(BT_LOG_INERT_ANG_VEL_Z, &angularVelocity.omega_z);
 		//______________________________________________________________________________________________________________
 
 		// Trigger the next conversion.

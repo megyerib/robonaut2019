@@ -8,25 +8,24 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include "FreeRTOS.h"
+#include "event_groups.h"
 #include "app_speedRun.h"
-#include "app_common.h"
+#include "trace.h"
 #include "main.h"
+#include "motor.h"
+#include "line.h"
+#include "bsp_servo.h"
+#include "bsp_sharp.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
-
-typedef enum
-{
-	eSTATE_MAIN_READY       = 0,	//! The car is waiting behind the safety car to start.
-	eSTATE_MAIN_PARADE_LAP,			//! The car is following the safety car  in this lap.
-	eSTATE_MAIN_OVERTAKING,			//! The car is overtaking the safety car.
-	eSTATE_MAIN_LAP_1,				//! First lap: The safest algorithm and slowest lap (secure race points).
-	eSTATE_MAIN_LAP_2,				//! Second lap: Lap with moderate speed.
-	eSTATE_MAIN_LAP_3,				//! Third lap: The fastest lap.
-	eSTATE_MAIN_STOP				//!	The car has completed 3 laps and stops.
-} eSTATE_MAIN;
-
 // Local (static) & extern variables -----------------------------------------------------------------------------------
+
+//! Event flag (first bit) that indicates if we have left the maze.
+extern EventGroupHandle_t event_MazeOut;
+//! Flag that indicates if we are on the speed run track.
+static bool	speedRunStarted;
 
 //! This button is used in case the car can not complete the Maze. The car will start waiting behind the safety car
 //! to start the speed run.
@@ -34,7 +33,7 @@ static GPIO_PinState btnHardRstSpeedRun;
 //! GPIO port of the hard reset button.
 static GPIO_TypeDef* btnHardRst_Port;
 //! GPIO pin of the hard reset button.
-static uint16_t      btnHardRst_Pin;
+static uint16_t btnHardRst_Pin;
 
 //! This button is used in that unfortunate case, if the car get lost in the speed run and must be replaced to the line.
 //! IN CASE OF: car is lost, car has crashed, bad overtaking
@@ -42,16 +41,78 @@ static GPIO_PinState btnSoftRstSpeedRun;
 //! GPIO port of the soft reset button.
 static GPIO_TypeDef* btnSoftRst_Port;
 //! GPIO pin of the soft reset button.
-static uint16_t      btnSoftRst_Pin;
+static uint16_t btnSoftRst_Pin;
 
-//! State of the speed run main state machine.
-static eSTATE_MAIN smMainState;
+//! Contains the received serial data.
+static cTRACE_RX_DATA rxData;
+//! Flag that indicates if the car must stop.
+static bool	recStopCar;
+//! Flag that indicates if the overtake action is allowed.
+static bool recTryOvertake;
+//! Flag that indicates if the main state machine must be reset. Car starts from behind the safety car.
+static bool recHardReset;
+//! Flag that indicates if the actual state has to be reset or a it has to be reset to a new state.
+static bool recSoftReset;
+//! State into which the state machine must be reset.
+static uint32_t recSoftResetTo;
+//! Request for the control parameter of this state.
+static uint32_t recGetState;
+//! Update the control parameters of the selected state.
+static uint32_t recSetState;
+//! New P control parameter for the selected state.
+static float recSetP;
+//! New Kp control parameter for the selected state.
+static float recSetKp;
+//! New Kd control parameter for the selected state.
+static float recSetKd;
+//! New Speed control parameter for the selected state.
+static uint32_t recSetSpeed;
+
+//! Actual state of the main state machine.
+static uint32_t txMainSm;
+//! Actual state of the drive state machine.
+static uint32_t txActState;
+//! Actual P control parameter.
+static float txActP;
+//! Actual Kp control parameter.
+static float txActKp;
+//! Actual Kd control parameter.
+static float txActKd;
+//! Actual Speed control parameter.
+static uint32_t txActSpeed;
+//! Requested P control parameter.
+static float txGetP;
+//! Requested Kp control parameter.
+static float txGetKp;
+//! Requested Kd control parameter.
+static float txGetKd;
+//! Requested Speed control parameter.
+static uint32_t	txGetSpeed;
+
+extern bool tryToOvertake;
+extern eSTATE_MAIN smMainState;
+extern uint8_t actLapSegment;
+extern cPD_CONTROLLER_PARAMS actualParams;
+extern cSRUN_PD_CONTROL_PARAM_LIST paramList;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
+
+static void sRunSetLap1Parameters	 (void);
+static void sRunSetLap2Parameters	 (void);
+static void sRunSetLap3Parameters	 (void);
+static void sRunProcessRecCommands   (void);
+static void sRunTraceInformations    (void);
+static void sRunCollectGetParams     (void);
+static void sRunUpdateParams	     (void);
+static void sRunCheckButtonHardRst   (void);
+static void sRunCheckButtonSoftRst   (void);
+static void sRunCheckStartCondition  (void);
+
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void TaskInit_SpeedRun (void)
 {
+	// Configure the GPIOs of the buttons.
 	btnHardRstSpeedRun = GPIO_PIN_SET;
 	//btnHardRst_Port  = GPIOx;
 	//btnHardRst_Pin   = GPIO_PIN_x;
@@ -60,8 +121,14 @@ void TaskInit_SpeedRun (void)
 	//btnSoftRst_Port  = GPIOx;
 	//btnSoftRst_Pin   = GPIO_PIN_x;
 
-	smMainState = eSTATE_MAIN_READY;
+	// Reset the module.
+	speedRunStarted = false;
+	sRunSetLap1Parameters();
+	sRunSetLap2Parameters();
+	sRunSetLap3Parameters();
+	sRunInitStateMachines();
 
+	// Task can be created now.
 	xTaskCreate(Task_SpeedRun,
 				"TASK_SPEED_RUN",
 				DEFAULT_STACK_SIZE,
@@ -76,65 +143,359 @@ void Task_SpeedRun (void* p)
 
 	while (1)
 	{
-		switch (smMainState)
+		// Receive and process the data from the CDT application.
+		sRunProcessRecCommands();
+
+		// Wait until the maze task is running.
+		if (speedRunStarted == false)
 		{
-			case eSTATE_MAIN_READY:
-			{
-
-				break;
-			}
-			case eSTATE_MAIN_PARADE_LAP:
-			{
-
-				break;
-			}
-			case eSTATE_MAIN_OVERTAKING:
-			{
-
-				break;
-			}
-			case eSTATE_MAIN_LAP_1:
-			{
-
-				break;
-			}
-			case eSTATE_MAIN_LAP_2:
-			{
-
-				break;
-			}
-			case eSTATE_MAIN_LAP_3:
-			{
-
-				break;
-			}
-			case eSTATE_MAIN_STOP:
-			{
-
-				break;
-			}
-			default:
-			{
-				break;
-			}
+			sRunCheckStartCondition();
 		}
 
-		// Check the button.
-		btnHardRstSpeedRun = HAL_GPIO_ReadPin(btnHardRst_Port, btnHardRst_Pin);
-		if (btnHardRstSpeedRun == GPIO_PIN_RESET)
+		// Main state machine that drive though the speed run track.
+		if (speedRunStarted == true  && recStopCar == false)
 		{
-			// Reset signal received. Skip the maze and signal to the speed run state machine.
-			// TODO signal to the other task: event bit.
+			sRunMainStateMachine();
+			// TODO drive state machine needs to follow in which segment we are.
+		}
+		else if (recStopCar == true)
+		{
+			// Stop signal is received, stop the car.
+			actualParams.Speed = 0;
+			motorSetDutyCycle(0);
 		}
 
-		// Check the button.
-		btnSoftRstSpeedRun = HAL_GPIO_ReadPin(btnSoftRst_Port, btnSoftRst_Pin);
-		if (btnSoftRstSpeedRun == GPIO_PIN_RESET)
-		{
-			// Reset signal received. Skip the maze and signal to the speed run state machine.
-			// TODO signal to the other task: event bit.
-		}
+		// Check the buttons.
+		sRunCheckButtonHardRst();
+		sRunCheckButtonSoftRst();
+
+		// Detect line and control the servo and the speed of the car.
+		sRunCntrLineFollow();
+
+		// TODO Check for frontal collision.
+
+		// Trace out the speed run informations.
+		sRunTraceInformations();
+
+		vTaskDelay(TASK_DELAY_5_MS);
 	}
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+//**********************************************************************************************************************
+//!	Provides initial values for the control parameters of the Lap1.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunSetLap1Parameters (void)
+{
+	paramList.lap1[0].P = 0;	paramList.lap1[0].Kp = 0;	paramList.lap1[0].Kd = 0;	paramList.lap1[0].Speed = 0;
+	paramList.lap1[1].P = 0; 	paramList.lap1[1].Kp = 0;	paramList.lap1[1].Kd = 0;	paramList.lap1[1].Speed = 0;
+	paramList.lap1[2].P = 0; 	paramList.lap1[2].Kp = 0;	paramList.lap1[2].Kd = 0;	paramList.lap1[2].Speed = 0;
+	paramList.lap1[3].P = 0; 	paramList.lap1[3].Kp = 0;	paramList.lap1[3].Kd = 0;	paramList.lap1[3].Speed = 0;
+	paramList.lap1[4].P = 0; 	paramList.lap1[4].Kp = 0;	paramList.lap1[4].Kd = 0;	paramList.lap1[4].Speed = 0;
+
+	paramList.lap1[5].P = 0; 	paramList.lap1[5].Kp = 0;	paramList.lap1[5].Kd = 0;	paramList.lap1[5].Speed = 0;
+	paramList.lap1[6].P = 0; 	paramList.lap1[6].Kp = 0;	paramList.lap1[6].Kd = 0;	paramList.lap1[6].Speed = 0;
+	paramList.lap1[7].P = 0; 	paramList.lap1[7].Kp = 0;	paramList.lap1[7].Kd = 0;	paramList.lap1[7].Speed = 0;
+	paramList.lap1[8].P = 0; 	paramList.lap1[8].Kp = 0;	paramList.lap1[8].Kd = 0;	paramList.lap1[8].Speed = 0;
+	paramList.lap1[9].P = 0; 	paramList.lap1[9].Kp = 0;	paramList.lap1[9].Kd = 0;	paramList.lap1[9].Speed = 0;
+
+	paramList.lap1[10].P = 0;	paramList.lap1[10].Kp = 0;	paramList.lap1[10].Kd = 0;	paramList.lap1[10].Speed = 0;
+	paramList.lap1[11].P = 0;	paramList.lap1[11].Kp = 0;	paramList.lap1[11].Kd = 0;	paramList.lap1[11].Speed = 0;
+	paramList.lap1[12].P = 0;	paramList.lap1[12].Kp = 0;	paramList.lap1[12].Kd = 0;	paramList.lap1[12].Speed = 0;
+	paramList.lap1[13].P = 0;	paramList.lap1[13].Kp = 0;	paramList.lap1[13].Kd = 0;	paramList.lap1[13].Speed = 0;
+	paramList.lap1[14].P = 0;	paramList.lap1[14].Kp = 0;	paramList.lap1[14].Kd = 0;	paramList.lap1[14].Speed = 0;
+	paramList.lap1[15].P = 0;	paramList.lap1[15].Kp = 0;	paramList.lap1[15].Kd = 0;	paramList.lap1[15].Speed = 0;
+}
+
+//**********************************************************************************************************************
+//! Provides initial values for the control parameters of the Lap2.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunSetLap2Parameters (void)
+{
+	paramList.lap2[0].P = 0;	paramList.lap2[0].Kp = 0;	paramList.lap2[0].Kd = 0;	paramList.lap2[0].Speed = 0;
+	paramList.lap2[1].P = 0; 	paramList.lap2[1].Kp = 0;	paramList.lap2[1].Kd = 0;	paramList.lap2[1].Speed = 0;
+	paramList.lap2[2].P = 0; 	paramList.lap2[2].Kp = 0;	paramList.lap2[2].Kd = 0;	paramList.lap2[2].Speed = 0;
+	paramList.lap2[3].P = 0; 	paramList.lap2[3].Kp = 0;	paramList.lap2[3].Kd = 0;	paramList.lap2[3].Speed = 0;
+	paramList.lap2[4].P = 0; 	paramList.lap2[4].Kp = 0;	paramList.lap2[4].Kd = 0;	paramList.lap2[4].Speed = 0;
+
+	paramList.lap2[5].P = 0; 	paramList.lap2[5].Kp = 0;	paramList.lap2[5].Kd = 0;	paramList.lap2[5].Speed = 0;
+	paramList.lap2[6].P = 0; 	paramList.lap2[6].Kp = 0;	paramList.lap2[6].Kd = 0;	paramList.lap2[6].Speed = 0;
+	paramList.lap2[7].P = 0; 	paramList.lap2[7].Kp = 0;	paramList.lap2[7].Kd = 0;	paramList.lap2[7].Speed = 0;
+	paramList.lap2[8].P = 0; 	paramList.lap2[8].Kp = 0;	paramList.lap2[8].Kd = 0;	paramList.lap2[8].Speed = 0;
+	paramList.lap2[9].P = 0; 	paramList.lap2[9].Kp = 0;	paramList.lap2[9].Kd = 0;	paramList.lap2[9].Speed = 0;
+
+	paramList.lap2[10].P = 0;	paramList.lap2[10].Kp = 0;	paramList.lap2[10].Kd = 0;	paramList.lap2[10].Speed = 0;
+	paramList.lap2[11].P = 0;	paramList.lap2[11].Kp = 0;	paramList.lap2[11].Kd = 0;	paramList.lap2[11].Speed = 0;
+	paramList.lap2[12].P = 0;	paramList.lap2[12].Kp = 0;	paramList.lap2[12].Kd = 0;	paramList.lap2[12].Speed = 0;
+	paramList.lap2[13].P = 0;	paramList.lap2[13].Kp = 0;	paramList.lap2[13].Kd = 0;	paramList.lap2[13].Speed = 0;
+	paramList.lap2[14].P = 0;	paramList.lap2[14].Kp = 0;	paramList.lap2[14].Kd = 0;	paramList.lap2[14].Speed = 0;
+	paramList.lap2[15].P = 0;	paramList.lap2[15].Kp = 0;	paramList.lap2[15].Kd = 0;	paramList.lap2[15].Speed = 0;
+}
+
+//**********************************************************************************************************************
+//! Provides initial values for the control parameters of the Lap3.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunSetLap3Parameters (void)
+{
+	paramList.lap3[0].P = 0;	paramList.lap3[0].Kp = 0;	paramList.lap3[0].Kd = 0;	paramList.lap3[0].Speed = 0;
+	paramList.lap3[1].P = 0; 	paramList.lap3[1].Kp = 0;	paramList.lap3[1].Kd = 0;	paramList.lap3[1].Speed = 0;
+	paramList.lap3[2].P = 0; 	paramList.lap3[2].Kp = 0;	paramList.lap3[2].Kd = 0;	paramList.lap3[2].Speed = 0;
+	paramList.lap3[3].P = 0; 	paramList.lap3[3].Kp = 0;	paramList.lap3[3].Kd = 0;	paramList.lap3[3].Speed = 0;
+	paramList.lap3[4].P = 0; 	paramList.lap3[4].Kp = 0;	paramList.lap3[4].Kd = 0;	paramList.lap3[4].Speed = 0;
+
+	paramList.lap3[5].P = 0; 	paramList.lap3[5].Kp = 0;	paramList.lap3[5].Kd = 0;	paramList.lap3[5].Speed = 0;
+	paramList.lap3[6].P = 0; 	paramList.lap3[6].Kp = 0;	paramList.lap3[6].Kd = 0;	paramList.lap3[6].Speed = 0;
+	paramList.lap3[7].P = 0; 	paramList.lap3[7].Kp = 0;	paramList.lap3[7].Kd = 0;	paramList.lap3[7].Speed = 0;
+	paramList.lap3[8].P = 0; 	paramList.lap3[8].Kp = 0;	paramList.lap3[8].Kd = 0;	paramList.lap3[8].Speed = 0;
+	paramList.lap3[9].P = 0; 	paramList.lap3[9].Kp = 0;	paramList.lap3[9].Kd = 0;	paramList.lap3[9].Speed = 0;
+
+	paramList.lap3[10].P = 0;	paramList.lap3[10].Kp = 0;	paramList.lap3[10].Kd = 0;	paramList.lap3[10].Speed = 0;
+	paramList.lap3[11].P = 0;	paramList.lap3[11].Kp = 0;	paramList.lap3[11].Kd = 0;	paramList.lap3[11].Speed = 0;
+	paramList.lap3[12].P = 0;	paramList.lap3[12].Kp = 0;	paramList.lap3[12].Kd = 0;	paramList.lap3[12].Speed = 0;
+	paramList.lap3[13].P = 0;	paramList.lap3[13].Kp = 0;	paramList.lap3[13].Kd = 0;	paramList.lap3[13].Speed = 0;
+	paramList.lap3[14].P = 0;	paramList.lap3[14].Kp = 0;	paramList.lap3[14].Kd = 0;	paramList.lap3[14].Speed = 0;
+	paramList.lap3[15].P = 0;	paramList.lap3[15].Kp = 0;	paramList.lap3[15].Kd = 0;	paramList.lap3[15].Speed = 0;
+}
+
+//**********************************************************************************************************************
+//! This function gets and processes the serial data.
+//!
+//! @retval -
+//**********************************************************************************************************************
+static void sRunProcessRecCommands (void)
+{
+	rxData = traceGetRxData();
+
+	recTryOvertake	 = rxData.SRunTryOvertake;
+	recHardReset 	 = rxData.SRunHardReset;
+	recSoftReset 	 = rxData.SRunSoftReset;
+	recSoftResetTo   = rxData.SRunSoftResetTo;
+	recGetState 	 = rxData.SRunGetState;
+	recSetState 	 = rxData.SRunSetState;
+	recSetP 		 = rxData.SRunSetP;
+	recSetKp 		 = rxData.SRunSetKp;
+	recSetKd 		 = rxData.SRunSetKd;
+	recSetSpeed  	 = rxData.SRunSetSpeed;
+
+	// Update overtake flag
+	tryToOvertake = recTryOvertake;
+
+	// Emit hard reset in sRunCheckButtonHardRst function.
+	// Emit soft reset in sRunCheckButtonSoftRst function.
+
+	// Get state parameters
+	sRunCollectGetParams();
+
+	// Set parameters
+	sRunUpdateParams();
+}
+
+//**********************************************************************************************************************
+//!	This function send out the informations about the Speed Run task.
+//!
+//! @retval -
+//**********************************************************************************************************************
+static void sRunTraceInformations  (void)
+{
+	txMainSm   = smMainState;
+	txActState = actLapSegment;
+	txActP	   = actualParams.P;
+	txActKp	   = actualParams.Kp;
+	txActKd    = actualParams.Kp;
+	txActSpeed = actualParams.Speed;
+
+	traceBluetooth(BT_LOG_SRUN_MAIN_SM, 	&txMainSm);
+	traceBluetooth(BT_LOG_SRUN_ACT_STATE, 	&txActState);
+	traceBluetooth(BT_LOG_SRUN_ACT_P, 		&txActP);
+	traceBluetooth(BT_LOG_SRUN_ACT_KP, 		&txActKp);
+	traceBluetooth(BT_LOG_SRUN_ACT_KD,		&txActKd);
+	traceBluetooth(BT_LOG_SRUN_ACT_SPEED,	&txActSpeed);
+	traceBluetooth(BT_LOG_SRUN_GET_P, 		&txGetP);
+	traceBluetooth(BT_LOG_SRUN_GET_KP,	 	&txGetKp);
+	traceBluetooth(BT_LOG_SRUN_GET_KD, 		&txGetKd);
+	traceBluetooth(BT_LOG_SRUN_GET_SPEED, 	&txGetSpeed);
+}
+
+//**********************************************************************************************************************
+//! This function collects the requested P, KP, KD, Speed parameters from a specific state.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunCollectGetParams (void)
+{
+	switch (smMainState)
+	{
+		case eSTATE_MAIN_PARADE_LAP:
+		{
+			txGetP		= paramList.lapParade.P;
+			txGetKp		= paramList.lapParade.Kp;
+			txGetKd		= paramList.lapParade.Kd;
+			txGetSpeed	= paramList.lapParade.Speed;
+			break;
+		}
+		case eSTATE_MAIN_OVERTAKING:
+		{
+			txGetP		= paramList.overtaking.P;
+			txGetKp		= paramList.overtaking.Kp;
+			txGetKd		= paramList.overtaking.Kd;
+			txGetSpeed	= paramList.overtaking.Speed;
+			break;
+		}
+		case eSTATE_MAIN_LAP_1:
+		{
+			txGetP		= paramList.lap1[recGetState].P;
+			txGetKp		= paramList.lap1[recGetState].Kp;
+			txGetKd		= paramList.lap1[recGetState].Kd;
+			txGetSpeed	= paramList.lap1[recGetState].Speed;
+			break;
+		}
+		case eSTATE_MAIN_LAP_2:
+		{
+			txGetP		= paramList.lap2[recGetState].P;
+			txGetKp		= paramList.lap2[recGetState].Kp;
+			txGetKd		= paramList.lap2[recGetState].Kd;
+			txGetSpeed	= paramList.lap2[recGetState].Speed;
+			break;
+		}
+		case eSTATE_MAIN_LAP_3:
+		{
+			txGetP		= paramList.lap3[recGetState].P;
+			txGetKp		= paramList.lap3[recGetState].Kp;
+			txGetKd		= paramList.lap3[recGetState].Kd;
+			txGetSpeed	= paramList.lap3[recGetState].Speed;
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+}
+
+//**********************************************************************************************************************
+//!	This function updates the control parameters of a selected state.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunUpdateParams (void)
+{
+	switch (smMainState)
+	{
+		case eSTATE_MAIN_PARADE_LAP:
+		{
+			paramList.lapParade.P     = recSetP;
+			paramList.lapParade.Kp	  = recSetKp;
+			paramList.lapParade.Kd	  =	recSetKd;
+			paramList.lapParade.Speed = recSetSpeed;
+			break;
+		}
+		case eSTATE_MAIN_OVERTAKING:
+		{
+			paramList.overtaking.P     = recSetP;
+			paramList.overtaking.Kp	   = recSetKp;
+			paramList.overtaking.Kd	   = recSetKd;
+			paramList.overtaking.Speed = recSetSpeed;
+			break;
+		}
+		case eSTATE_MAIN_LAP_1:
+		{
+			paramList.lap1[recSetState].P     = recSetP;
+			paramList.lap1[recSetState].Kp	  = recSetKp;
+			paramList.lap1[recSetState].Kd	  =	recSetKd;
+			paramList.lap1[recSetState].Speed = recSetSpeed;
+			break;
+		}
+		case eSTATE_MAIN_LAP_2:
+		{
+			paramList.lap2[recSetState].P     = recSetP;
+			paramList.lap2[recSetState].Kp	  = recSetKp;
+			paramList.lap2[recSetState].Kd	  =	recSetKd;
+			paramList.lap2[recSetState].Speed = recSetSpeed;
+			break;
+		}
+		case eSTATE_MAIN_LAP_3:
+		{
+			paramList.lap3[recSetState].P     = recSetP;
+			paramList.lap3[recSetState].Kp	  = recSetKp;
+			paramList.lap3[recSetState].Kd	  =	recSetKd;
+			paramList.lap3[recSetState].Speed = recSetSpeed;
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+}
+
+//**********************************************************************************************************************
+//!	This function is responsible for checking the Hard reset button and signaling if it was pressed.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunCheckButtonHardRst (void)
+{
+	btnHardRstSpeedRun = HAL_GPIO_ReadPin(btnHardRst_Port, btnHardRst_Pin);
+	if (btnHardRstSpeedRun == GPIO_PIN_RESET || recHardReset == true)
+	{
+		// Reset signal received. Skip the maze and signal to the speed run state machine.
+
+		// Reset the state machine.
+		smMainState = eSTATE_MAIN_PARADE_LAP;
+		actLapSegment = 0;
+
+		// Signal to the maze task that we are out of the maze.
+		xEventGroupSetBits(event_MazeOut, 0);
+
+		// Reset event is handled.
+		recHardReset = false;
+	}
+}
+
+//**********************************************************************************************************************
+//!	This function check the soft reset button and if it was pressed, then resets the state machine.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunCheckButtonSoftRst (void)
+{
+	btnSoftRstSpeedRun = HAL_GPIO_ReadPin(btnSoftRst_Port, btnSoftRst_Pin);
+	if (btnSoftRstSpeedRun == GPIO_PIN_RESET || recSoftReset == true)
+	{
+		// Reset signal received. Skip the maze and signal to the speed run state machine.
+
+		if (recSoftReset == true)
+		{
+			actLapSegment = recSoftResetTo;
+		}
+		else
+		{
+			// TODO think this through.
+			// actLapSegment =
+		}
+
+		// Reset event is handled.
+		recSoftReset = false;
+	}
+}
+
+//**********************************************************************************************************************
+//! This function checks if the maze task is finished and the speed run can be started.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunCheckStartCondition (void)
+{
+	// Wait for the event.
+	if (xEventGroupGetBits(event_MazeOut) > 0)
+	{
+		speedRunStarted = true;
+	}
+}

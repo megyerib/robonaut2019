@@ -8,7 +8,7 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include <bsp_bluetooth.h>
+#include "bsp_bluetooth.h"
 #include "usart.h"
 #include "bsp_uart.h"
 
@@ -20,9 +20,6 @@ cBluetoothLog btLog;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-//! Reads out the module structure that holds the bluetooth logs.
-//!
-//! @param log		this will get the values
 static void bcmLogGet (cBluetoothLog* const log);
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -110,7 +107,7 @@ void bspBtBufferFlush (void)
 	uint32_t header = 2;
 	uint32_t msgSize = 3;
 	uint32_t footer = 2;
-	uint32_t bufSize = BCM_LOG_SIZE + header + msgSize + footer;
+	uint32_t bufSize = BT_LOG_SIZE + header + msgSize + footer;
 	uint8_t btBuffer[bufSize];
 	cBluetoothLog log;
 	uint32_t index = 0;
@@ -139,7 +136,7 @@ void bspBtBufferFlush (void)
 
 	// Send out the message
 	bspUartTransmit_IT(Uart_Bluetooth, btBuffer, bufSize);
-	// TODO for qt debug
+	// TODO BtFlush send out on usb too.
 	bspUartTransmit_IT(Uart_USB, btBuffer, bufSize);
 }
 
@@ -149,74 +146,141 @@ bool bspLogMemberUpdate (const eBluetoothLogMember member, uint8_t* const array,
 
 	// Save the value into right slot of the structure.
 	switch (member) {
-		case BCM_LOG_SHARP_DISTANCE:
-			memcpy(btLog.sharpDistant, array, len);
-			break;
-		case BCM_LOG_SHARP_COLLISION_WARNING:
-			memcpy(btLog.sharpCollisionWarning, array, len);
-			break;
-		case BCM_LOG_SERVO_ANGLE:
-			memcpy(btLog.servoAngle, array, len);
-			break;
-		case BCM_LOG_INERT_ACCEL_X:
-			memcpy(btLog.inertAccelX, array, len);
-			break;
-		case BCM_LOG_INERT_ACCEL_Y:
-			memcpy(btLog.inertAccelY, array, len);
-			break;
-		case BCM_LOG_INERT_ACCEL_Z:
-			memcpy(btLog.inertAccelZ, array, len);
-			break;
-		case BCM_LOG_INERT_ANG_VEL_X:
-			memcpy(btLog.inertAngVelX, array, len);
-			break;
-		case BCM_LOG_INERT_ANG_VEL_Y:
-			memcpy(btLog.inertAngVelY, array, len);
-			break;
-		case BCM_LOG_INERT_ANG_VEL_Z:
-			memcpy(btLog.inertAngVelZ, array, len);
-			break;
-		case BCM_LOG_NAVI_N:
+		case BT_LOG_NAVI_N:
 			memcpy(btLog.naviN, array, len);
 			break;
-		case BCM_LOG_NAVI_E:
+		case BT_LOG_NAVI_E:
 			memcpy(btLog.naviE, array, len);
 			break;
-		case BCM_LOG_NAVI_THETA:
-			memcpy(btLog.naviTheta, array, len);
+		case BT_LOG_NAVI_PSI:
+			memcpy(btLog.naviPsi, array, len);
 			break;
-		case BCM_LOG_ENC_VEL:
-			memcpy(btLog.encVel, array, len);
+		case BT_LOG_ENC_V:
+			memcpy(btLog.encV, array, len);
 			break;
-		case BCM_LOG_TOF_1_DISTANCE:
-			memcpy(btLog.tof1Distance, array, len);
+		case BT_LOG_DIST_TOF_1:
+			memcpy(btLog.distToF1, array, len);
 			break;
-		case BCM_LOG_TOF_2_DISTANCE:
-			memcpy(btLog.tof2Distance, array, len);
+		case BT_LOG_DIST_TOF_2:
+			memcpy(btLog.distToF2, array, len);
 			break;
-		case BCM_LOG_TOF_3_DISTANCE:
-			memcpy(btLog.tof3Distance, array, len);
+		case BT_LOG_DIST_TOF_3:
+			memcpy(btLog.distToF3, array, len);
 			break;
-		case BCM_LOG_MTR_MAIN_BAT_VOLT:
+		case BT_LOG_DIST_SHARP_1:
+			memcpy(btLog.distSharp1, array, len);
+			break;
+		case BT_LOG_INERT_ACCEL_X:
+			memcpy(btLog.inertAccX, array, len);
+			break;
+		case BT_LOG_INERT_ACCEL_Y:
+			memcpy(btLog.inertAccY, array, len);
+			break;
+		case BT_LOG_INERT_ACCEL_Z:
+			memcpy(btLog.inertAccZ, array, len);
+			break;
+		case BT_LOG_INERT_ANG_VEL_X:
+			memcpy(btLog.inertAngVelX, array, len);
+			break;
+		case BT_LOG_INERT_ANG_VEL_Y:
+			memcpy(btLog.inertAngVelY, array, len);
+			break;
+		case BT_LOG_INERT_ANG_VEL_Z:
+			memcpy(btLog.inertAngVelZ, array, len);
+			break;
+		case BT_LOG_STEER_WHEEL_ANGLE:
+			memcpy(btLog.steerWheelAngle, array, len);
+			break;
+		case BT_LOG_SERVO_ANGLE:
+			memcpy(btLog.servoAngle, array, len);
+			break;
+
+		case BT_LOG_MTR_MAIN_BAT_VOLT:
 			memcpy(btLog.mtrMainBatVolt, array, len);
 			break;
-		case BCM_LOG_MTR_SEC_BAT_VOLT:
+		case BT_LOG_MTR_SEC_BAT_VOLT:
 			memcpy(btLog.mtrSecBatVolt, array, len);
 			break;
-		case BCM_LOG_MTR_CURR:
+		case BT_LOG_MTR_MOTOR_CURR:
 			memcpy(btLog.mtrCurr, array, len);
 			break;
-		case BCM_LOG_MTR_SYS_CURR:
+		case BT_LOG_MTR_SYS_CURR:
 			memcpy(btLog.mtrSysCurr, array, len);
 			break;
-		case BCM_LOG_MTR_SRV_CURR:
+		case BT_LOG_MTR_SERVO_CURR:
 			memcpy(btLog.mtrSrvCurr, array, len);
 			break;
-		case BCM_LOG_MTR_CMD_STOP_ENGINE:
-			memcpy(btLog.mtrCmdStopEngine, array, len);
+
+		case BT_LOG_LINE_LINE_NBR:
+			memcpy(btLog.lineLineNbr, array, len);
 			break;
-		case BCM_LOG_CTR_MTR_CURR:
-			memcpy(btLog.ctrMtrCurr, array, len);
+		case BT_LOG_LINE_MAIN_LINE_POS:
+			memcpy(btLog.lineMainLinePos, array, len);
+			break;
+		case BT_LOG_LINE_SEC_LINE_POS:
+			memcpy(btLog.lineSecLinePos, array, len);
+			break;
+
+		case BT_LOG_MAZE_MAIN_SM:
+			memcpy(btLog.mazeMainSM, array, len);
+			break;
+		case BT_LOG_MAZE_GET_KP:
+			memcpy(btLog.mazeGetKp, array, len);
+			break;
+		case BT_LOG_MAZE_GET_KD:
+			memcpy(btLog.mazeGetKd, array, len);
+			break;
+		case BT_LOG_MAZE_GET_SPEED:
+			memcpy(btLog.mazeGetSpeed, array, len);
+			break;
+		case BT_LOG_MAZE_SEGMENTS:
+			memcpy(btLog.mazeSegments, array, len);
+			break;
+		case BT_LOG_MAZE_ACT_STATE:
+			memcpy(btLog.mazeActState, array, len);
+			break;
+		case BT_LOG_MAZE_ACT_KP:
+			memcpy(btLog.mazeActKp, array, len);
+			break;
+		case BT_LOG_MAZE_ACT_KD:
+			memcpy(btLog.mazeActKd, array, len);
+			break;
+		case BT_LOG_MAZE_ACT_SPEED:
+			memcpy(btLog.mazeActSpeed, array, len);
+			break;
+		case BT_LOG_MAZE_INCLIN_SEGMENT:
+			memcpy(btLog.mazeInclinSegment, array, len);
+			break;
+
+		case BT_LOG_SRUN_MAIN_SM:
+			memcpy(btLog.sRunMainSm, array, len);
+			break;
+		case BT_LOG_SRUN_ACT_STATE:
+			memcpy(btLog.sRunActState, array, len);
+			break;
+		case BT_LOG_SRUN_ACT_P:
+			memcpy(btLog.sRunActP, array, len);
+			break;
+		case BT_LOG_SRUN_ACT_KP:
+			memcpy(btLog.sRunActKp, array, len);
+			break;
+		case BT_LOG_SRUN_ACT_KD:
+			memcpy(btLog.sRunActKd, array, len);
+			break;
+		case BT_LOG_SRUN_ACT_SPEED:
+			memcpy(btLog.sRunActSpeed, array, len);
+			break;
+		case BT_LOG_SRUN_GET_P:
+			memcpy(btLog.sRunGetP, array, len);
+			break;
+		case BT_LOG_SRUN_GET_KP:
+			memcpy(btLog.sRunGetKp, array, len);
+			break;
+		case BT_LOG_SRUN_GET_KD:
+			memcpy(btLog.sRunGetKd, array, len);
+			break;
+		case BT_LOG_SRUN_GET_SPEED:
+			memcpy(btLog.sRunGetSpeed, array, len);
 			break;
 		default:
 			success = false;
@@ -238,6 +302,11 @@ void bspBtReceive (uint8_t* const rxBuffer, const uint16_t length)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
+//**********************************************************************************************************************
+//! Reads out the module structure that holds the bluetooth logs.
+//!
+//! @param log		this will get the values
+//**********************************************************************************************************************
 void bcmLogGet (cBluetoothLog* const log)
 {
 	// Copy the log structure into the pointer

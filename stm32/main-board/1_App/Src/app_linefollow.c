@@ -40,7 +40,7 @@ static double T;		// sec
 
 static cFirstOrderTF contrPD;
 
-static cTraceRxBluetoothStruct recBtData;
+static cTRACE_RX_DATA recBtData;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -91,7 +91,7 @@ static void Task_LineFollow (void* p)
     while (1)
     {
     	// TODO
-    	recBtData = traceReceiveBluetooth();
+    	recBtData = traceGetRxData();
     	/*if (recBtData.RecCmdPdKp_x == true)
     	{
         	controllerPdConfigure(&contrPD, recBtData.RecDataPdKp_d, Td, T);
@@ -104,7 +104,7 @@ static void Task_LineFollow (void* p)
 
     	// Get new measurements of the line p distance.
     	p_meas = lineGetSingle();
-    	traceBluetooth(BCM_LOG_LINE_D, &p_meas);
+    	traceBluetooth(BT_LOG_LINE_MAIN_LINE_POS, &p_meas);
 
     	// Calculate control error.
     	e = p_a - p_meas;
@@ -123,7 +123,7 @@ static void Task_LineFollow (void* p)
     	{
     		steerSetAngle(3.14159265359/180 * phi_a);
     	}*/
-    	traceBluetooth(BCM_LOG_SERVO_ANGLE, &phi_a);
+    	traceBluetooth(BT_LOG_SERVO_ANGLE, &phi_a);
 
     	motorSetDutyCycle(pwm);
     	/*if (recBtData.RecCmdAccelerate == true)
@@ -144,7 +144,7 @@ static void Task_LineFollow (void* p)
 
         	motorSetDutyCycle(duty);
     	}*/
-    	traceBluetooth(BCM_LOG_CTR_MTR_CURR, &pwm);
+    	//traceBluetooth(BCM_LOG_CTR_MTR_CURR, &pwm);
 
     	//TODO const to define
     	vTaskDelay(5);
