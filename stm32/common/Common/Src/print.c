@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
-//!  \file      speed.c
+//!  \file      print.c
 //!  \brief
 //!  \details
 //!
@@ -8,55 +8,46 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
-#include "speed.h"
-#include "tim.h"
+#include "print.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
-
-#define MUL_DIST     (1.0f)    /* TODO */
-#define MUL_SPEED    (1.0f)    /* TODO */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static uint32_t prev_cntrval = 0;
-static uint32_t cur_cntrval = 0;
-static uint32_t cntrDiff = 0;
-
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void speedInit()
+void print_uint32_t(uint32_t num, char* dst, int* len)
 {
-	HAL_TIM_Base_Start_IT(&htim4);
-	HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
-}
+	if (num == 0)
+	{
+		dst[0] = '0';
+	}
+	else
+	{
+		int digits[10];
+		int dnum = 0;
+		int i;
 
-float speedGet()
-{
-	return cntrDiff * MUL_SPEED;
-}
+		while (num > 0)
+		{
+			digits[dnum] = num % 10;
+			num /= 10;
+			dnum++;
+		}
 
-uint32_t speedGetCounter()
-{
-	return cur_cntrval;
-}
+		for (i = 0; i < dnum; i++)
+		{
+			dst[i] = '0' + digits[dnum - 1 - i];
+		}
 
-float speedGetDistance()
-{
-	return cur_cntrval * MUL_DIST;
-}
-
-void speedCallback()
-{
-	__disable_irq();
-	prev_cntrval = cur_cntrval;
-	cur_cntrval  = TIM3->CNT;
-
-	cntrDiff = cur_cntrval - prev_cntrval;
-	__enable_irq();
+		*len = dnum;
+	}
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+// END -----------------------------------------------------------------------------------------------------------------

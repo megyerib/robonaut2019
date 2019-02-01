@@ -19,6 +19,7 @@
 #include "app_inertCalibration.h"
 #include "app_maze.h"
 #include "app_speedRun.h"
+#include "app_speedcal.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -47,14 +48,18 @@ void Init()
 //! Initialize app layer modules
 static void appInit()
 {
-	TaskInit_CarDiagnosticsTool();
-	TaskInit_Sharp();
+	//TaskInit_CarDiagnosticsTool();
+	//TaskInit_Sharp();
 	//TaskInit_InertialCalibration();
-	TaskInit_Navigation();
-	//TaskInit_steeringDemo();
+	//TaskInit_Navigation();
+	TaskInit_steeringDemo();
 
-	TaskInit_Maze();
-	TaskInit_SpeedRun();
+	//TaskInit_Maze();
+	//TaskInit_SpeedRun();
+
+	// Calibration:
+
+	//TaskInit_SpeedCalibration();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
