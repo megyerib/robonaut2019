@@ -331,7 +331,7 @@ static void	MazeCntrLineFollow (void)
 
 	// Detect line.
 	line_prevPos = line_pos;
-	line_pos = lineGetSingle() / 1000; // m -> mm
+	line_pos = lineGetSingle() * 1000; // m -> mm
 	line_diff = line_pos - line_prevPos;
 
 	// Control the servo.
@@ -471,7 +471,7 @@ static void MazeTraceInformations  (void)
 
 	if (lineGetRoadSignal() != Nothing)
 	{
-		txLineSecLinePos = lineGetRawFront().lines[2];
+		txLineSecLinePos = lineGetRawFront().lines[0];
 	}
 
 	traceBluetooth(BT_LOG_STEER_WHEEL_ANGLE, &txSteerWheelAngle);
