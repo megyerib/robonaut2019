@@ -108,23 +108,29 @@ static uint32_t recSetSpeed;
 //! Holds the actual state of the main state machine.
 static uint32_t txMainSM;
 //! Holds the Kp parameter of the requested state.
-static float 	txGetKp;
+static float txGetKp;
 //! Holds the Kd parameter of the requested state.
-static float 	txGetKd;
+static float txGetKd;
 //! Holds the Speed parameter of the requested state.
-static float 	txGetSpeed;
+static uint32_t	txGetSpeed;
 //! Contains the information about the segments if they are discovered or not.
 static uint32_t txSegments;
 //! Holds the actual state of the car.
 static uint32_t txActState;
 //! Holds the Kp parameter of the actual state.
-static float    txActKp;
+static float txActKp;
 //! Holds the Kd parameter of the actual state.
-static float    txActKd;
+static float txActKd;
 //! Holds the Speed parameter of the actual state.
 static uint32_t txActSpeed;
 //! Hold the number of the segment on which the exit point is present.
 static uint32_t txInclinSegment;
+
+static float txSteerWheelAngle;
+static float txServoAngle;
+static uint8_t txLineNumber;
+static float txLineMainLinePos;
+static float txLineSecLinePos;
 
 //! Position of the main line in the previous task period.
 static float line_prevPos;
@@ -135,7 +141,7 @@ static float line_pos;
 
 static void 	MazeMainStateMachine   (void);
 static void 	MazeProcessRecCommands (void);
-static void 	MazeCheckRemote		   (void);		// TODO REMOVE
+static void 	MazeCheckRemote		   (void);
 static void 	MazeTraceInformations  (void);
 static uint32_t MazeSegmentsConverter  (void);
 static void		MazeCntrLineFollow	   (void);
@@ -267,7 +273,7 @@ static void MazeMainStateMachine (void)
 			//TODO implement
 
 			// All of the segments are discovered and reached -> INCLINATION state.
-			smMainState = eSTATE_MAIN_INCLINATION;
+			//smMainState = eSTATE_MAIN_INCLINATION;
 			break;
 		}
 		case eSTATE_MAIN_INCLINATION:
@@ -291,7 +297,7 @@ static void MazeMainStateMachine (void)
 			// then stop.
 
 			// New lines found -> OUT state.
-			smMainState = eSTATE_MAIN_OUT;
+			//smMainState = eSTATE_MAIN_OUT;
 			break;
 		}
 		case eSTATE_MAIN_OUT:
@@ -336,6 +342,10 @@ static void	MazeCntrLineFollow (void)
 	// Actuate.
 	motorSetDutyCycle(actualParams.Speed);
 	servoSetAngle(servo_angle);
+
+	// Trace
+	txServoAngle = servo_angle;
+	txLineMainLinePos = line_pos;
 }
 
 //**********************************************************************************************************************
@@ -455,6 +465,20 @@ static void MazeTraceInformations  (void)
 	traceBluetooth(BT_LOG_MAZE_ACT_KD, 		   &txActKd);
 	traceBluetooth(BT_LOG_MAZE_ACT_SPEED, 	   &txActSpeed);
 	traceBluetooth(BT_LOG_MAZE_INCLIN_SEGMENT, &txInclinSegment);
+
+	txServoAngle = servoGetAngle();
+	txLineNumber = lineGetRawFront().cnt;
+
+	if (lineGetRoadSignal() != Nothing)
+	{
+		txLineSecLinePos = lineGetRawFront().lines[2];
+	}
+
+	traceBluetooth(BT_LOG_STEER_WHEEL_ANGLE, &txSteerWheelAngle);
+	traceBluetooth(BT_LOG_SERVO_ANGLE, &txServoAngle);
+	traceBluetooth(BT_LOG_LINE_LINE_NBR, &txLineNumber);
+	traceBluetooth(BT_LOG_LINE_MAIN_LINE_POS, &txLineMainLinePos);
+	traceBluetooth(BT_LOG_LINE_SEC_LINE_POS, &txLineSecLinePos);
 }
 
 //**********************************************************************************************************************

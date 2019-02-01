@@ -492,7 +492,7 @@ void traceProcessRxData (uint8_t* const buffer)
 		index += TRACE_REC_SRUN_SET_KP;
 
 		rxData.SRunSetKd = traceUnwrapFloat(buffer, index, TRACE_REC_SRUN_SET_KD, TRACE_DECIMALS_SRUN_SET_KD);
-		index += TRACE_DECIMALS_SRUN_SET_KD;
+		index += TRACE_REC_SRUN_SET_KD;
 
 		rxData.SRunSetSpeed = traceUnwrapInteger(buffer, index, TRACE_REC_SRUN_SET_SPEED);
 		index += TRACE_REC_SRUN_SET_SPEED;
