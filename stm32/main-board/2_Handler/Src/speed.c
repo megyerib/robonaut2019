@@ -13,8 +13,8 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define MUL_DIST     (1.0f)    /* TODO */
-#define MUL_SPEED    (1.0f)    /* TODO */
+#define MUL_DIST     (1.0f/140702.0f)    /* TODO */
+#define MUL_SPEED    (1.0f)              /* TODO */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -33,8 +33,7 @@ static uint32_t position = 0;
 void speedInit()
 {
 	HAL_TIM_Base_Start_IT(&htim4);
-	HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
-	//HAL_TIM_Base_Start(&htim9);
+	HAL_TIM_Encoder_Start(&htim5, TIM_CHANNEL_ALL);
 }
 
 float speedGet()
@@ -57,7 +56,7 @@ void speedCallback()
 	uint32_t tim_val;
 
 	__disable_irq();
-	tim_val  = TIM3->CNT;
+	tim_val  = TIM5->CNT;
 	__enable_irq();
 
 	prev_cntrval = cur_cntrval;

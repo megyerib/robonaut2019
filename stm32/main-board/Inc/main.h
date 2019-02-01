@@ -103,10 +103,6 @@ void Error_Handler(void);
 #define SHRP_SENS_AD14_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
-#define ENC_A_TIM31_Pin GPIO_PIN_6
-#define ENC_A_TIM31_GPIO_Port GPIOA
-#define ENC_B_TIM32_Pin GPIO_PIN_7
-#define ENC_B_TIM32_GPIO_Port GPIOA
 #define INRT_CS_Pin GPIO_PIN_4
 #define INRT_CS_GPIO_Port GPIOC
 #define INRT_SD0_Pin GPIO_PIN_14
