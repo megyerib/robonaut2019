@@ -13,15 +13,16 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define MUL    (1.0f)
+#define MUL_DIST     (1.0f)    /* TODO */
+#define MUL_SPEED    (1.0f)    /* TODO */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static uint16_t prev_cntrval = 0;
-static uint16_t cur_cntrval = 0;
-static uint16_t cntrDiff = 0;
+static uint32_t prev_cntrval = 0;
+static uint32_t cur_cntrval = 0;
+static uint32_t cntrDiff = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -33,11 +34,14 @@ void speedInit()
 	HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
 }
 
-int16_t speedGet()
+float speedGet()
 {
-	float speed = cntrDiff * MUL;
+	return cntrDiff * MUL_SPEED;
+}
 
-	return speed;
+float speedGetDistance()
+{
+	return cur_cntrval * MUL_DIST;
 }
 
 void speedCallback()
