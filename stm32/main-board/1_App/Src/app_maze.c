@@ -69,13 +69,11 @@ typedef struct
 
 //! Event flag (first bit) that indicates if we have left the maze.
 EventGroupHandle_t event_MazeOut;
-
 //! Flag that indicates if the maze task is finished.
 static bool mazeFinished;
 
 //! This variable indicates the actual state of the main state machine of the maze algorithm.
 static eSTATE_MAIN smMainState;
-
 //! The graph map of the labyrinth.
 static cSEGMENT map[20];
 //! A list of the discoverable segments. A bit is set when the segment was found and the car has driven it through.
@@ -128,12 +126,10 @@ static uint32_t txActSpeed;
 //! Hold the number of the segment on which the exit point is present.
 static uint32_t txInclinSegment;
 
+//! Position of the main line in the previous task period.
 static float line_prevPos;
+//! Position of the main line in the current task period.
 static float line_pos;
-static float line_diff;
-static float servo_angle;
-static float P_modifier;
-static float D_modifier;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -148,6 +144,9 @@ static void		MazeCntrLineFollow	   (void);
 
 void TaskInit_Maze (void)
 {
+	event_MazeOut = xEventGroupCreate();
+	xEventGroupClearBits(event_MazeOut, 1);
+
 	mazeFinished = false;
 
 	// Start in the Ready state.
@@ -165,11 +164,13 @@ void TaskInit_Maze (void)
 	// Initial parameters of the Discover state.
 	paramList.inclination.Kp	 = 1;
 	paramList.inclination.Kd	 = 1;
-	paramList.inclination.Speed = 0;
+	paramList.inclination.Speed  = 0;
 
-	event_MazeOut = xEventGroupCreate();
-	xEventGroupClearBits(event_MazeOut, 1);
+	// Initial parameters for the line follower controller.
+	line_pos 	 = 0;
+	line_prevPos = 0;
 
+	// Task can be created now.
 	xTaskCreate(Task_Maze,
 				"TASK_MAZE",
 				DEFAULT_STACK_SIZE,
@@ -216,6 +217,8 @@ void Task_Maze (void* p)
 		// Detect line and control the servo and the speed of the car.
 		MazeCntrLineFollow();
 
+		// TODO Check for frontal collision.
+
 		// Trace out the necessary infos.
 		MazeTraceInformations();
 
@@ -245,6 +248,7 @@ static void MazeMainStateMachine (void)
 			// Standing in the start position and radio trigger.
 			actualParams.Speed = 0;
 
+			//TODO Wait for the start radio signal.
 			if (true)
 			{
 				// Trigger received -> DISCOVER state.
@@ -260,6 +264,7 @@ static void MazeMainStateMachine (void)
 			actualParams.Speed = paramList.discover.Speed;
 
 			// Map making, navigation, path tracking.
+			//TODO implement
 
 			// All of the segments are discovered and reached -> INCLINATION state.
 			smMainState = eSTATE_MAIN_INCLINATION;
@@ -307,12 +312,17 @@ static void MazeMainStateMachine (void)
 }
 
 //**********************************************************************************************************************
-//!
+//! TODO
 //!
 //! @return -
 //**********************************************************************************************************************
 static void	MazeCntrLineFollow (void)
 {
+	float line_diff;
+	float servo_angle;
+	float P_modifier;
+	float D_modifier;
+
 	// Detect line.
 	line_prevPos = line_pos;
 	line_pos = lineGetSingle() / 1000; // m -> mm

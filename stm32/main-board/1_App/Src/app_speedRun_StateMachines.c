@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file      app_speedRun_StateMachines.c
-//!  \brief
-//!  \details
+//!  \brief		This is a submodule that hold the state machines and the controller of the speed run app.
+//!  \details	See in app_speedRun_StateMachine.h
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -31,33 +31,23 @@ cPD_CONTROLLER_PARAMS actualParams;
 //! Contain all of the control parameters.
 cSRUN_PD_CONTROL_PARAM_LIST paramList;
 
-//! Flag that indicates that the car is behind the safety car.
-static bool behindSafetyCar;
 //! During the Parade lap the car is allowed to try to overtake the safety car.
 bool tryToOvertake;
+//! Flag that indicates that the car is behind the safety car.
+static bool behindSafetyCar;
 //! Flag that indicates if the car went through the start gate, which means a new lap is started.
 static bool startGateFound;
 //! Counter for the individual timing functionalities.
 static uint32_t timeCounter;
 
-//! Line position in the previous task run.
-static float line_prevPos;
 //! Line position in the actual task run.
 static float line_pos;
-//!
-static float line_diff;
-//!
-static float servo_angle;
-//!
-static float P_modifier;
-//!
-static float D_modifier;
-//!
-static float dist_front;
-//!
-static float dist_frontPrev;
-//!
-static float dist_diff;
+//! Line position in the previous task run.
+static float line_prevPos;
+//! Measured distance value in front of the car in the actual task run.
+static uint32_t dist_front;
+//! Measured distance value in front of the car in the previous task run.
+static uint32_t dist_frontPrev;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -77,20 +67,15 @@ void sRunInitStateMachines (void)
 	actualParams.Kd		= 0;
 	actualParams.Speed	= 0;
 
+	tryToOvertake 	= false;
 	behindSafetyCar = true;
-	tryToOvertake = false;
-	startGateFound = false;
-	timeCounter = 0;
+	startGateFound  = false;
+	timeCounter 	= 0;
 
-	line_prevPos = 0;
-	line_pos = 0;
-	line_diff = 0;
-	servo_angle = 0;
-	P_modifier = 0;
-	D_modifier = 0;
-	dist_front = 0;
+	line_prevPos   = 0;
+	line_pos 	   = 0;
+	dist_front 	   = 0;
 	dist_frontPrev = 0;
-	dist_diff = 0;
 }
 
 //! Function: sRunMainStateMachine
@@ -670,10 +655,10 @@ void sRunParadeLapAlgorithm (void)
 	if (behindSafetyCar == true)
 	{
 		// Load in control parameters.
-		actualParams.P = paramList.lapParade.P;
-		actualParams.Kp = paramList.lapParade.Kp;
-		actualParams.Kd = paramList.lapParade.Kd;
-		actualParams.Speed = paramList.lapParade.Speed;
+		actualParams.P 		= paramList.lapParade.P;
+		actualParams.Kp 	= paramList.lapParade.Kp;
+		actualParams.Kd 	= paramList.lapParade.Kd;
+		actualParams.Speed	= paramList.lapParade.Speed;
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
 		sRunCntrKeepDistance();
@@ -723,6 +708,11 @@ void sRunParadeLapAlgorithm (void)
 //! Function: sRunCntrLineFollow
 void sRunCntrLineFollow (void)
 {
+	float line_diff;
+	float servo_angle;
+	float P_modifier;
+	float D_modifier;
+
 	// Detect line.
 	line_prevPos = line_pos;
 	line_pos = lineGetSingle() / 1000; // m -> mm
@@ -747,6 +737,9 @@ void sRunCntrLineFollow (void)
 //**********************************************************************************************************************
 static void sRunCntrKeepDistance (void)
 {
+	float dist_front;
+	float dist_diff;
+
 	dist_front = sharpGetMeasurement().Distance;
 	dist_diff = SRUN_FOLLOW_DISTANCE - dist_front;
 
