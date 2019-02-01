@@ -19,17 +19,6 @@
 #include "bsp_sharp.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
-
-#define SRUN_FOLLOW_DISTANCE			40			//!< cm
-
-#define SRUN_OVERTAKE_SEGMENT			8
-#define SRUN_OVERTAKE_TURN_TIME 		400 		//!< 400 * task period (5ms) = 2s
-#define SRUN_OVERTAKE_PASS_TIME			2000		//!< 2000* 5ms = 10s
-#define SRUN_OVERTAKE_FIND_TIME			800			//!< 800 * 5ms = 4s
-#define SRUN_OVERTAKE_SPEED_SLOW		15			//!< %
-#define SRUN_OVERTAKE_SPEED_FAST		35			//!< %
-#define SRUN_OVERTAKE_SERVO_ANGLE		20*PI/180	//!< rad
-
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
@@ -37,10 +26,6 @@
 extern EventGroupHandle_t event_MazeOut;
 //! Flag that indicates if we are on the speed run track.
 static bool	speedRunStarted;
-//! Flag that indicates that the car is behind the safety car.
-static bool behindSafetyCar;
-//! During the Parade lap the car is allowed to try to overtake the safety car.
-static bool tryToOvertake;
 
 //! This button is used in case the car can not complete the Maze. The car will start waiting behind the safety car
 //! to start the speed run.
@@ -57,17 +42,6 @@ static GPIO_PinState btnSoftRstSpeedRun;
 static GPIO_TypeDef* btnSoftRst_Port;
 //! GPIO pin of the soft reset button.
 static uint16_t btnSoftRst_Pin;
-
-//! State of the speed run main state machine.
-static eSTATE_MAIN smMainState;
-
-//! The lap is divided into a given number of segments, and this many states has a lap state machine.
-static uint8_t actLapSegment;
-
-//! Control parameters of the actual state.
-static cPD_CONTROLLER_PARAMS actualParams;
-//! Contain all of the control parameters.
-static cSRUN_PD_CONTROL_PARAM_LIST paramList;
 
 //! Contains the received serial data.
 static cTRACE_RX_DATA rxData;
@@ -115,30 +89,14 @@ static float txGetKd;
 //! Requested Speed control parameter.
 static uint32_t	txGetSpeed;
 
-
-static float line_prevPos;
-static float line_pos;
-static float line_diff;
-static float servo_angle;
-static float P_modifier;
-static float D_modifier;
-static float dist_front;
-static float dist_frontPrev;
-static float dist_diff;
-
-static bool startGateFound;
-
-static eSTATE_OVERTAKE overtakeState;
-static uint32_t timeCounter;
+extern bool tryToOvertake;
+extern eSTATE_MAIN smMainState;
+extern uint8_t actLapSegment;
+extern cPD_CONTROLLER_PARAMS actualParams;
+extern cSRUN_PD_CONTROL_PARAM_LIST paramList;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void sRunMainStateMachine     (void);
-static void sRunDriveStateMachine	 (void);
-static void sRunOvertakeStateMachine (void);
-static void sRunParadeLapAlgorithm	 (void);
-static void	sRunCntrLineFollow 		 (void);
-static void sRunCntrKeepDistance	 (void);
 static void sRunSetLap1Parameters	 (void);
 static void sRunSetLap2Parameters	 (void);
 static void sRunSetLap3Parameters	 (void);
@@ -154,6 +112,7 @@ static void sRunCheckStartCondition  (void);
 
 void TaskInit_SpeedRun (void)
 {
+	// Configure the GPIOs of the buttons.
 	btnHardRstSpeedRun = GPIO_PIN_SET;
 	//btnHardRst_Port  = GPIOx;
 	//btnHardRst_Pin   = GPIO_PIN_x;
@@ -162,10 +121,14 @@ void TaskInit_SpeedRun (void)
 	//btnSoftRst_Port  = GPIOx;
 	//btnSoftRst_Pin   = GPIO_PIN_x;
 
-	smMainState = eSTATE_MAIN_READY;
+	// Reset the module.
+	speedRunStarted = false;
+	sRunSetLap1Parameters();
+	sRunSetLap2Parameters();
+	sRunSetLap3Parameters();
+	sRunInitStateMachines();
 
-	// Init all unless car start when it shouldn't. TODO
-
+	// Task can be created now.
 	xTaskCreate(Task_SpeedRun,
 				"TASK_SPEED_RUN",
 				DEFAULT_STACK_SIZE,
@@ -193,6 +156,7 @@ void Task_SpeedRun (void* p)
 		if (speedRunStarted == true  && recStopCar == false)
 		{
 			sRunMainStateMachine();
+			// TODO drive state machine needs to follow in which segment we are.
 		}
 		else if (recStopCar == true)
 		{
@@ -208,6 +172,8 @@ void Task_SpeedRun (void* p)
 		// Detect line and control the servo and the speed of the car.
 		sRunCntrLineFollow();
 
+		// TODO Check for frontal collision.
+
 		// Trace out the speed run informations.
 		sRunTraceInformations();
 
@@ -218,354 +184,84 @@ void Task_SpeedRun (void* p)
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 //**********************************************************************************************************************
-//! State machine that manages the lap and holds the driving strategies.
+//!	Provides initial values for the control parameters of the Lap1.
 //!
 //! @return -
 //**********************************************************************************************************************
-static void sRunMainStateMachine (void)
+static void sRunSetLap1Parameters (void)
 {
-	switch (smMainState)
-	{
-		case eSTATE_MAIN_READY:
-		{
-			// Check the distance change of the safety car.
-			dist_frontPrev = dist_front;
-			dist_front = sharpGetMeasurement().Distance;
+	paramList.lap1[0].P = 0;	paramList.lap1[0].Kp = 0;	paramList.lap1[0].Kd = 0;	paramList.lap1[0].Speed = 0;
+	paramList.lap1[1].P = 0; 	paramList.lap1[1].Kp = 0;	paramList.lap1[1].Kd = 0;	paramList.lap1[1].Speed = 0;
+	paramList.lap1[2].P = 0; 	paramList.lap1[2].Kp = 0;	paramList.lap1[2].Kd = 0;	paramList.lap1[2].Speed = 0;
+	paramList.lap1[3].P = 0; 	paramList.lap1[3].Kp = 0;	paramList.lap1[3].Kd = 0;	paramList.lap1[3].Speed = 0;
+	paramList.lap1[4].P = 0; 	paramList.lap1[4].Kp = 0;	paramList.lap1[4].Kd = 0;	paramList.lap1[4].Speed = 0;
 
-			if (dist_front >= SRUN_FOLLOW_DISTANCE)
-			{
-				// Trigger: safety car starts.
-				smMainState = eSTATE_MAIN_PARADE_LAP;
-			}
-			break;
-		}
-		case eSTATE_MAIN_PARADE_LAP:
-		{
-			sRunParadeLapAlgorithm();
-			break;
-		}
-		case eSTATE_MAIN_OVERTAKING:
-		{
-			sRunOvertakeStateMachine();
-			break;
-		}
-		case eSTATE_MAIN_LAP_1:
-		{
-			// Drive state machine.
-			sRunDriveStateMachine();
+	paramList.lap1[5].P = 0; 	paramList.lap1[5].Kp = 0;	paramList.lap1[5].Kd = 0;	paramList.lap1[5].Speed = 0;
+	paramList.lap1[6].P = 0; 	paramList.lap1[6].Kp = 0;	paramList.lap1[6].Kd = 0;	paramList.lap1[6].Speed = 0;
+	paramList.lap1[7].P = 0; 	paramList.lap1[7].Kp = 0;	paramList.lap1[7].Kd = 0;	paramList.lap1[7].Speed = 0;
+	paramList.lap1[8].P = 0; 	paramList.lap1[8].Kp = 0;	paramList.lap1[8].Kd = 0;	paramList.lap1[8].Speed = 0;
+	paramList.lap1[9].P = 0; 	paramList.lap1[9].Kp = 0;	paramList.lap1[9].Kd = 0;	paramList.lap1[9].Speed = 0;
 
-			if (startGateFound == true)
-			{
-				smMainState = eSTATE_MAIN_LAP_2;
-			}
-			break;
-		}
-		case eSTATE_MAIN_LAP_2:
-		{
-			// Drive state machine.
-			sRunDriveStateMachine();
-
-			if (startGateFound == true)
-			{
-				smMainState = eSTATE_MAIN_LAP_3;
-			}
-			break;
-		}
-		case eSTATE_MAIN_LAP_3:
-		{
-			// Drive state machine.
-			sRunDriveStateMachine();
-
-			if (startGateFound == true)
-			{
-				smMainState = eSTATE_MAIN_STOP;
-			}
-			break;
-		}
-		case eSTATE_MAIN_STOP:
-		{
-			// Race is complete, stop the car.
-			motorSetDutyCycle(0);
-			break;
-		}
-		default:
-		{
-			// NOP
-			break;
-		}
-	}
+	paramList.lap1[10].P = 0;	paramList.lap1[10].Kp = 0;	paramList.lap1[10].Kd = 0;	paramList.lap1[10].Speed = 0;
+	paramList.lap1[11].P = 0;	paramList.lap1[11].Kp = 0;	paramList.lap1[11].Kd = 0;	paramList.lap1[11].Speed = 0;
+	paramList.lap1[12].P = 0;	paramList.lap1[12].Kp = 0;	paramList.lap1[12].Kd = 0;	paramList.lap1[12].Speed = 0;
+	paramList.lap1[13].P = 0;	paramList.lap1[13].Kp = 0;	paramList.lap1[13].Kd = 0;	paramList.lap1[13].Speed = 0;
+	paramList.lap1[14].P = 0;	paramList.lap1[14].Kp = 0;	paramList.lap1[14].Kd = 0;	paramList.lap1[14].Speed = 0;
+	paramList.lap1[15].P = 0;	paramList.lap1[15].Kp = 0;	paramList.lap1[15].Kd = 0;	paramList.lap1[15].Speed = 0;
 }
 
 //**********************************************************************************************************************
-//! This state machine is responsible for how the car act at the specific segments of the lap.
+//! Provides initial values for the control parameters of the Lap2.
 //!
 //! @return -
 //**********************************************************************************************************************
-static void sRunDriveStateMachine (void)
+static void sRunSetLap2Parameters (void)
 {
+	paramList.lap2[0].P = 0;	paramList.lap2[0].Kp = 0;	paramList.lap2[0].Kd = 0;	paramList.lap2[0].Speed = 0;
+	paramList.lap2[1].P = 0; 	paramList.lap2[1].Kp = 0;	paramList.lap2[1].Kd = 0;	paramList.lap2[1].Speed = 0;
+	paramList.lap2[2].P = 0; 	paramList.lap2[2].Kp = 0;	paramList.lap2[2].Kd = 0;	paramList.lap2[2].Speed = 0;
+	paramList.lap2[3].P = 0; 	paramList.lap2[3].Kp = 0;	paramList.lap2[3].Kd = 0;	paramList.lap2[3].Speed = 0;
+	paramList.lap2[4].P = 0; 	paramList.lap2[4].Kp = 0;	paramList.lap2[4].Kd = 0;	paramList.lap2[4].Speed = 0;
 
+	paramList.lap2[5].P = 0; 	paramList.lap2[5].Kp = 0;	paramList.lap2[5].Kd = 0;	paramList.lap2[5].Speed = 0;
+	paramList.lap2[6].P = 0; 	paramList.lap2[6].Kp = 0;	paramList.lap2[6].Kd = 0;	paramList.lap2[6].Speed = 0;
+	paramList.lap2[7].P = 0; 	paramList.lap2[7].Kp = 0;	paramList.lap2[7].Kd = 0;	paramList.lap2[7].Speed = 0;
+	paramList.lap2[8].P = 0; 	paramList.lap2[8].Kp = 0;	paramList.lap2[8].Kd = 0;	paramList.lap2[8].Speed = 0;
+	paramList.lap2[9].P = 0; 	paramList.lap2[9].Kp = 0;	paramList.lap2[9].Kd = 0;	paramList.lap2[9].Speed = 0;
+
+	paramList.lap2[10].P = 0;	paramList.lap2[10].Kp = 0;	paramList.lap2[10].Kd = 0;	paramList.lap2[10].Speed = 0;
+	paramList.lap2[11].P = 0;	paramList.lap2[11].Kp = 0;	paramList.lap2[11].Kd = 0;	paramList.lap2[11].Speed = 0;
+	paramList.lap2[12].P = 0;	paramList.lap2[12].Kp = 0;	paramList.lap2[12].Kd = 0;	paramList.lap2[12].Speed = 0;
+	paramList.lap2[13].P = 0;	paramList.lap2[13].Kp = 0;	paramList.lap2[13].Kd = 0;	paramList.lap2[13].Speed = 0;
+	paramList.lap2[14].P = 0;	paramList.lap2[14].Kp = 0;	paramList.lap2[14].Kd = 0;	paramList.lap2[14].Speed = 0;
+	paramList.lap2[15].P = 0;	paramList.lap2[15].Kp = 0;	paramList.lap2[15].Kd = 0;	paramList.lap2[15].Speed = 0;
 }
 
 //**********************************************************************************************************************
-//! TODO parameters
+//! Provides initial values for the control parameters of the Lap3.
 //!
 //! @return -
 //**********************************************************************************************************************
-static void sRunOvertakeStateMachine (void)
+static void sRunSetLap3Parameters (void)
 {
-	// Maneuver
-	switch (overtakeState)
-	{
-		case eSTATE_OVERTAKE_LEAVE_LINE:
-		{
-			// Slow down.
-			motorSetDutyCycle(SRUN_OVERTAKE_SPEED_SLOW);
+	paramList.lap3[0].P = 0;	paramList.lap3[0].Kp = 0;	paramList.lap3[0].Kd = 0;	paramList.lap3[0].Speed = 0;
+	paramList.lap3[1].P = 0; 	paramList.lap3[1].Kp = 0;	paramList.lap3[1].Kd = 0;	paramList.lap3[1].Speed = 0;
+	paramList.lap3[2].P = 0; 	paramList.lap3[2].Kp = 0;	paramList.lap3[2].Kd = 0;	paramList.lap3[2].Speed = 0;
+	paramList.lap3[3].P = 0; 	paramList.lap3[3].Kp = 0;	paramList.lap3[3].Kd = 0;	paramList.lap3[3].Speed = 0;
+	paramList.lap3[4].P = 0; 	paramList.lap3[4].Kp = 0;	paramList.lap3[4].Kd = 0;	paramList.lap3[4].Speed = 0;
 
-			// Turn left for a bit
-			servoSetAngle(SRUN_OVERTAKE_SERVO_ANGLE);
+	paramList.lap3[5].P = 0; 	paramList.lap3[5].Kp = 0;	paramList.lap3[5].Kd = 0;	paramList.lap3[5].Speed = 0;
+	paramList.lap3[6].P = 0; 	paramList.lap3[6].Kp = 0;	paramList.lap3[6].Kd = 0;	paramList.lap3[6].Speed = 0;
+	paramList.lap3[7].P = 0; 	paramList.lap3[7].Kp = 0;	paramList.lap3[7].Kd = 0;	paramList.lap3[7].Speed = 0;
+	paramList.lap3[8].P = 0; 	paramList.lap3[8].Kp = 0;	paramList.lap3[8].Kd = 0;	paramList.lap3[8].Speed = 0;
+	paramList.lap3[9].P = 0; 	paramList.lap3[9].Kp = 0;	paramList.lap3[9].Kd = 0;	paramList.lap3[9].Speed = 0;
 
-			// Time is ticking.
-			if (timeCounter >= SRUN_OVERTAKE_TURN_TIME)
-			{
-				// Reset the time counter.
-				timeCounter = 0;
-
-				// Get back to parallel.
-				overtakeState = eSTATE_OVERTAKE_GET_PARALLEL;
-			}
-			else
-			{
-				timeCounter++;
-			}
-			break;
-		}
-		case eSTATE_OVERTAKE_GET_PARALLEL:
-		{
-			// Turn right to get parallel with the line.
-			servoSetAngle(-SRUN_OVERTAKE_SERVO_ANGLE);
-
-			// Time is ticking.
-			if (timeCounter >= SRUN_OVERTAKE_TURN_TIME)
-			{
-				// Reset the time counter.
-				timeCounter = 0;
-
-				// Pass the safety car.
-				overtakeState = eSTATE_OVERTAKE_PASS_SAFETY_CAR;
-			}
-			else
-			{
-				timeCounter++;
-			}
-			break;
-		}
-		case eSTATE_OVERTAKE_PASS_SAFETY_CAR:
-		{
-			// Speed up.
-			motorSetDutyCycle(paramList.overtaking.Speed);
-
-			// After a given time slow down.
-			// Time is ticking.
-			if (timeCounter >= SRUN_OVERTAKE_PASS_TIME)
-			{
-				// Reset the time counter.
-				timeCounter = 0;
-
-				// Get back to the track
-				overtakeState = eSTATE_OVERTAKE_FIND_LINE;
-			}
-			else
-			{
-				timeCounter++;
-			}
-			break;
-		}
-		case eSTATE_OVERTAKE_FIND_LINE:
-		{
-			// Slow down.
-			motorSetDutyCycle(SRUN_OVERTAKE_SPEED_SLOW);
-
-			// Turn right.
-			servoSetAngle(-SRUN_OVERTAKE_SERVO_ANGLE);
-
-			// Search for the line.
-			// Time is ticking.
-			if (timeCounter >= SRUN_OVERTAKE_FIND_TIME)
-			{
-				// Could not find the line, the car is lost.
-				overtakeState = eSTATE_OVERTAKE_FAILED;
-			}
-			else
-			{
-				timeCounter++;
-
-				// If the line is back, then it was successful. If not stop after a time (no collision).
-				if (lineGetSingle() != 0)
-				{
-					// The car is back on track.
-					overtakeState = eSTATE_OVERTAKE_SUCCESS;
-				}
-			}
-			break;
-		}
-		case eSTATE_OVERTAKE_SUCCESS:
-		{
-			// Overtake is finished
-			tryToOvertake = false;
-			behindSafetyCar = false;
-
-			// Resume the Parade lap.
-			smMainState = eSTATE_MAIN_PARADE_LAP;
-		}
-		case eSTATE_OVERTAKE_FAILED:
-		{
-			// Stop the car.
-			motorSetDutyCycle(0);
-
-			if (lineGetSingle() != 0)
-			{
-				// If the line is back continue the Parade Lap.
-				// Overtake is finished. The car is still behind the safety car.
-				tryToOvertake = false;
-				behindSafetyCar = true;
-
-				// Resume the Parade lap.
-				smMainState = eSTATE_MAIN_PARADE_LAP;
-			}
-			break;
-		}
-		default:
-		{
-			// NOP
-			break;
-		}
-	}
-}
-
-
-//**********************************************************************************************************************
-//!
-//!
-//! @return -
-//**********************************************************************************************************************
-static void sRunParadeLapAlgorithm (void)
-{
-	if (behindSafetyCar == true)
-	{
-		// Load in control parameters.
-		actualParams.P = paramList.lapParade.P;
-		actualParams.Kp = paramList.lapParade.Kp;
-		actualParams.Kd = paramList.lapParade.Kd;
-		actualParams.Speed = paramList.lapParade.Speed;
-
-		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
-		sRunCntrKeepDistance();
-		sRunCntrLineFollow();
-
-		// In the right place check if we can try overtaking.
-
-		// Try to overtake if it is enabled.
-		if (tryToOvertake == true && actLapSegment == SRUN_OVERTAKE_SEGMENT)
-		{
-			smMainState = eSTATE_MAIN_OVERTAKING;
-
-			// Reset the time counter for the maneuver.
-			timeCounter = 0;
-		}
-		else
-		{
-			// Follow the safety car until the last corner.
-
-			// Start gate means a new lap.
-			if (startGateFound == true)
-			{
-				smMainState = eSTATE_MAIN_LAP_1;
-			}
-		}
-	}
-	else
-	{
-		// We overtook the safety car!!! :D
-		// Speed up. Load in control parameters.
-		actualParams.P = paramList.lapParade.P;
-		actualParams.Kp = paramList.lapParade.Kp;
-		actualParams.Kd = paramList.lapParade.Kd;
-		actualParams.Speed = paramList.lapParade.Speed;
-
-		// Follow the track.
-		sRunCntrLineFollow();
-
-		// Start gate means a new lap.
-		if (startGateFound == true)
-		{
-			smMainState = eSTATE_MAIN_LAP_1;
-		}
-	}
-}
-
-//**********************************************************************************************************************
-//!	Line follow PD controller.
-//!
-//! @return -
-//**********************************************************************************************************************
-static void	sRunCntrLineFollow (void)
-{
-	// Detect line.
-	line_prevPos = line_pos;
-	line_pos = lineGetSingle() / 1000; // m -> mm
-	line_diff = line_pos - line_prevPos;
-
-	// Control the servo.
-	P_modifier = line_pos  * actualParams.Kp;
-	D_modifier = line_diff * actualParams.Kd;
-	servo_angle = -0.75f * (P_modifier + D_modifier);
-
-	// Actuate.
-	motorSetDutyCycle(actualParams.Speed);
-	servoSetAngle(servo_angle);
-}
-
-//**********************************************************************************************************************
-//! Distance P controller.
-//!
-//! @return -
-//**********************************************************************************************************************
-static void sRunCntrKeepDistance (void)
-{
-	dist_front = sharpGetMeasurement().Distance;
-	dist_diff = SRUN_FOLLOW_DISTANCE - dist_front;
-
-	actualParams.Speed = actualParams.P * dist_diff;
-}
-
-//**********************************************************************************************************************
-//!
-//!
-//! @return -
-//**********************************************************************************************************************
-static void sRunSetLap1Parameters	(void)
-{
-
-}
-
-//**********************************************************************************************************************
-//!
-//!
-//! @return -
-//**********************************************************************************************************************
-static void sRunSetLap2Parameters	(void)
-{
-
-}
-
-//**********************************************************************************************************************
-//!
-//!
-//! @return -
-//**********************************************************************************************************************
-static void sRunSetLap3Parameters	(void)
-{
-
+	paramList.lap3[10].P = 0;	paramList.lap3[10].Kp = 0;	paramList.lap3[10].Kd = 0;	paramList.lap3[10].Speed = 0;
+	paramList.lap3[11].P = 0;	paramList.lap3[11].Kp = 0;	paramList.lap3[11].Kd = 0;	paramList.lap3[11].Speed = 0;
+	paramList.lap3[12].P = 0;	paramList.lap3[12].Kp = 0;	paramList.lap3[12].Kd = 0;	paramList.lap3[12].Speed = 0;
+	paramList.lap3[13].P = 0;	paramList.lap3[13].Kp = 0;	paramList.lap3[13].Kd = 0;	paramList.lap3[13].Speed = 0;
+	paramList.lap3[14].P = 0;	paramList.lap3[14].Kp = 0;	paramList.lap3[14].Kd = 0;	paramList.lap3[14].Speed = 0;
+	paramList.lap3[15].P = 0;	paramList.lap3[15].Kp = 0;	paramList.lap3[15].Kd = 0;	paramList.lap3[15].Speed = 0;
 }
 
 //**********************************************************************************************************************
