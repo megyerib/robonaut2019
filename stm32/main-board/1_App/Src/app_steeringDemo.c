@@ -116,7 +116,7 @@ void Task_steeringDemo(void* p)
 
 		prevline = line_pos;
 
-		line_pos = lineGetSingle() / 1000; // m -> mm
+		line_pos = lineGetSingle() * 1000; // m -> mm
 
 		line_diff = line_pos - prevline;
 
@@ -128,10 +128,11 @@ void Task_steeringDemo(void* p)
 
 		// ACTUATE _________________________________________
 
-		(void) actuateEnabled;
-
-		//motorSetDutyCycle(motor_d);
-		//servoSetAngle(angle);
+		if (actuateEnabled)
+		{
+			motorSetDutyCycle(motor_d);
+			servoSetAngle(angle);
+		}
 
 		// TRACE ___________________________________________
 
