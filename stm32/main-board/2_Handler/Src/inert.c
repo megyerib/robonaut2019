@@ -114,8 +114,8 @@ ACCEL inertGetAccel()
     ACCEL trueAcc;
 
     // Changing directions to match the car's orientation.
-    measuredAcc.a_x = ret_accel[1] * -XL_C; // X = -Y
-    measuredAcc.a_y = ret_accel[0] *  XL_C; // Y =  X
+    measuredAcc.a_x = ret_accel[0] *  XL_C; // X =  X
+    measuredAcc.a_y = ret_accel[1] *  XL_C; // Y =  Y
     measuredAcc.a_z = ret_accel[2] * -XL_C; // Z = -Z
 
     // Calculate the true acceleration from the measured ones with the calibration parameters.
