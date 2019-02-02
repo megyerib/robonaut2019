@@ -52,14 +52,14 @@ static void appInit()
 	//TaskInit_Sharp();
 	//TaskInit_InertialCalibration();
 	//TaskInit_Navigation();
-	TaskInit_steeringDemo();
+	//TaskInit_steeringDemo();
 
 	//TaskInit_Maze();
 	//TaskInit_SpeedRun();
 
 	// Calibration:
 
-	//TaskInit_SpeedCalibration();
+	TaskInit_SpeedCalibration();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

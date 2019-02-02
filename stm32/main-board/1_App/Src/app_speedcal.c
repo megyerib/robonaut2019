@@ -199,7 +199,6 @@ static void traceCounterValue(SPEEDCAL_STATE state, int32_t counter)
 	btBuffer[btBufferLen] = '\n';
 	btBufferLen++;
 	btBuffer[btBufferLen] = '\0';
-	btBufferLen++;
 
 	bspBtSend((uint8_t*) btBuffer, btBufferLen);
 }
