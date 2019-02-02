@@ -169,8 +169,11 @@ void Task_SpeedRun (void* p)
 		sRunCheckButtonHardRst();
 		sRunCheckButtonSoftRst();
 
-		// Detect line and control the servo and the speed of the car.
-		sRunCntrLineFollow();
+		if (speedRunStarted == true)
+		{
+			// Detect line and control the servo and the speed of the car.
+			sRunCntrLineFollow();
+		}
 
 		// TODO Check for frontal collision.
 
