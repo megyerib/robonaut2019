@@ -19,6 +19,7 @@
 #include "motor.h"
 #include "line.h"
 #include "bsp_servo.h"
+#include "speed.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -137,6 +138,11 @@ static float line_prevPos;
 //! Position of the main line in the current task period.
 static float line_pos;
 
+static float speed_current;
+static float speed_prev;
+static uint32_t D_prev;
+static uint32_t D_curr;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void 	MazeMainStateMachine   (void);
@@ -145,6 +151,7 @@ static void 	MazeCheckRemote		   (void);
 static void 	MazeTraceInformations  (void);
 static uint32_t MazeSegmentsConverter  (void);
 static void		MazeCntrLineFollow	   (void);
+static void		MazeCntrSpeed 		   (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -163,9 +170,9 @@ void TaskInit_Maze (void)
 	inclinSegment = 0;
 
 	// Initial parameters of the Discover state.
-	paramList.discover.Kp	 = 1;
-	paramList.discover.Kd	 = 1;
-	paramList.discover.Speed = 0;
+	paramList.discover.Kp	 = 0.025;
+	paramList.discover.Kd	 = 3.68;
+	paramList.discover.Speed = 19;
 
 	// Initial parameters of the Discover state.
 	paramList.inclination.Kp	 = 1;
@@ -222,13 +229,14 @@ void Task_Maze (void* p)
 
 		// Detect line and control the servo and the speed of the car.
 		MazeCntrLineFollow();
+		//MazeCntrSpeed(); //TODO
 
 		// TODO Check for frontal collision.
 
 		// Trace out the necessary infos.
 		MazeTraceInformations();
 
-		vTaskDelay(TASK_DELAY_5_MS);
+		vTaskDelay(15);	// TASK_DELAY_5_MS TODO
 	}
 }
 
@@ -348,6 +356,33 @@ static void	MazeCntrLineFollow (void)
 	txLineMainLinePos = line_pos;
 }
 
+static void	MazeCntrSpeed (void)
+{
+	float r_speed = 1;
+	float e_speed;
+	float P_speed = 13;
+	uint32_t y_speed;
+
+	float speed_diff;
+
+	// v previous
+	speed_prev = speed_current;
+
+	// V actual
+	speed_current = speedGet();
+
+	// v diff = v wanted - v actual
+	speed_diff = r_speed - speed_current;
+
+	// D current
+	y_speed = (uint32_t)(P_speed*(speed_prev + speed_diff));
+	actualParams.Speed = y_speed;
+
+	// Actuate.
+	motorSetDutyCycle(actualParams.Speed);
+
+}
+
 //**********************************************************************************************************************
 //!	This function translates the commands of the CDT application and answers them.
 //!
@@ -360,6 +395,9 @@ static void MazeProcessRecCommands (void)
 {
 	// Get the received data.
 	rxData = traceGetRxData();
+
+	// Car stop signal
+	recStopCar = rxData.StopCar;
 
 	// Separate the parameters.
 	recMainSMReset 	 = rxData.MazeMainSMReset;
@@ -473,6 +511,9 @@ static void MazeTraceInformations  (void)
 	{
 		txLineSecLinePos = lineGetRawFront().lines[0];
 	}
+
+	// TODO debug
+	txSteerWheelAngle = txServoAngle / 180 * PI;
 
 	traceBluetooth(BT_LOG_STEER_WHEEL_ANGLE, &txSteerWheelAngle);
 	traceBluetooth(BT_LOG_SERVO_ANGLE, &txServoAngle);

@@ -48,18 +48,21 @@ void Init()
 //! Initialize app layer modules
 static void appInit()
 {
+	//______________________Race:
 	TaskInit_CarDiagnosticsTool();
-	//TaskInit_Sharp();
+	TaskInit_Navigation();
+
+	TaskInit_Maze();
+	TaskInit_SpeedRun();
+
+	//_______________________Calibration:
 	//TaskInit_InertialCalibration();
-	//TaskInit_Navigation();
+	//TaskInit_SpeedCalibration();
+
+
+	//_______________________Debug:
 	//TaskInit_steeringDemo();
-
-	//TaskInit_Maze();
-	//TaskInit_SpeedRun();
-
-	// Calibration:
-
-	TaskInit_SpeedCalibration();
+	//TaskInit_Sharp();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -12,16 +12,12 @@
 #include "app_common.h"
 #include "inert.h"
 #include "main.h"
+#include "trace.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static ACCEL temp;
-
-static float AccX[6];
-static float AccY[6];
-static float AccZ[6];
 static float Xgain;
 static float Xofs;
 static float XtoY;
@@ -56,19 +52,43 @@ static bool enable  = false;
 
 static uint8_t measurementIndex = 0;
 
+// Accelerometer____________________________________
+
+static ACCEL temp;
+
+static float AccX[6];
+static float AccY[6];
+static float AccZ[6];
+
+static bool accelCalibFinished;
+
+//Gyroscope_________________________________________
+
 static ANGVEL Wofs;
-static bool ofsSaved = false;
+static ANGVEL w;
+
+static float AngX[6];	// Roll
+static float AngY[6];	// Pitch
+static float AngZ[6];	// Yaw
+
+static bool ofsSaved;
+static bool angulCalibFinished;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void inertCal_CalculateOffset();
 static void inertCal_CalculateGain();
 static void inertCal_CalculateCrossAxisGain();
+static void inertCal_DebounceButton (void);
+static void inertCal_Accelerometer (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void TaskInit_InertialCalibration(void)
 {
+	ofsSaved = false;
+	angulCalibFinished = false;
+
 	xTaskCreate(Task_InertialCalibration,
 				"TASK_INERTCALIBRATION",
 				DEFAULT_STACK_SIZE,
@@ -84,160 +104,165 @@ void Task_InertialCalibration(void* p)
 
 	while (1)
 	{
-		blueBtn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
-		if (pressed == false && blueBtn == GPIO_PIN_RESET)
-		{
-			vTaskDelay(30);
-			blueBtn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
-			if (blueBtn == GPIO_PIN_RESET)
-			{
-				pressed = true;
-				enable = true;
-			}
-		}
-		else if (pressed == true && blueBtn == GPIO_PIN_SET)
-		{
-			vTaskDelay(30);
-			blueBtn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
-			if (blueBtn == GPIO_PIN_SET)
-			{
-				pressed = false;
-			}
-		}
+		inertCal_DebounceButton();
 
-		if (enable == true && measurementIndex == 1)
-		{
-			// Set the inertial sensor in [0, 0, -1]. 6-point tumble calibration 6th measurement.
-			// AccX5 = -ZtoX + Xofs, AccY5 = -ZtoY + Yofs, AccZ4 = -Zgain + Zofs
-			temp = inertGetAccel();
+		//inertCal_Accelerometer();
 
-			AccX[5] = temp.a_x;
-			AccY[5] = temp.a_y;
-			AccZ[5] = temp.a_z;
-
-			measurementIndex = 2;
-			enable = false;
-		}
-		else if (enable == true && measurementIndex == 2)
-		{
-			// Set the inertial sensor in [-1, 0, 0]. 6-point tumble calibration 2nd measurement.
-			// AccX2 = -Xgain + Xofs, AccY2 = -XtoY + Yofs, AccZ2 = -XtoZ + Zofs
-			temp = inertGetAccel();
-
-			AccX[1] = temp.a_x;
-			AccY[1] = temp.a_y;
-			AccZ[1] = temp.a_z;
-
-			measurementIndex = 3;
-			enable = false;
-		}
-		else if (enable == true && measurementIndex == 3)
-		{
-			// Set the inertial sensor in [0, 0, +1]. 6-point tumble calibration 5th measurement.
-			// AccX5 = ZtoX + Xofs, AccY5 = ZtoY + Yofs, AccZ4 = Zgain + Zofs
-			temp = inertGetAccel();
-
-			AccX[4] = temp.a_x;
-			AccY[4] = temp.a_y;
-			AccZ[4] = temp.a_z;
-
-			measurementIndex = 4;
-			enable = false;
-		}
-		else if (enable == true && measurementIndex == 4)
-		{
-			// Set the inertial sensor in [+1, 0, 0]. 6-point tumble calibration 1st measurement.
-			// AccX1 = Xgain + Xofs, AccY1 = XtoY + Yofs, AccZ1 = XtoZ + Zofs
-			temp = inertGetAccel();
-
-			AccX[0] = temp.a_x;
-			AccY[0] = temp.a_y;
-			AccZ[0] = temp.a_z;
-
-			measurementIndex = 5;
-			enable = false;
-		}
-		else if (enable == true && measurementIndex == 5)
-		{
-			// Set the inertial sensor in [0, +1, 0]. 6-point tumble calibration 3rd measurement.
-			// AccX3 = YtoZ + Xofs, AccY3 = Ygain + Yofs, AccZ3 = YtoZ + Zofs
-			temp = inertGetAccel();
-
-			AccX[2] = temp.a_x;
-			AccY[2] = temp.a_y;
-			AccZ[2] = temp.a_z;
-
-			measurementIndex = 6;
-			enable = false;
-		}
-		else if(enable == true && measurementIndex == 6)
-		{
-			// Set the inertial sensor in [0, -1, 0]. 6-point tumble calibration 4th measurement.
-			// AccX4 = -YtoZ + Xofs, AccY4 = -Ygain + Yofs, AccZ4 = -YtoZ + Zofs
-			temp = inertGetAccel();
-
-			AccX[3] = temp.a_x;
-			AccY[3] = temp.a_y;
-			AccZ[3] = temp.a_z;
-
-			measurementIndex = 7;
-			enable = false;
-		}
-		else if(measurementIndex == 7)
-		{
-			// Calibration
-
-			// Calculate the offsets.
-			inertCal_CalculateOffset();
-
-			// Calculate the gains.
-			inertCal_CalculateGain();
-
-			// Calculate the cross-axis gains.
-			inertCal_CalculateCrossAxisGain();
-
-			// Save the calibration result in the inert module.
-			inert6PointCalibration(
-										Xgain,
-										Xofs,
-										XtoY,
-										XtoZ,
-										Ygain,
-										Yofs,
-										YtoX,
-										YtoZ,
-										Zgain,
-										Zofs,
-										ZtoX,
-										ZtoY
-									);
-
-			measurementIndex = 0;
-		}
-		else
-		{
-			// NO measurement
-
-			// Start calibration
-			if (enable == true)
-			{
-				measurementIndex = 1;
-			}
-		}
-
-		if (ofsSaved == false && measurementIndex != 0)
+		if (ofsSaved == false && measurementIndex == 0)
 		{
 			Wofs = inertGetAngVel();
 
 			ofsSaved = true;
+			measurementIndex = 0;
 		}
-
-		/*else if (angulCalibFinished == false && accelCalibFinished == true)
+		else if (angulCalibFinished == false && ofsSaved == true)
 		{
+			switch (measurementIndex)
+			{
+				case 1:
+				{
+					if (enable == true)
+					{
+						// Rotate the inertial sensor in [l, 0, 0]. 6-point tumble calibration 1st measurement.
+						// AngX1 = -Xgain + Xofs, AngY1 = -XtoY + Yofs, AngZ1 = -XtoZ + Zofs
+						w = inertGetAngVel();
 
+						AngX[0] = w.omega_x;
+						AngY[0] = w.omega_y;
+						AngZ[0] = w.omega_z;
 
-		}*/
+						measurementIndex = 2;
+						enable = false;
+					}
+					break;
+				}
+				case 2:
+				{
+					if (enable == true)
+					{
+						// Rotate the inertial sensor in [-l, 0, 0]. 6-point tumble calibration 2nd measurement.
+						// AngX2 = -Xgain + Xofs, AngY2 = -XtoY + Yofs, AngZ2 = -XtoZ + Zofs
+						w = inertGetAngVel();
 
+						AngX[1] = w.omega_x;
+						AngY[1] = w.omega_y;
+						AngZ[1] = w.omega_z;
+
+						measurementIndex = 3;
+						enable = false;
+					}
+					break;
+				}
+				case 3:
+				{
+					if (enable == true)
+					{
+						// Rotate the inertial sensor in [0, m, 0]. 6-point tumble calibration 3rd measurement.
+						// AngX3 = -Xgain + Xofs, AngY3 = -XtoY + Yofs, AngZ3 = -XtoZ + Zofs
+						w = inertGetAngVel();
+
+						AngX[2] = w.omega_x;
+						AngY[2] = w.omega_y;
+						AngZ[2] = w.omega_z;
+
+						measurementIndex = 4;
+						enable = false;
+					}
+					break;
+				}
+				case 4:
+				{
+					if (enable == true)
+					{
+						// Rotate the inertial sensor in [0, -m, 0]. 6-point tumble calibration 4th measurement.
+						// AngX4 = -Xgain + Xofs, AngY4 = -XtoY + Yofs, AngZ4 = -XtoZ + Zofs
+						w = inertGetAngVel();
+
+						AngX[3] = w.omega_x;
+						AngY[3] = w.omega_y;
+						AngZ[3] = w.omega_z;
+
+						measurementIndex = 5;
+						enable = false;
+					}
+					break;
+				}
+				case 5:
+				{
+					if (enable == true)
+					{
+						// Rotate the inertial sensor in [0, 0, n]. 6-point tumble calibration 4th measurement.
+						// AngX5 = -Xgain + Xofs, AngY5 = -XtoY + Yofs, AngZ5 = -XtoZ + Zofs
+						w = inertGetAngVel();
+
+						AngX[4] = w.omega_x;
+						AngY[4] = w.omega_y;
+						AngZ[4] = w.omega_z;
+
+						measurementIndex = 6;
+						enable = false;
+					}
+					break;
+				}
+				case 6:
+				{
+					if (enable == true)
+					{
+						// Rotate the inertial sensor in [0, 0, -n]. 6-point tumble calibration 4th measurement.
+						// AngX5 = -Xgain + Xofs, AngY5 = -XtoY + Yofs, AngZ5 = -XtoZ + Zofs
+						w = inertGetAngVel();
+
+						AngX[5] = w.omega_x;
+						AngY[5] = w.omega_y;
+						AngZ[5] = w.omega_z;
+
+						measurementIndex = 7;
+						enable = false;
+					}
+					break;
+				}
+				case 7:
+				{
+					// Calibration
+
+					// Calculate the offsets.
+					inertCal_CalculateOffset();
+
+					// Calculate the gains.
+					inertCal_CalculateGain();
+
+					// Calculate the cross-axis gains.
+					inertCal_CalculateCrossAxisGain();
+
+					// Save the calibration result in the inert module.
+					inert6PointCalibration(
+												Xgain,
+												Xofs,
+												XtoY,
+												XtoZ,
+												Ygain,
+												Yofs,
+												YtoX,
+												YtoZ,
+												Zgain,
+												Zofs,
+												ZtoX,
+												ZtoY
+											);
+
+					measurementIndex = 0;
+				}
+				default:
+				{
+					// Start calibration
+					if (enable == true)
+					{
+						measurementIndex = 1;
+					}
+					break;
+				}
+			}
+		}
 
 		inertTriggerMeasurement();
 
@@ -317,4 +342,151 @@ static void inertCal_CalculateCrossAxisGain()
 	arrZtoY[0] = AccY[4] - Yofs;
 	arrZtoY[1] = -AccY[5] + Yofs;
 	ZtoY = (arrZtoY[0] + arrZtoY[1]) /  2.0;
+}
+
+static void inertCal_DebounceButton (void)
+{
+	blueBtn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+	if (pressed == false && blueBtn == GPIO_PIN_RESET)
+	{
+		vTaskDelay(30);
+		blueBtn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+		if (blueBtn == GPIO_PIN_RESET)
+		{
+			pressed = true;
+			enable = true;
+		}
+	}
+	else if (pressed == true && blueBtn == GPIO_PIN_SET)
+	{
+		vTaskDelay(30);
+		blueBtn = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
+		if (blueBtn == GPIO_PIN_SET)
+		{
+			pressed = false;
+		}
+	}
+}
+
+static void inertCal_Accelerometer (void)
+{
+	if (enable == true && measurementIndex == 1)
+	{
+		// Set the inertial sensor in [0, 0, -1]. 6-point tumble calibration 6th measurement.
+		// AccX5 = -ZtoX + Xofs, AccY5 = -ZtoY + Yofs, AccZ4 = -Zgain + Zofs
+		temp = inertGetAccel();
+
+		AccX[5] = temp.a_x;
+		AccY[5] = temp.a_y;
+		AccZ[5] = temp.a_z;
+
+		measurementIndex = 2;
+		enable = false;
+	}
+	else if (enable == true && measurementIndex == 2)
+	{
+		// Set the inertial sensor in [-1, 0, 0]. 6-point tumble calibration 2nd measurement.
+		// AccX2 = -Xgain + Xofs, AccY2 = -XtoY + Yofs, AccZ2 = -XtoZ + Zofs
+		temp = inertGetAccel();
+
+		AccX[1] = temp.a_x;
+		AccY[1] = temp.a_y;
+		AccZ[1] = temp.a_z;
+
+		measurementIndex = 3;
+		enable = false;
+	}
+	else if (enable == true && measurementIndex == 3)
+	{
+		// Set the inertial sensor in [0, 0, +1]. 6-point tumble calibration 5th measurement.
+		// AccX5 = ZtoX + Xofs, AccY5 = ZtoY + Yofs, AccZ4 = Zgain + Zofs
+		temp = inertGetAccel();
+
+		AccX[4] = temp.a_x;
+		AccY[4] = temp.a_y;
+		AccZ[4] = temp.a_z;
+
+		measurementIndex = 4;
+		enable = false;
+	}
+	else if (enable == true && measurementIndex == 4)
+	{
+		// Set the inertial sensor in [+1, 0, 0]. 6-point tumble calibration 1st measurement.
+		// AccX1 = Xgain + Xofs, AccY1 = XtoY + Yofs, AccZ1 = XtoZ + Zofs
+		temp = inertGetAccel();
+
+		AccX[0] = temp.a_x;
+		AccY[0] = temp.a_y;
+		AccZ[0] = temp.a_z;
+
+		measurementIndex = 5;
+		enable = false;
+	}
+	else if (enable == true && measurementIndex == 5)
+	{
+		// Set the inertial sensor in [0, +1, 0]. 6-point tumble calibration 3rd measurement.
+		// AccX3 = YtoZ + Xofs, AccY3 = Ygain + Yofs, AccZ3 = YtoZ + Zofs
+		temp = inertGetAccel();
+
+		AccX[2] = temp.a_x;
+		AccY[2] = temp.a_y;
+		AccZ[2] = temp.a_z;
+
+		measurementIndex = 6;
+		enable = false;
+	}
+	else if(enable == true && measurementIndex == 6)
+	{
+		// Set the inertial sensor in [0, -1, 0]. 6-point tumble calibration 4th measurement.
+		// AccX4 = -YtoZ + Xofs, AccY4 = -Ygain + Yofs, AccZ4 = -YtoZ + Zofs
+		temp = inertGetAccel();
+
+		AccX[3] = temp.a_x;
+		AccY[3] = temp.a_y;
+		AccZ[3] = temp.a_z;
+
+		measurementIndex = 7;
+		enable = false;
+	}
+	else if(measurementIndex == 7)
+	{
+		// Calibration
+
+		// Calculate the offsets.
+		inertCal_CalculateOffset();
+
+		// Calculate the gains.
+		inertCal_CalculateGain();
+
+		// Calculate the cross-axis gains.
+		inertCal_CalculateCrossAxisGain();
+
+		// Save the calibration result in the inert module.
+		inert6PointCalibration(
+									Xgain,
+									Xofs,
+									XtoY,
+									XtoZ,
+									Ygain,
+									Yofs,
+									YtoX,
+									YtoZ,
+									Zgain,
+									Zofs,
+									ZtoX,
+									ZtoY
+								);
+
+		measurementIndex = 0;
+	}
+	else
+	{
+		// NO measurement
+
+		// Start calibration
+		if (enable == true)
+		{
+			measurementIndex = 1;
+		}
+	}
 }
