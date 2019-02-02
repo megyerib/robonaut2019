@@ -67,7 +67,8 @@ static float ZtoX  = 0.0;
 static float ZtoY  = 0.0;
 
 // Calibration data (inverted) to calculate the true acceleration from the measured ones.
-static cMATRIX_3X3 invParams;
+static cMATRIX_3X3 invParamsAcc;
+static cMATRIX_3X3 invParamsAng;
 
 // Gyroscope offsets.
 static float WxOfs;
@@ -96,20 +97,30 @@ void inertInit()
 	// Last valid calibration:
 	//               - 2019.01.25. 12:23 by Joci
 	// acceleration:
-	invParams.a1[0] = 0.103275834;
-	invParams.a1[1] = -0.00021038;
-	invParams.a1[2] = 0.000890583;
-	invParams.a2[0] = 0.000563969;
-	invParams.a2[1] = 0.104217378;
-	invParams.a2[2] = 0.00234628;
-	invParams.a3[0] = 0.002363388;
-	invParams.a3[1] = -0.003682367;
-	invParams.a3[2] = 0.103042739;
+	invParamsAcc.a1[0] = 0.103275834;
+	invParamsAcc.a1[1] = -0.00021038;
+	invParamsAcc.a1[2] = 0.000890583;
+	invParamsAcc.a2[0] = 0.000563969;
+	invParamsAcc.a2[1] = 0.104217378;
+	invParamsAcc.a2[2] = 0.00234628;
+	invParamsAcc.a3[0] = 0.002363388;
+	invParamsAcc.a3[1] = -0.003682367;
+	invParamsAcc.a3[2] = 0.103042739;
 	//
 	// gyroscope:
-	WxOfs = 614;
-	WyOfs = 340;
-	WzOfs = 342;
+	invParamsAng.a1[0] = 1;
+	invParamsAng.a1[1] = 0;
+	invParamsAng.a1[2] = 0;
+	invParamsAng.a2[0] = 0;
+	invParamsAng.a2[1] = 1;
+	invParamsAng.a2[2] = 0;
+	invParamsAng.a3[0] = 0;
+	invParamsAng.a3[1] = 0;
+	invParamsAng.a3[2] = 1;
+
+	WxOfs = -603.5155232;
+	WyOfs = -334.282356;
+	WzOfs = -341.346629;
 }
 
 ACCEL inertGetAccel()
@@ -118,20 +129,20 @@ ACCEL inertGetAccel()
     ACCEL trueAcc;
 
     // Changing directions to match the car's orientation.
-    measuredAcc.a_x = ret_accel[0] *  XL_C; // X =  X
-    measuredAcc.a_y = ret_accel[1] *  XL_C; // Y =  Y
-    measuredAcc.a_z = ret_accel[2] * -XL_C; // Z = -Z
+    measuredAcc.a_x = ret_accel[1] * -XL_C; // X =  Y
+    measuredAcc.a_y = ret_accel[0] * -XL_C; // Y =  X
+    measuredAcc.a_z = ret_accel[2] * XL_C;  // Z =  Z
 
     // Calculate the true acceleration from the measured ones with the calibration parameters.
-    trueAcc.a_x =   invParams.a1[0] * (measuredAcc.a_x - Xofs)
-    			  + invParams.a1[1] * (measuredAcc.a_y - Yofs)
-				  + invParams.a1[2] * (measuredAcc.a_z - Zofs);
-    trueAcc.a_y =   invParams.a2[0] * (measuredAcc.a_x - Xofs)
-    			  + invParams.a2[1] * (measuredAcc.a_y - Yofs)
-				  + invParams.a2[2] * (measuredAcc.a_z - Zofs);
-    trueAcc.a_z = 	invParams.a3[0] * (measuredAcc.a_x - Xofs)
-    		      + invParams.a3[1] * (measuredAcc.a_y - Yofs)
-				  + invParams.a3[2] * (measuredAcc.a_z - Zofs);
+    trueAcc.a_x =   invParamsAcc.a1[0] * (measuredAcc.a_x - Xofs)
+    			  + invParamsAcc.a1[1] * (measuredAcc.a_y - Yofs)
+				  + invParamsAcc.a1[2] * (measuredAcc.a_z - Zofs);
+    trueAcc.a_y =   invParamsAcc.a2[0] * (measuredAcc.a_x - Xofs)
+    			  + invParamsAcc.a2[1] * (measuredAcc.a_y - Yofs)
+				  + invParamsAcc.a2[2] * (measuredAcc.a_z - Zofs);
+    trueAcc.a_z = 	invParamsAcc.a3[0] * (measuredAcc.a_x - Xofs)
+    		      + invParamsAcc.a3[1] * (measuredAcc.a_y - Yofs)
+				  + invParamsAcc.a3[2] * (measuredAcc.a_z - Zofs);
 
 	return trueAcc;
 }
@@ -139,18 +150,28 @@ ACCEL inertGetAccel()
 ANGVEL inertGetAngVel()
 {
 	ANGVEL measuredAngVel;
-	ANGVEL treuAngVel;
+	ANGVEL trueAngVel;
 
 	measuredAngVel.omega_x = ret_angvel[1] * -G_C;
 	measuredAngVel.omega_y = ret_angvel[0] *  G_C;
 	measuredAngVel.omega_z = ret_angvel[2] * -G_C;
 
 	// Get rid of the offset error. Calibration was made in standing-still only.
-	treuAngVel.omega_x = measuredAngVel.omega_x - WxOfs;
-	treuAngVel.omega_y = measuredAngVel.omega_y - WyOfs;
-	treuAngVel.omega_z = measuredAngVel.omega_z - WzOfs;
+	/*trueAngVel.omega_x =    invParamsAng.a1[0] * (measuredAngVel.omega_x - WxOfs)
+    					  + invParamsAng.a1[1] * (measuredAngVel.omega_y - WyOfs)
+						  + invParamsAng.a1[2] * (measuredAngVel.omega_z - WzOfs);
+	trueAngVel.omega_y =    invParamsAng.a2[0] * (measuredAngVel.omega_x - WxOfs)
+    					  + invParamsAng.a2[1] * (measuredAngVel.omega_y - WyOfs)
+						  + invParamsAng.a2[2] * (measuredAngVel.omega_z - Zofs);
+	trueAngVel.omega_z = 	invParamsAng.a3[0] * (measuredAngVel.omega_x - WxOfs)
+    		    		  + invParamsAng.a3[1] * (measuredAngVel.omega_y - WyOfs)
+						  + invParamsAng.a3[2] * (measuredAngVel.omega_z - WzOfs);*/
 
-	return treuAngVel;
+	trueAngVel.omega_x = measuredAngVel.omega_x - WxOfs;
+	trueAngVel.omega_y = measuredAngVel.omega_y - WyOfs;
+	trueAngVel.omega_z = measuredAngVel.omega_z - WzOfs;
+
+	return trueAngVel; //TODO
 }
 
 void inertTriggerMeasurement()
@@ -206,7 +227,7 @@ void inert6PointCalibration(
 	Params.a3[1] = pYtoZ;
 	Params.a3[2] = pZgain;
 
-	invParams = hndlMatrixInversion(Params);
+	invParamsAcc = hndlMatrixInversion(Params);
 }
 
 // Callback functions --------------------------------------------------------------------------------------------------

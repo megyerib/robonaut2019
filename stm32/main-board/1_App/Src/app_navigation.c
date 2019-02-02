@@ -38,12 +38,15 @@ static ANGVEL w;
 static float v;
 static cNAVI_STATE naviState;
 
-static uint8_t naviMethod = 0;	// DEBUG. It can only be 0,1,2 or 3.
+static uint8_t naviMethod = 3;	// DEBUG. It can only be 0,1,2 or 3.
 
 static ACCEL txAccel;
 static ANGVEL txAngVel;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
+
+static void naviInertOffsetCalibration (void);
+
 // Global function definitions -----------------------------------------------------------------------------------------
 
 //! @brief	Initializes the Task_Navigation task.
@@ -75,10 +78,7 @@ void Task_Navigation(void* p)
 {
 	(void)p;
 
-	// Wait for the first measurement result.
-	vTaskDelay(200);
-	ANGVEL ofs = inertGetAngVel();
-	inertGyroOffsetCalibration(ofs);
+	naviInertOffsetCalibration();
 
 	while(1)
 	{
@@ -164,3 +164,51 @@ void Task_Navigation(void* p)
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
+
+static void naviInertOffsetCalibration (void)
+{
+	ANGVEL ofs[10];
+		ANGVEL avg;
+		ANGVEL sum;
+		int i;
+		sum.omega_x = 0;
+		sum.omega_y = 0;
+		sum.omega_z = 0;
+
+		// Wait for the first measurement result.
+		vTaskDelay(200);
+
+		vTaskDelay(10);
+		ofs[0] = inertGetAngVel();
+		vTaskDelay(10);
+		ofs[1] = inertGetAngVel();
+		vTaskDelay(10);
+		ofs[2] = inertGetAngVel();
+		vTaskDelay(10);
+		ofs[3] = inertGetAngVel();
+		vTaskDelay(10);
+		ofs[4] = inertGetAngVel();
+		vTaskDelay(10);
+		ofs[5] = inertGetAngVel();
+		vTaskDelay(10);
+		ofs[6] = inertGetAngVel();
+		vTaskDelay(10);
+		ofs[7] = inertGetAngVel();
+		vTaskDelay(10);
+		ofs[8] = inertGetAngVel();
+		vTaskDelay(10);
+		ofs[9] = inertGetAngVel();
+
+		for (i = 0; i < 10; i++)
+		{
+			sum.omega_x += ofs[i].omega_x;
+			sum.omega_y += ofs[i].omega_y;
+			sum.omega_z += ofs[i].omega_z;
+		}
+
+		avg.omega_x = sum.omega_x / 10.0f;
+		avg.omega_y = sum.omega_y / 10.0f;
+		avg.omega_z = sum.omega_z / 10.0f;
+
+		inertGyroOffsetCalibration(avg);
+}
