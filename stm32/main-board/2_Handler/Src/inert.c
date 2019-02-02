@@ -9,6 +9,10 @@
 // XL: Accelerometer
 //  G: Gyroscope
 
+// Gyro:
+// 100 dps = +11428
+// Magic constant = 114.28f
+
 // Includes ------------------------------------------------------------------------------------------------------------
 
 #include "handler_common.h"
@@ -23,7 +27,7 @@
 #define XL_1G_VAL (4096.0f)
 #define XL_C      (G * XL_CAL / XL_1G_VAL)
 
-#define G_C       (1.0f)
+#define G_C       (0.00875043752f) /* 1/114.28 */
 
 #define REGS_TO_READ (12u)
 
