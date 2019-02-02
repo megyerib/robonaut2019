@@ -20,6 +20,7 @@
 #include "print.h"
 #include "bsp_bluetooth.h"
 #include "speed.h"
+#include "trace.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -30,7 +31,9 @@
 typedef enum
 {
 	s1line,
-	s3lines
+	s1line2,
+	s3lines,
+	s3lines2
 }
 SPEEDCAL_STATE;
 
@@ -58,12 +61,15 @@ void TaskInit_SpeedCalibration(void)
 
 const char greeting[] = "Speed calibration task started\r\n";
 static int greetinglen = 32;
+static float speed;
 
 void Task_SpeedCalibration(void* p)
 {
 	static int32_t cntrval_start;
 	static int32_t cntrval_end;
-	static SPEEDCAL_STATE state = s1line;
+	static SPEEDCAL_STATE state = s3lines;
+
+	RoadSignal signal;
 
 	bspBtSend((uint8_t*) greeting, greetinglen);
 
@@ -74,17 +80,32 @@ void Task_SpeedCalibration(void* p)
 		if (actuateEnabled)
 			lineFollow();
 
+		signal = lineGetRoadSignal();
+
 		// LINE MEASURING & TRACE __________________________
 
 		switch (state)
 		{
 			case (s1line):
 			{
+				if (signal == TripleLine)
+				{
+					state = s3lines2;
+				}
+
+				break;
+			}
+			case (s1line2):
+			{
 				if (lineGetRoadSignal() == TripleLine)
 				{
 					cntrval_start = speedGetCounter();
 					traceCounterValue(state, cntrval_start);
 					state = s3lines;
+				}
+				else
+				{
+					state = s1line;
 				}
 
 				break;
@@ -93,14 +114,32 @@ void Task_SpeedCalibration(void* p)
 			{
 				if (lineGetRoadSignal() == Nothing)
 				{
+					state = s1line2;
+				}
+
+				break;
+			}
+			case (s3lines2):
+			{
+				if (lineGetRoadSignal() == Nothing)
+				{
 					cntrval_end = speedGetCounter();
 					traceCounterValue(state, cntrval_end);
 					state = s1line;
+				}
+				else
+				{
+					state = s3lines;
 				}
 
 				break;
 			}
 		}
+
+		// TRACE SPEED _____________________________________
+
+		speed = speedGet();
+		traceBluetooth(BT_LOG_ENC_V, &speed);
 
 		// END DELAY _______________________________________
 
@@ -173,13 +212,17 @@ static void traceCounterValue(SPEEDCAL_STATE state, int32_t counter)
 	{
 		case s1line:
 		{
-			memcpy(btBuffer, startText, textlen);
+			memcpy(btBuffer, endText, textlen);
 			break;
 		}
 		case s3lines:
 		{
-			memcpy(btBuffer, endText, textlen);
+			memcpy(btBuffer, startText, textlen);
 			break;
+		}
+		default:
+		{
+			return;
 		}
 	}
 
@@ -199,7 +242,7 @@ static void traceCounterValue(SPEEDCAL_STATE state, int32_t counter)
 	btBuffer[btBufferLen] = '\n';
 	btBufferLen++;
 	btBuffer[btBufferLen] = '\0';
-	btBufferLen++;
+	//btBufferLen++;
 
 	bspBtSend((uint8_t*) btBuffer, btBufferLen);
 }

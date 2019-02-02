@@ -10,11 +10,13 @@
 
 #include "speed.h"
 #include "tim.h"
+#include "bsp_bluetooth.h"
+#include "trace.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define MUL_DIST     (1.0f/140702.0f)
-#define MUL_SPEED    (1000.0f)
+//#define INC_PER_M    (140702.0f) /* Balazs */
+#define INC_PER_M    (140331.0f)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -38,7 +40,12 @@ void speedInit()
 
 float speedGet()
 {
-	return cntrDiff * MUL_SPEED;
+	// (incr/ms)/1000 = incr/s
+	// (incr/s)/(incr/m) = m/s
+
+	float speed = cntrDiff * 1000.0 / INC_PER_M;
+
+	return speed;
 }
 
 int32_t speedGetCounter()
@@ -48,7 +55,8 @@ int32_t speedGetCounter()
 
 float speedGetDistance()
 {
-	return cur_cntrval * MUL_DIST;
+	// incr/(incr/m) = m
+	return cur_cntrval / INC_PER_M;
 }
 
 void speedCallback()

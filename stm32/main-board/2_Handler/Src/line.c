@@ -21,6 +21,8 @@
 
 #define BUFMAXLEN 32
 
+#define OFFSET_HACK (-0.009f) /* +9 mm to the left */
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -80,7 +82,7 @@ float lineGetSingle()
 
 	prev_line_front = x_front;
 
-    return (x_front + 0.0f) / 1000.0f;
+    return (x_front + 0.0f) / 1000.0f + OFFSET_HACK;
 }
 
 LINE_SENSOR_OUT lineGetRawFront()
