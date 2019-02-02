@@ -48,7 +48,7 @@ void Init()
 //! Initialize app layer modules
 static void appInit()
 {
-	//TaskInit_CarDiagnosticsTool();
+	TaskInit_CarDiagnosticsTool();
 	//TaskInit_Sharp();
 	//TaskInit_InertialCalibration();
 	//TaskInit_Navigation();
