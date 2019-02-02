@@ -156,362 +156,209 @@ void sRunMainStateMachine (void)
 //! Function: sRunDriveStateMachine
 void sRunDriveStateMachine (void)	// TODO implementation
 {
+	// Load in control parameters.
 	switch (actLapSegment)
 	{
-		case 0:
+		case eSTATE_MAIN_LAP_1:
 		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
+			actualParams.P 		= paramList.lap1[actLapSegment].P;
+			actualParams.Kp 	= paramList.lap1[actLapSegment].Kp;
+			actualParams.Kd 	= paramList.lap1[actLapSegment].Kd;
+			actualParams.Speed 	= paramList.lap1[actLapSegment].Speed;
 			break;
 		}
-		case 1:
+		case eSTATE_MAIN_LAP_2:
 		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
+			actualParams.P 		= paramList.lap2[actLapSegment].P;
+			actualParams.Kp 	= paramList.lap2[actLapSegment].Kp;
+			actualParams.Kd 	= paramList.lap2[actLapSegment].Kd;
+			actualParams.Speed 	= paramList.lap2[actLapSegment].Speed;
 			break;
 		}
-		case 2:
+		case eSTATE_MAIN_LAP_3:
 		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 3:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 4:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 5:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 6:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 7:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 8:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 9:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 10:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 11:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 12:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 13:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 14:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
-			break;
-		}
-		case 15:
-		{
-			// Load in control parameters.
-			if (smMainState == eSTATE_MAIN_LAP_1)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_2)
-			{
-
-			}
-			else if (smMainState == eSTATE_MAIN_LAP_3)
-			{
-
-			}
-
-			// Actuate the car
-
-			// Search for the end of the segment.
-
+			actualParams.P 		= paramList.lap3[actLapSegment].P;
+			actualParams.Kp 	= paramList.lap3[actLapSegment].Kp;
+			actualParams.Kd 	= paramList.lap3[actLapSegment].Kd;
+			actualParams.Speed 	= paramList.lap3[actLapSegment].Speed;
 			break;
 		}
 		default:
 		{
+			break;
+		}
+	}
+
+	// Actuate the car
+	sRunCntrLineFollow();
+
+	// Search for the end of the segment: 3 continuous lines (slow down segment).
+	switch (actLapSegment)
+	{
+		case 0:
+		{
+			// Find slowing segment (3 continuous lines).
+			if (false)
+			{
+
+				actLapSegment = 1;
+			}
+			break;
+		}
+		case 1:
+		{
+			// Find main track (1 line).
+			if (false)
+			{
+
+				actLapSegment = 2;
+			}
+			break;
+		}
+		case 2:
+		{
+			// Find acceleration segment (3 discrete line segments).
+			if (false)
+			{
+
+				actLapSegment = 3;
+			}
+			break;
+		}
+		case 3:
+		{
+			// Find main track (1 line).
+			if (false)
+			{
+
+				actLapSegment = 4;
+			}
+			break;
+		}
+		case 4:
+		{
+			// Find slowing segment (3 continuous lines).
+			if (false)
+			{
+
+				actLapSegment = 5;
+			}
+			break;
+		}
+		case 5:
+		{
+			// Find main track (1 line).
+			if (false)
+			{
+
+				actLapSegment = 6;
+			}
+			break;
+		}
+		case 6:
+		{
+			// Find acceleration segment (3 discrete line segments).
+			if (false)
+			{
+
+				actLapSegment = 7;
+			}
+			break;
+		}
+		case 7:
+		{
+			// Find main track (1 line).
+			if (false)
+			{
+
+				actLapSegment = 8;
+			}
+			break;
+		}
+		case 8:
+		{
+			// Find slowing segment (3 continuous lines).
+			if (false)
+			{
+
+				actLapSegment = 9;
+			}
+			break;
+		}
+		case 9:
+		{
+			// Find main track (1 line).
+			if (false)
+			{
+
+				actLapSegment = 10;
+			}
+			break;
+		}
+		case 10:
+		{
+			// Find acceleration segment (3 discrete line segments).
+			if (false)
+			{
+
+				actLapSegment = 11;
+			}
+			break;
+		}
+		case 11:
+		{
+			// Find main track (1 line).
+			if (false)
+			{
+
+				actLapSegment = 12;
+			}
+			break;
+		}
+		case 12:
+		{
+			// Find slowing segment (3 continuous lines).
+			if (false)
+			{
+
+				actLapSegment = 13;
+			}
+			break;
+		}
+		case 13:
+		{
+			// Find main track (1 line).
+			if (false)
+			{
+
+				actLapSegment = 14;
+			}
+			break;
+		}
+		case 14:
+		{
+			// Find acceleration segment (3 discrete line segments).
+			if (false)
+			{
+
+				actLapSegment = 15;
+			}
+			break;
+		}
+		case 15:
+		{
+			// Find start gate.
+			if (false)
+			{
+
+				// The lap is complete, new one is starting.
+				actLapSegment = 0;
+			}
+			break;
+		}
+		default:
+		{
+			// NOP
 			break;
 		}
 	}

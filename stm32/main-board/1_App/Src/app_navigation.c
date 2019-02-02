@@ -40,6 +40,9 @@ static cNAVI_STATE naviState;
 
 static uint8_t naviMethod = 0;	// DEBUG. It can only be 0,1,2 or 3.
 
+static ACCEL txAccel;
+static ANGVEL txAngVel;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -91,7 +94,7 @@ void Task_Navigation(void* p)
 		// Orthogonal with the orientation of the car.
 		a.v = naviConvertGToSI(acceleration.a_y);
 		// Vertical acceleration.
-		a.v = naviConvertGToSI(acceleration.a_z);
+		//a.v = naviConvertGToSI(acceleration.a_z);
 
 		// Roll direction in the RPY coordinate-system.
 		w.omega_x = naviConvertDpsToSI(angularVelocity.omega_x);
@@ -136,13 +139,21 @@ void Task_Navigation(void* p)
 
 		traceBluetooth(BT_LOG_ENC_V, &v);
 
-		traceBluetooth(BT_LOG_INERT_ACCEL_X, &acceleration.a_x);
-		traceBluetooth(BT_LOG_INERT_ACCEL_Y, &acceleration.a_y);
-		traceBluetooth(BT_LOG_INERT_ACCEL_Z, &acceleration.a_z);
+		txAccel.a_x = naviConvertGToSI(acceleration.a_x);
+		txAccel.a_y = naviConvertGToSI(acceleration.a_y);
+		txAccel.a_z = naviConvertGToSI(acceleration.a_z);
 
-		traceBluetooth(BT_LOG_INERT_ANG_VEL_X, &angularVelocity.omega_x);
-		traceBluetooth(BT_LOG_INERT_ANG_VEL_Y, &angularVelocity.omega_y);
-		traceBluetooth(BT_LOG_INERT_ANG_VEL_Z, &angularVelocity.omega_z);
+		txAngVel.omega_x = naviConvertDpsToSI(angularVelocity.omega_x);
+		txAngVel.omega_y = naviConvertDpsToSI(angularVelocity.omega_y);
+		txAngVel.omega_z = naviConvertDpsToSI(angularVelocity.omega_z);
+
+		traceBluetooth(BT_LOG_INERT_ACCEL_X, &txAccel.a_x);
+		traceBluetooth(BT_LOG_INERT_ACCEL_Y, &txAccel.a_y);
+		traceBluetooth(BT_LOG_INERT_ACCEL_Z, &txAccel.a_z);
+
+		traceBluetooth(BT_LOG_INERT_ANG_VEL_X, &txAngVel.omega_x);
+		traceBluetooth(BT_LOG_INERT_ANG_VEL_Y, &txAngVel.omega_y);
+		traceBluetooth(BT_LOG_INERT_ANG_VEL_Z, &txAngVel.omega_z);
 		//______________________________________________________________________________________________________________
 
 		// Trigger the next conversion.

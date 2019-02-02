@@ -161,7 +161,7 @@ void Task_SpeedRun (void* p)
 		else if (recStopCar == true)
 		{
 			// Stop signal is received, stop the car.
-			actualParams.Speed = 0;
+
 			motorSetDutyCycle(0);
 		}
 
@@ -473,7 +473,7 @@ static void sRunCheckButtonSoftRst (void)
 
 		if (recSoftReset == true)
 		{
-			actLapSegment = recSoftResetTo;
+			smMainState = recSoftResetTo;
 		}
 		else
 		{
