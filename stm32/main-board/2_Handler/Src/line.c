@@ -53,7 +53,7 @@ void lineInit()
 	uframeStmRear.process = uframeProcessRear;
 
 	uartFrameRxStm(&uframeStmFront);
-	uartFrameRxStm(&uframeStmRear);
+	//uartFrameRxStm(&uframeStmRear);
 }
 
 float lineGetSingle()
@@ -65,20 +65,22 @@ float lineGetSingle()
     // Get temporary data
 	front = front_tmp;
 
-    // Get center line position
-    for (i = 0; i < front.cnt; i++)
-        x_front += front.lines[i];
-    x_front /= front.cnt;
-
-    int16_t ret_mm = x_front;
-
 	// Lost line
 	if (front.cnt == 0)
-		ret_mm = prev_line_front;
+	{
+		x_front = prev_line_front;
+	}
+	else
+	{
+		// Get center line position
+		for (i = 0; i < front.cnt; i++)
+			x_front += front.lines[i];
+		x_front /= front.cnt;
+	}
 
-	prev_line_front = ret_mm;
+	prev_line_front = x_front;
 
-    return (ret_mm + 0.0f) / 1000.0f;
+    return (x_front + 0.0f) / 1000.0f;
 }
 
 LINE_SENSOR_OUT lineGetRawFront()

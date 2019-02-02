@@ -339,7 +339,7 @@ void USART3_IRQHandler (void)
 
 void UART4_IRQHandler (void)
 {
-	HAL_UART_IRQHandler(&huart4);
+	//HAL_UART_IRQHandler(&huart4);
 }
 
 void UART5_IRQHandler (void)
@@ -501,7 +501,7 @@ static eBspStatus bspUartLineFrontInit (void)
 
 static eBspStatus bspUartLineRearInit (void)
 {
-	eBspStatus status = BSP_OK;
+	/*eBspStatus status = BSP_OK;
 
 	huart_line_rear->Instance 				= usart_line_rear;
 
@@ -523,7 +523,9 @@ static eBspStatus bspUartLineRearInit (void)
     HAL_NVIC_SetPriority(UART4_IRQn, 2, 2);
     NVIC_EnableIRQ(UART4_IRQn);
 
-	return status;
+	return status;*/
+
+	return BSP_OK;
 }
 
 static eBspStatus bspUartBluetoothInit (void)
@@ -596,11 +598,11 @@ static void bspUartAssignDevices(void)
     // Dynamically assigned
     huart_motor      = &huart1;
     huart_line_front = &huart3;
-    huart_line_rear  = &huart4;
+    //huart_line_rear  = &huart4;
 
     usart_motor      = USART1;
     usart_line_front = USART3;
-    usart_line_rear  = UART4;
+    //usart_line_rear  = UART4;
 
 }
 

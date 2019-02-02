@@ -42,7 +42,7 @@ static int actuateEnabled;
 
 static void remoteHandle();
 static void lineFollow();
-static void traceCounterValue(SPEEDCAL_STATE state, uint32_t counter);
+static void traceCounterValue(SPEEDCAL_STATE state, int32_t counter);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -56,11 +56,16 @@ void TaskInit_SpeedCalibration(void)
 				NULL);
 }
 
+const char greeting[] = "Speed calibration task started\r\n";
+static int greetinglen = 32;
+
 void Task_SpeedCalibration(void* p)
 {
-	uint32_t cntrval_start;
-	uint32_t cntrval_end;
-	SPEEDCAL_STATE state = s1line;
+	static int32_t cntrval_start;
+	static int32_t cntrval_end;
+	static SPEEDCAL_STATE state = s1line;
+
+	bspBtSend((uint8_t*) greeting, greetinglen);
 
 	while(1)
 	{
@@ -78,7 +83,7 @@ void Task_SpeedCalibration(void* p)
 				if (lineGetRoadSignal() == TripleLine)
 				{
 					cntrval_start = speedGetCounter();
-					//traceCounterValue(state, cntrval_start);
+					traceCounterValue(state, cntrval_start);
 					state = s3lines;
 				}
 
@@ -89,7 +94,7 @@ void Task_SpeedCalibration(void* p)
 				if (lineGetRoadSignal() == Nothing)
 				{
 					cntrval_end = speedGetCounter();
-					//traceCounterValue(state, cntrval_end);
+					traceCounterValue(state, cntrval_end);
 					state = s1line;
 				}
 
@@ -137,7 +142,7 @@ static void lineFollow()
 
 	prevline = line_pos;
 
-	line_pos = lineGetSingle() * 1000; // m -> mm
+	line_pos = lineGetSingle() * 1000.0; // m -> mm
 
 	line_diff = line_pos - prevline;
 
@@ -155,37 +160,48 @@ static void lineFollow()
 	servoSetAngle(angle);
 }
 
-static void traceCounterValue(SPEEDCAL_STATE state, uint32_t counter)
+static void traceCounterValue(SPEEDCAL_STATE state, int32_t counter)
 {
-	char* startText = "Start cntr value: ";
-	char* endText   = "End cntr value:   ";
-	int len = 18;
+	static const char startText[] = "Start cntr value: ";
+	static const char endText[]   = "End cntr value:   ";
+	int textlen = 18;
+
+	static char btBuffer[60];
+	static int btBufferLen;
 
 	switch (state)
 	{
 		case s1line:
 		{
-			bspBtSend((uint8_t*) startText, len);
+			memcpy(btBuffer, startText, textlen);
 			break;
 		}
 		case s3lines:
 		{
-			bspBtSend((uint8_t*) endText, len);
+			memcpy(btBuffer, endText, textlen);
 			break;
 		}
 	}
+
+	btBufferLen = textlen;
 
 	char num_buf[11];
 	int num_buf_len;
 
 	print_uint32_t(counter, num_buf, &num_buf_len);
 
-	num_buf[num_buf_len] = '\r';
-	num_buf_len++;
-	num_buf[num_buf_len] = '\n';
-	num_buf_len++;
+	memcpy(&btBuffer[btBufferLen], num_buf, num_buf_len);
 
-	bspBtSend((uint8_t*) endText, len);
+	btBufferLen += num_buf_len;
+
+	btBuffer[btBufferLen] = '\r';
+	btBufferLen++;
+	btBuffer[btBufferLen] = '\n';
+	btBufferLen++;
+	btBuffer[btBufferLen] = '\0';
+	btBufferLen++;
+
+	bspBtSend((uint8_t*) btBuffer, btBufferLen);
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
