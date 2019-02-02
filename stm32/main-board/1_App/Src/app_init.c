@@ -20,6 +20,7 @@
 #include "app_maze.h"
 #include "app_speedRun.h"
 #include "app_speedcal.h"
+#include "app_servo.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -63,6 +64,7 @@ static void appInit()
 	//_______________________Debug:
 	//TaskInit_steeringDemo();
 	//TaskInit_Sharp();
+	//TaskInit_Servo();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

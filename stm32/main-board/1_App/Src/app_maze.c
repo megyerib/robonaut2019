@@ -236,7 +236,7 @@ void Task_Maze (void* p)
 		// Trace out the necessary infos.
 		MazeTraceInformations();
 
-		vTaskDelay(15);	// TASK_DELAY_5_MS TODO
+		vTaskDelay(TASK_DELAY_5_MS);	// TASK_DELAY_5_MS TODO
 	}
 }
 
