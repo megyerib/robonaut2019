@@ -24,7 +24,7 @@
 
 static uint32_t prev_cntrval = 0;
 static uint32_t cur_cntrval = 0;
-static uint32_t cntrDiff = 0;
+static  int32_t cntrDiff = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -40,7 +40,7 @@ void speedInit()
 
 float speedGet()
 {
-	// (incr/ms)/1000 = incr/s
+	// (incr/ms)*1000 = incr/s
 	// (incr/s)/(incr/m) = m/s
 
 	float speed = cntrDiff * 1000.0 / INC_PER_M;
@@ -61,16 +61,30 @@ float speedGetDistance()
 
 void speedCallback()
 {
+	static int32_t ms_timer_val;
+	static int32_t ms_timer_val_prev;
+
 	uint32_t tim_val;
+	int32_t meas_diff;
+	int32_t diff;
 
 	__disable_irq();
-	tim_val  = TIM5->CNT;
+	tim_val      = TIM5->CNT;
+	ms_timer_val = TIM4->CNT;
 	__enable_irq();
 
 	prev_cntrval = cur_cntrval;
 	cur_cntrval = tim_val;
 
-	cntrDiff = cur_cntrval - prev_cntrval;
+	// Compensation
+	meas_diff = 1000 + ms_timer_val - ms_timer_val_prev;
+	ms_timer_val_prev = ms_timer_val;
+
+	diff = cur_cntrval - prev_cntrval;
+	diff *= 1000;
+	diff /= meas_diff;
+
+	cntrDiff = diff;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
