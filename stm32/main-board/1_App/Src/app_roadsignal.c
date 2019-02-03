@@ -63,7 +63,6 @@ static int prevLineCnt = 0;
 
 static int prevLineTypes[3] = {0,0,0};
 static int pltIndex = 0;
-static LINE_TYPE lineType = None;
 static LINE_TYPE prevLineType = None;
 static LSO_FLOAT lastDoubleLine;
 
@@ -74,7 +73,7 @@ static void  lineFollow(float line_pos, float K_P, float K_D, int motor_d);
 static float followPrevLine();
 static float followRightLine();
 static float followLeftLine();
-static void  examineRoadSignals(LSO_FLOAT SensorOut);
+static LINE_TYPE examineRoadSignals(LSO_FLOAT SensorOut);
 static int   isLeft(LSO_FLOAT sensorData, float line);
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -92,6 +91,7 @@ void TaskInit_roadSignal(void)
 void Task_roadSignal(void* p)
 {
 	float line;
+	LINE_TYPE lineType;
 
 	while (1)
 	{
@@ -99,7 +99,9 @@ void Task_roadSignal(void* p)
 
 		line = followPrevLine();
 
-		examineRoadSignals(lineGetRawFrontFloat());
+		lineType = examineRoadSignals(lineGetRawFrontFloat());
+
+		prevLineType = lineType;
 
 		lineFollow(
 			line,
@@ -232,9 +234,10 @@ static float followRightLine()
 	return newLine;
 }
 
-static void examineRoadSignals(LSO_FLOAT SensorOut)
+static LINE_TYPE examineRoadSignals(LSO_FLOAT SensorOut)
 {
 	int prevLinesOk;
+	LINE_TYPE lineType = prevLineType;
 
 	prevLineTypes[pltIndex] = SensorOut.cnt;
 	pltIndex++;
@@ -304,21 +307,18 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 			}
 		}
 
-		prevLineType = lineType;
 		prevLineCnt = SensorOut.cnt;
 	}
 
-	if (prevLinesOk && (prevLineType == DoubleNearRight || prevLineType == DoubleNearLeft))
+	if (prevLinesOk && (lineType == DoubleNearRight || lineType == DoubleNearLeft))
 	{
 		if (SensorOut.lines[0] - SensorOut.lines[1] > DOUBLE_LINE_HYS_HIGH)
 		{
 			lineType = DoubleFar;
 			bspBtSend((uint8_t*)"Double far\r\n", 12);
-			prevLineType = lineType;
 		}
 	}
-
-	if (prevLinesOk && lineType == DoubleFar)
+	else if (prevLinesOk && lineType == DoubleFar)
 	{
 		if (SensorOut.lines[0] - SensorOut.lines[1] < DOUBLE_LINE_HYS_LOW)
 		{
@@ -332,10 +332,10 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 				lineType = DoubleNearRight;
 				bspBtSend((uint8_t*)"Double near right\r\n", 19);
 			}
-
-			prevLineType = lineType;
 		}
 	}
+
+	return lineType;
 }
 
 static int isLeft(LSO_FLOAT sensorData, float line)
