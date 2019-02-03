@@ -21,7 +21,7 @@
 
 #define BUFMAXLEN 32
 
-#define OFFSET_HACK (-0.009f) /* +9 mm to the left */
+#define OFFSET_HACK (-9u) /* +9 mm to the left */
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -82,7 +82,7 @@ float lineGetSingle()
 
 	prev_line_front = x_front;
 
-    return (x_front + 0.0f) / 1000.0f + OFFSET_HACK;
+    return (x_front + 0.0f) / 1000.0f;
 }
 
 LINE_SENSOR_OUT lineGetRawFront()
@@ -147,6 +147,10 @@ static void uframeProcessFront(uint8_t* buf, uint8_t size)
 	if (size == sizeof(LINE_SENSOR_OUT))
 	{
 		front_tmp = *((LINE_SENSOR_OUT*) buf);
+
+		front_tmp.lines[0] += OFFSET_HACK;
+		front_tmp.lines[1] += OFFSET_HACK;
+		front_tmp.lines[2] += OFFSET_HACK;
 	}
 }
 

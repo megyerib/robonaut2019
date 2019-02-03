@@ -12,19 +12,11 @@
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
-typedef enum
-{
-	singleLine = 0
-}
-ROAD_SIGNAL;
-
 // Variables -----------------------------------------------------------------------------------------------------------
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
-// signal       : signal type
-// distance_back: signal distance from sensor
-
-void roadSignalGet(ROAD_SIGNAL* signal, float* distance_back);
+void TaskInit_roadSignal(void);
+void Task_roadSignal(void* p);
 
 // END -----------------------------------------------------------------------------------------------------------------
