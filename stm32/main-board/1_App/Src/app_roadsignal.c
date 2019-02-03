@@ -29,6 +29,10 @@
 
 #define PREV_LINES      (3u)
 
+#define DOUBLE_LINE_THRESHOLD  (0.09f)
+#define DOUBLE_LINE_HYS_LOW    (0.06f)
+#define DOUBLE_LINE_HYS_HIGH   (0.12f)
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 typedef struct
@@ -42,7 +46,8 @@ typedef enum
 {
 	None = 0,
 	Single,
-	Double,
+	DoubleNear,
+	DoubleFar,
 	Triple
 }
 LINE_TYPE;
@@ -51,10 +56,11 @@ LINE_TYPE;
 
 static int   actuateEnabled = 0;
 static float prevLine = 0;
-static LINE_TYPE lineType = None;
+static int prevLineCnt = 0;
 
 static int prevLineTypes[3] = {0,0,0};
 static int pltIndex = 0;
+static LINE_TYPE lineType = None;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -230,29 +236,63 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 
 	prevLinesOk = (prevLineTypes[0] == prevLineTypes[1] && prevLineTypes[0] == prevLineTypes[2]);
 
-	if (prevLinesOk && SensorOut.cnt != lineType)
+	if (prevLinesOk && SensorOut.cnt != prevLineCnt)
 	{
 		switch (SensorOut.cnt)
 		{
-			case 0:
+			/*case 0:
 			{
+				lineType = None;
 				bspBtSend((uint8_t*)"No line\r\n", 9);
-			}
+				break;
+			}*/
 			case 1:
 			{
-				bspBtSend((uint8_t*)"Single line\r\n", 13);
+				lineType = Single;
+				bspBtSend((uint8_t*)"Single\r\n", 8); // & unemployed
+				break;
 			}
 			case 2:
 			{
-				bspBtSend((uint8_t*)"Double line\r\n", 13);
+				if (SensorOut.lines[0] - SensorOut.lines[1] < DOUBLE_LINE_THRESHOLD)
+				{
+					lineType = DoubleNear;
+					bspBtSend((uint8_t*)"Double near\r\n", 13);
+				}
+				else
+				{
+					lineType = DoubleFar;
+					bspBtSend((uint8_t*)"Double far\r\n", 12);
+				}
+
+				break;
 			}
 			case 3:
 			{
-				bspBtSend((uint8_t*)"Triple line\r\n", 13);
+				bspBtSend((uint8_t*)"Triple\r\n", 8);
+				break;
 			}
 		}
 
-		lineType = SensorOut.cnt;
+		prevLineCnt = SensorOut.cnt;
+	}
+
+	if (prevLinesOk && lineType == DoubleNear)
+	{
+		if (SensorOut.lines[0] - SensorOut.lines[1] > DOUBLE_LINE_HYS_HIGH)
+		{
+			lineType = DoubleFar;
+			bspBtSend((uint8_t*)"Double far\r\n", 12);
+		}
+	}
+
+	if (prevLinesOk && lineType == DoubleFar)
+	{
+		if (SensorOut.lines[0] - SensorOut.lines[1] < DOUBLE_LINE_HYS_LOW)
+		{
+			lineType = DoubleNear;
+			bspBtSend((uint8_t*)"Double near\r\n", 13);
+		}
 	}
 }
 
