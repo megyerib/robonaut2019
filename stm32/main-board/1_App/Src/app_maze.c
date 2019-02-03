@@ -140,8 +140,8 @@ static float line_pos;
 
 static float speed_current;
 static float speed_prev;
-static uint32_t D_prev;
-static uint32_t D_curr;
+//static uint32_t D_prev;
+//static uint32_t D_curr;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -151,7 +151,7 @@ static void 	MazeCheckRemote		   (void);
 static void 	MazeTraceInformations  (void);
 static uint32_t MazeSegmentsConverter  (void);
 static void		MazeCntrLineFollow	   (void);
-static void		MazeCntrSpeed 		   (void);
+static void		MazeCntrSpeed 		   (float r_speed);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -195,6 +195,7 @@ void TaskInit_Maze (void)
 void Task_Maze (void* p)
 {
 	(void)p;
+	float r_speed = 1.5;
 
 	while (1)
 	{
@@ -207,6 +208,7 @@ void Task_Maze (void* p)
 		// Run the state machine until the job is done or stop signal received.
 		if (mazeFinished == false && recStopCar == false)
 		{
+			MazeCntrSpeed (r_speed);
 			MazeMainStateMachine();
 		}
 		else if (recStopCar == true)
@@ -229,6 +231,7 @@ void Task_Maze (void* p)
 
 		// Detect line and control the servo and the speed of the car.
 		MazeCntrLineFollow();
+
 		//MazeCntrSpeed(); //TODO
 
 		// TODO Check for frontal collision.
@@ -262,7 +265,7 @@ static void MazeMainStateMachine (void)
 			// Standing in the start position and radio trigger.
 			actualParams.Speed = 0;
 
-			if (startGetState() == s0)
+			if (true)
 			{
 				// Trigger received -> DISCOVER state.
 				smMainState = eSTATE_MAIN_DISCOVER;
@@ -347,7 +350,7 @@ static void	MazeCntrLineFollow (void)
 	servo_angle = -0.75f * (P_modifier + D_modifier);
 
 	// Actuate.
-	motorSetDutyCycle(actualParams.Speed);
+	//motorSetDutyCycle(actualParams.Speed);
 	servoSetAngle(servo_angle);
 
 	// Trace
@@ -355,27 +358,35 @@ static void	MazeCntrLineFollow (void)
 	txLineMainLinePos = line_pos;
 }
 
-static void	MazeCntrSpeed (void)
+static void	MazeCntrSpeed (float r_speed)
 {
-	float r_speed = 1;
 	float e_speed;
-	float P_speed = 13;
-	uint32_t y_speed;
 
-	float speed_diff;
+	float Ts = 5;			//sampling time in ms
+	float Ti = 20;			//integrating time ms
+	float beta = exp(-Ts/Ti);
+	float fk = 0;
 
-	// v previous
-	speed_prev = speed_current;
+	float Umin = 10;
+	float Umax = 85;
+	float uk;
+	float kc = 10;
 
-	// V actual
-	speed_current = speedGet();
+	speed_prev = speed_current;				// v previous
+	speed_current = speedGet();				// V actual
+	e_speed = r_speed - speed_current;		// v diff = v wanted - v actual
+	uk = kc * e_speed + fk;
+	if(uk < Umin)
+	{
+		uk = Umin;
+	}
+	if(uk > Umax)
+	{
+		uk = Umax;
+	}
+	fk = beta*fk + (1-beta*uk);
 
-	// v diff = v wanted - v actual
-	speed_diff = r_speed - speed_current;
-
-	// D current
-	y_speed = (uint32_t)(P_speed*(speed_prev + speed_diff));
-	actualParams.Speed = y_speed;
+	actualParams.Speed = (uint32_t) uk;
 
 	// Actuate.
 	motorSetDutyCycle(actualParams.Speed);
