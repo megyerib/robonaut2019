@@ -19,7 +19,7 @@
 //! Constant used to convert the gravitational acceleration given in gravitational force [g] to SI [m2/s].
 #define     NAVI_F_GRAVY_TO_SI      (9.80665f)
 //! Constant used to convert the angular velocity given in degree per seconds [dps] to SI [rad/s].
-#define     NAVI_DPS_TO_SI          (float)(PI/180)
+#define     NAVI_DPS_TO_SI          (float)(PI/180.0f)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -58,38 +58,38 @@ static void  naviUpdateOrientationSTM32 (void);
 static void  naviUpdateOrientation 	    (void);
 static void  naviUpdateVelocity 	  	(void);
 static void  naviUpdatePosition         (void);
-static float naviNormaliseOrientation   (const float psi);
+
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void naviDRInit (void)
 {
-	prevA.u = 0;
-	prevA.v = 0;
-	prevV.u = 0;
-	prevV.v = 0;
-	prevP.n = 0;
-	prevP.e = 0;
-	prevOmega = 0;
-	prevPhi = 0;
+	prevA.u = 0.0f;
+	prevA.v = 0.0f;
+	prevV.u = 0.0f;
+	prevV.v = 0.0f;
+	prevP.n = 0.0f;
+	prevP.e = 0.0f;
+	prevOmega = 0.0f;
+	prevPhi = 0.0f;
 
-	currA.u = 0;
-	currA.v = 0;
-	currV.u = 0;
-	currV.v = 0;
-	currP.n = 0;
-	currP.e = 0;
-	currOmega = 0;
-	currPhi = 0;
+	currA.u = 0.0f;
+	currA.v = 0.0f;
+	currV.u = 0.0f;
+	currV.v = 0.0f;
+	currP.n = 0.0f;
+	currP.e = 0.0f;
+	currOmega = 0.0f;
+	currPhi = 0.0f;
 
-	dt_s = 1;
+	dt_s = 1.0f;
 
-	Phi    = 0;
-	Theta  = 0;
-	Psi    = 0;
-	dPhi   = 0;
-	dTheta = 0;
-	dPsi   = 0;
+	Phi    = 0.0f;
+	Theta  = 0.0f;
+	Psi    = 0.0f;
+	dPhi   = 0.0f;
+	dTheta = 0.0f;
+	dPsi   = 0.0f;
 }
 
 cNAVI_STATE naviGetNaviDataEnc (const float v, const ANGVEL w, const uint32_t dt, const eNAVI_ENC_MODE mode)
@@ -152,6 +152,43 @@ float naviConvertGToSI (const float accel_g)
 	return accel_g * NAVI_F_GRAVY_TO_SI;
 }
 
+//**********************************************************************************************************************
+//!
+//!
+//**********************************************************************************************************************
+float naviNormaliseOrientation (const float psi)
+{
+	float normOri;
+	float temp = psi;
+
+	if (temp >= 0.0f)
+	{
+		// Positive.
+
+		// Convert into [0; 2PI)
+		while (temp >= 2.0f*PI)
+		{
+			temp -= 2.0f*PI;
+		}
+
+		normOri = temp;
+	}
+	else
+	{
+		// Negative.
+
+		// Convert into (-2PI; 0]
+		while (temp <= -2.0f*PI)
+		{
+			temp += 2.0f*PI;
+		}
+
+		normOri = temp + 2.0f*PI;
+	}
+
+	return normOri;
+}
+
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 //**********************************************************************************************************************
@@ -178,7 +215,7 @@ static cNAVI_STATE naviDRProcessInertial (const cVEC_ACCEL a, const float omega,
 	currOmega = omega;
 
 	// Convert time to seconds.
-	dt_s = (float)dt / 1000;
+	dt_s = (float)dt / 1000.0f;
 
 	// Calculate orientation.
 	naviUpdateOrientation();
@@ -191,7 +228,7 @@ static cNAVI_STATE naviDRProcessInertial (const cVEC_ACCEL a, const float omega,
 
 	// Construct navigation state vector.
 	retVal.p   = currP;
-	retVal.phi = currPhi;
+	retVal.psi = currPhi;
 
 	return retVal;
 }
@@ -209,7 +246,7 @@ static cNAVI_STATE naviDRProcessInertialSTM32 (const cVEC_ACCEL a, const ANGVEL 
 	W = w;
 
 	// Convert time to seconds.
-	dt_s = (float)dt / 1000;
+	dt_s = (float)dt / 1000.0f;
 
 	// Calculate orientation.
 	naviUpdateOrientationSTM32();
@@ -222,7 +259,7 @@ static cNAVI_STATE naviDRProcessInertialSTM32 (const cVEC_ACCEL a, const ANGVEL 
 
 	// Construct navigation state vector.
 	retVal.p   = currP;
-	retVal.phi = currPhi;
+	retVal.psi = currPhi;
 
 	return retVal;
 }
@@ -237,11 +274,11 @@ static cNAVI_STATE naviDRProcessIncremental (const float v, const float omega, c
 
 	// Save the current sensor data.
 	currV.u = v;
-	currV.v = 0;
+	currV.v = 0.0f;
 	currOmega = omega;
 
 	// Convert time to seconds.
-	dt_s = (float)dt / 1000;
+	dt_s = (float)dt / 1000.0f;
 
 	// Calculate orientation.
 	naviUpdateOrientation();
@@ -251,7 +288,7 @@ static cNAVI_STATE naviDRProcessIncremental (const float v, const float omega, c
 
 	// Construct navigation state vector.
 	retVal.p   = currP;
-	retVal.phi = currPhi;
+	retVal.psi = currPhi;
 
 	return retVal;
 }
@@ -266,11 +303,11 @@ static cNAVI_STATE naviDRProcessIncrementalSTM32 (const float v, const ANGVEL w,
 
 	// Save the current sensor data.
 	currV.u = v;
-	currV.v = 0;
+	currV.v = 0.0f;
 	W = w;
 
 	// Convert time to seconds.
-	dt_s = (float)dt / 1000;
+	dt_s = (float)dt / 1000.0f;
 
 	// Calculate orientation.
 	naviUpdateOrientationSTM32();
@@ -280,7 +317,7 @@ static cNAVI_STATE naviDRProcessIncrementalSTM32 (const float v, const ANGVEL w,
 
 	// Construct navigation state vector.
 	retVal.p   = currP;
-	retVal.phi = currPhi;
+	retVal.psi = currPhi;
 
 	return retVal;
 }
@@ -331,14 +368,16 @@ static void naviUpdateOrientation (void)
 	float dPhi;
 
 	// Calculate the derivative of the new theta form the current and the last omega value
-	dPhi = hndlNumIntegTrapezoidal(0, dt_s, prevOmega, currOmega);
+	dPhi = hndlNumIntegTrapezoidal(0.0f, dt_s, prevOmega, currOmega);
 
 	// Determine the current theta value
 	currPhi = prevPhi + dPhi;
 
 	// Save the current parameters as previous measurement and state for the next iteration
-	prevOmega = naviNormaliseOrientation(currOmega);
-	prevPhi   = naviNormaliseOrientation(currPhi);
+	//prevOmega = naviNormaliseOrientation(currOmega);
+	//prevPhi   = naviNormaliseOrientation(currPhi);
+	prevOmega = currOmega;
+	prevPhi = currPhi;
 }
 
 //**********************************************************************************************************************
@@ -351,8 +390,8 @@ static void naviUpdateVelocity (void)
 	cVEC_VEL dv;
 
 	// Calculate the velocity change since the last value.
-	dv.u = hndlNumIntegTrapezoidal(0, dt_s, prevA.u, currA.u);
-	dv.v = hndlNumIntegTrapezoidal(0, dt_s, prevA.v, currA.v);
+	dv.u = hndlNumIntegTrapezoidal(0.0f, dt_s, prevA.u, currA.u);
+	dv.v = hndlNumIntegTrapezoidal(0.0f, dt_s, prevA.v, currA.v);
 
 	// Calculate the new velocity.
 	currV.u = prevV.u + dv.u;
@@ -385,42 +424,7 @@ static void naviUpdatePosition (void)
 	prevP = currP;
 }
 
-//**********************************************************************************************************************
-//!
-//!
-//**********************************************************************************************************************
-static float naviNormaliseOrientation (const float psi)
-{
-	float normOri;
-	float temp = psi;
 
-	if (temp >= 0.0f)
-	{
-		// Positive.
-
-		// Convert into [0; 2PI)
-		while (temp >= 2.0f*PI)
-		{
-			temp -= 2.0f*PI;
-		}
-
-		normOri = temp;
-	}
-	else
-	{
-		// Negative.
-
-		// Convert into (-2PI; 0]
-		while (temp <= -2.0f*PI)
-		{
-			temp += 2.0f*PI;
-		}
-
-		normOri = temp + 2.0f*PI;
-	}
-
-	return normOri;
-}
 
 /* TODO Do we need this?
 cNedParameters naviDRGetNedCoordinates (void)
