@@ -262,7 +262,8 @@ static void MazeMainStateMachine (void)
 			// Standing in the start position and radio trigger.
 			actualParams.Speed = 0;
 
-			if (startGetState() == s0)
+			// TODO on race use this! : if (startGetState() == s0)
+			if (true)
 			{
 				// Trigger received -> DISCOVER state.
 				smMainState = eSTATE_MAIN_DISCOVER;
