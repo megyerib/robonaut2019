@@ -74,7 +74,7 @@ double servoGetAngle()
 
 //TODO
 	// angle = m*compare + b + compensation
-	return angle = compare * hsrv.Gradient + hsrv.Y_intercept + hsrv.CV_compensation;
+	return angle = compare * hsrv.Gradient + hsrv.Y_intercept;
 }
 
 //! Servo Anlge:

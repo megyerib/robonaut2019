@@ -512,7 +512,14 @@ static void MazeTraceInformations  (void)
 	}
 
 	// TODO debug
-	txSteerWheelAngle = txServoAngle / 180 * PI;
+	if (txServoAngle < PI/2)
+	{
+		txSteerWheelAngle =  PI/2.0f - (PI/2.0f - txServoAngle) / 2.0f;
+	}
+	else
+	{
+		txSteerWheelAngle = PI/2.0f + (txServoAngle - PI/2.0f) / 2.0f;
+	}
 
 	traceBluetooth(BT_LOG_STEER_WHEEL_ANGLE, &txSteerWheelAngle);
 	traceBluetooth(BT_LOG_SERVO_ANGLE, &txServoAngle);
