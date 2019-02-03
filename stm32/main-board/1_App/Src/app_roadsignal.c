@@ -46,7 +46,10 @@ typedef enum
 {
 	None = 0,
 	Single,
-	DoubleNear,
+	SingleRight,
+	SingleLeft,
+	DoubleNearRight,
+	DoubleNearLeft,
 	DoubleFar,
 	Triple
 }
@@ -250,7 +253,7 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 		{
 			case 1:
 			{
-				if (prevLineCnt == 2 && prevLineType == DoubleNear)
+				if (prevLineCnt == 2 && (prevLineType == DoubleNearRight || prevLineType == DoubleNearLeft))
 				{
 					if (isLeft(lastDoubleLine, SensorOut.lines[0]))
 					{
@@ -275,8 +278,16 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 			{
 				if (SensorOut.lines[0] - SensorOut.lines[1] < DOUBLE_LINE_THRESHOLD)
 				{
-					lineType = DoubleNear;
-					bspBtSend((uint8_t*)"Double near\r\n", 13);
+					if (isLeft(SensorOut, prevLine))
+					{
+						lineType = DoubleNearLeft;
+						bspBtSend((uint8_t*)"Double near left\r\n", 18);
+					}
+					else
+					{
+						lineType = DoubleNearRight;
+						bspBtSend((uint8_t*)"Double near right\r\n", 19);
+					}
 				}
 				else
 				{
@@ -297,7 +308,7 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 		prevLineCnt = SensorOut.cnt;
 	}
 
-	if (prevLinesOk && lineType == DoubleNear)
+	if (prevLinesOk && (prevLineType == DoubleNearRight || prevLineType == DoubleNearLeft))
 	{
 		if (SensorOut.lines[0] - SensorOut.lines[1] > DOUBLE_LINE_HYS_HIGH)
 		{
@@ -311,8 +322,17 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 	{
 		if (SensorOut.lines[0] - SensorOut.lines[1] < DOUBLE_LINE_HYS_LOW)
 		{
-			lineType = DoubleNear;
-			bspBtSend((uint8_t*)"Double near\r\n", 13);
+			if (isLeft(SensorOut, prevLine))
+			{
+				lineType = DoubleNearLeft;
+				bspBtSend((uint8_t*)"Double near left\r\n", 18);
+			}
+			else
+			{
+				lineType = DoubleNearRight;
+				bspBtSend((uint8_t*)"Double near right\r\n", 19);
+			}
+
 			prevLineType = lineType;
 		}
 	}
