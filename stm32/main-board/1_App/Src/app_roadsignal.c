@@ -61,15 +61,18 @@ static int prevLineCnt = 0;
 static int prevLineTypes[3] = {0,0,0};
 static int pltIndex = 0;
 static LINE_TYPE lineType = None;
+static LINE_TYPE prevLineType = None;
+static LSO_FLOAT lastDoubleLine;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void remoteHandle();
-static void lineFollow(float line_pos, float K_P, float K_D, int motor_d);
+static void  remoteHandle();
+static void  lineFollow(float line_pos, float K_P, float K_D, int motor_d);
 static float followPrevLine();
 static float followRightLine();
 static float followLeftLine();
-static void examineRoadSignals(LSO_FLOAT SensorOut);
+static void  examineRoadSignals(LSO_FLOAT SensorOut);
+static int   isLeft(LSO_FLOAT sensorData, float line);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -236,20 +239,36 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 
 	prevLinesOk = (prevLineTypes[0] == prevLineTypes[1] && prevLineTypes[0] == prevLineTypes[2]);
 
+	if (SensorOut.cnt == 2)
+	{
+		lastDoubleLine = SensorOut;
+	}
+
 	if (prevLinesOk && SensorOut.cnt != prevLineCnt)
 	{
 		switch (SensorOut.cnt)
 		{
-			/*case 0:
-			{
-				lineType = None;
-				bspBtSend((uint8_t*)"No line\r\n", 9);
-				break;
-			}*/
 			case 1:
 			{
-				lineType = Single;
-				bspBtSend((uint8_t*)"Single\r\n", 8); // & unemployed
+				if (prevLineCnt == 2 && prevLineType == DoubleNear)
+				{
+					if (isLeft(lastDoubleLine, SensorOut.lines[0]))
+					{
+						lineType = Single;
+						bspBtSend((uint8_t*)"Single left\r\n", 13);
+					}
+					else
+					{
+						lineType = Single;
+						bspBtSend((uint8_t*)"Single right\r\n", 14);
+					}
+				}
+				else
+				{
+					lineType = Single;
+					bspBtSend((uint8_t*)"Single\r\n", 8); // & unemployed
+				}
+
 				break;
 			}
 			case 2:
@@ -274,6 +293,7 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 			}
 		}
 
+		prevLineType = lineType;
 		prevLineCnt = SensorOut.cnt;
 	}
 
@@ -283,6 +303,7 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 		{
 			lineType = DoubleFar;
 			bspBtSend((uint8_t*)"Double far\r\n", 12);
+			prevLineType = lineType;
 		}
 	}
 
@@ -292,7 +313,30 @@ static void examineRoadSignals(LSO_FLOAT SensorOut)
 		{
 			lineType = DoubleNear;
 			bspBtSend((uint8_t*)"Double near\r\n", 13);
+			prevLineType = lineType;
 		}
+	}
+}
+
+static int isLeft(LSO_FLOAT sensorData, float line)
+{
+	if (sensorData.cnt == 2)
+	{
+		float diffLeft  = fabs(sensorData.lines[1] - line);
+		float diffRight = fabs(sensorData.lines[0] - line);
+
+		if (diffLeft < diffRight)
+		{
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	else
+	{
+		return 0;
 	}
 }
 
