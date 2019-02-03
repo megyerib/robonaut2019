@@ -41,6 +41,8 @@ FILTERED_LINES;
 
 static int   actuateEnabled;
 static float prevLine;
+static LSO_FLOAT LSOut[LINE_BUF_SIZE];
+static int LSOutIndex;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -71,7 +73,7 @@ void Task_roadSignal(void* p)
 	{
 		remoteHandle();
 
-		line = followLeftLine();
+		line = followPrevLine();
 
 		lineFollow(
 			line,
@@ -134,30 +136,23 @@ static float followPrevLine()
 	float newLine;
 	float minDiff;
 
-	float sensorLines[3];
-
-	LINE_SENSOR_OUT sensorOut = lineGetRawFront();
-
-	for (int i = 0; i < sensorOut.cnt; i++)
-	{
-		sensorLines[i] = sensorOut.lines[i] / 1000.0f; // mm -> m
-	}
+	LSO_FLOAT sensorOut = lineGetRawFrontFloat();
 
 	if (sensorOut.cnt > 0)
 	{
 		float diff;
 
-		minDiff = fabs(sensorLines[0] - prevLine);
-		newLine = sensorLines[0];
+		minDiff = fabs(sensorOut.lines[0] - prevLine);
+		newLine = sensorOut.lines[0];
 
 		for (int i = 1; i < sensorOut.cnt; i++)
 		{
-			diff = fabs(sensorLines[i] - prevLine);
+			diff = fabs(sensorOut.lines[i] - prevLine);
 
 			if (diff < minDiff)
 			{
 				minDiff = diff;
-				newLine = sensorLines[i];
+				newLine = sensorOut.lines[i];
 			}
 		}
 	}
@@ -175,11 +170,11 @@ static float followLeftLine()
 {
 	float newLine;
 
-	LINE_SENSOR_OUT sensorOut = lineGetRawFront();
+	LSO_FLOAT sensorOut = lineGetRawFrontFloat();
 
 	if (sensorOut.cnt > 0)
 	{
-		newLine = sensorOut.lines[sensorOut.cnt - 1] / 1000.0; // mm -> m
+		newLine = sensorOut.lines[sensorOut.cnt - 1];
 	}
 	else
 	{
@@ -195,11 +190,11 @@ static float followRightLine()
 {
 	float newLine;
 
-	LINE_SENSOR_OUT sensorOut = lineGetRawFront();
+	LSO_FLOAT sensorOut = lineGetRawFrontFloat();
 
 	if (sensorOut.cnt > 0)
 	{
-		newLine = sensorOut.lines[0] / 1000.0; // mm -> m
+		newLine = sensorOut.lines[0];
 	}
 	else
 	{
@@ -209,57 +204,6 @@ static float followRightLine()
 	prevLine = newLine;
 
 	return newLine;
-}
-
-static FILTERED_LINES getFilteredLines()
-{
-	static LINE_SENSOR_OUT LSOut[LINE_BUF_SIZE];
-	static int LSOutIndex;
-
-	FILTERED_LINES ret;
-	int lineCntSeen[MAXLINES + 1] = {0,0,0,0};
-	int howManyLines = 0;
-	int sums[MAXLINES] = {0,0,0};
-
-	// Beolvassuk a vonalszenzor kimenetét
-	LSOut[LSOutIndex] = lineGetRawFront();
-	LSOutIndex++;
-
-	// Milyen vonalból (0,1,2,3) mennyit láttunk?
-	for (int i = 0; i < LINE_BUF_SIZE; i++)
-	{
-		lineCntSeen[LSOut[i].cnt]++;
-	}
-
-	// Hány vonalat látunk a többségi szavazás alapján?
-	for (int i = 0; i < MAXLINES + 1; i++)
-	{
-		if (lineCntSeen[i] >= LINE_BUF_ACCEPT)
-		{
-			howManyLines = i;
-		}
-	}
-
-	// Kiátlagoljuk a jó méréseket
-	for (int i = 0; i < LINE_BUF_SIZE; i++)
-	{
-		if (LSOut[i].cnt == howManyLines)
-		{
-			for (int j = 0; j < LSOut[i].cnt; j++)
-			{
-				sums[i] += LSOut[i].lines[j];
-			}
-		}
-	}
-
-	ret.cnt = howManyLines;
-
-	for (int i = 0; i < MAXLINES; i++)
-	{
-		ret.lines[i] = sums[i] / (MAXLINES * 1000.0f);
-	}
-
-	return ret;
 }
 
 // END -----------------------------------------------------------------------------------------------------------------

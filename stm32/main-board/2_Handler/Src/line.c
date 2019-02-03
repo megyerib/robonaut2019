@@ -90,6 +90,20 @@ LINE_SENSOR_OUT lineGetRawFront()
 	return front_tmp;
 }
 
+LSO_FLOAT lineGetRawFrontFloat()
+{
+	LSO_FLOAT ret;
+	LINE_SENSOR_OUT tmp = front_tmp;
+
+	ret.lines[0] = tmp.lines[0] / 1000.0f;
+	ret.lines[1] = tmp.lines[1] / 1000.0f;
+	ret.lines[2] = tmp.lines[2] / 1000.0f;
+
+	ret.cnt = tmp.cnt;
+
+	return ret;
+}
+
 LINE_SENSOR_OUT lineGetRawRear()
 {
 	return rear_tmp;
