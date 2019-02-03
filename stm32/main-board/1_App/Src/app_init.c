@@ -8,6 +8,8 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include <app_encoderCalibration.h>
+#include <app_servoCalibration.h>
 #include "bsp_common.h"
 #include "handler_common.h"
 
@@ -19,8 +21,6 @@
 #include "app_inertCalibration.h"
 #include "app_maze.h"
 #include "app_speedRun.h"
-#include "app_speedcal.h"
-#include "app_servo.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 

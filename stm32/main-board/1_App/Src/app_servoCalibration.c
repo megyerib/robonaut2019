@@ -9,9 +9,8 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include <app_servoCalibration.h>
 #include <bsp_servo.h>
-#include "app_servo.h"
-
 #include "event_groups.h"
 
 #include "trace.h"
