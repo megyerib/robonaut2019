@@ -68,10 +68,8 @@ void speedCallback()
 	int32_t meas_diff;
 	int32_t diff;
 
-	//__disable_irq();
 	tim_val      = TIM5->CNT;
 	ms_timer_val = TIM4->CNT;
-	//__enable_irq();
 
 	prev_cntrval = cur_cntrval;
 	cur_cntrval = tim_val;
