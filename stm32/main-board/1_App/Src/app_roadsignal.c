@@ -16,6 +16,7 @@
 #include "motor.h"
 #include "bsp_servo.h"
 #include <math.h>
+#include "bsp_bluetooth.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -37,12 +38,23 @@ typedef struct
 }
 FILTERED_LINES;
 
+typedef enum
+{
+	None = 0,
+	Single,
+	Double,
+	Triple
+}
+LINE_TYPE;
+
 // Local (static) variables --------------------------------------------------------------------------------------------
 
-static int   actuateEnabled;
-static float prevLine;
-static LSO_FLOAT LSOut[LINE_BUF_SIZE];
-static int LSOutIndex;
+static int   actuateEnabled = 0;
+static float prevLine = 0;
+static LINE_TYPE lineType = None;
+
+static int prevLineTypes[3] = {0,0,0};
+static int pltIndex = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -51,7 +63,7 @@ static void lineFollow(float line_pos, float K_P, float K_D, int motor_d);
 static float followPrevLine();
 static float followRightLine();
 static float followLeftLine();
-static FILTERED_LINES getFilteredLines();
+static void examineRoadSignals(LSO_FLOAT SensorOut);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -74,6 +86,8 @@ void Task_roadSignal(void* p)
 		remoteHandle();
 
 		line = followPrevLine();
+
+		examineRoadSignals(lineGetRawFrontFloat());
 
 		lineFollow(
 			line,
@@ -204,6 +218,42 @@ static float followRightLine()
 	prevLine = newLine;
 
 	return newLine;
+}
+
+static void examineRoadSignals(LSO_FLOAT SensorOut)
+{
+	int prevLinesOk;
+
+	prevLineTypes[pltIndex] = SensorOut.cnt;
+	pltIndex++;
+	pltIndex %= 3;
+
+	prevLinesOk = (prevLineTypes[0] == prevLineTypes[1] && prevLineTypes[0] == prevLineTypes[2]);
+
+	if (prevLinesOk && SensorOut.cnt != lineType)
+	{
+		switch (SensorOut.cnt)
+		{
+			case 0:
+			{
+				bspBtSend((uint8_t*)"No line\r\n", 9);
+			}
+			case 1:
+			{
+				bspBtSend((uint8_t*)"Single line\r\n", 13);
+			}
+			case 2:
+			{
+				bspBtSend((uint8_t*)"Double line\r\n", 13);
+			}
+			case 3:
+			{
+				bspBtSend((uint8_t*)"Triple line\r\n", 13);
+			}
+		}
+
+		lineType = SensorOut.cnt;
+	}
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
