@@ -25,23 +25,21 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define NAVI_TASK_DELAY		5
+#define NAVI_TASK_DELAY		1
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 static ACCEL    acceleration;
-static ANGVEL   angularVelocity;
-
-static ACCEL  accelOffset;
-static ANGVEL angularOffset;
+static ANGVELd   angularVelocity;
 
 static cVEC_ACCEL a;
-static ANGVEL w;
+static ANGVELd w;
 static float v;
+static double encVel;
 static cNAVI_STATE naviState;
 
-static uint8_t naviMethod = 3;	// DEBUG. It can only be 0,1,2 or 3.
+static uint8_t naviMethod = 2;	// DEBUG. It can only be 0,1,2 or 3.
 
 static ACCEL txAccel;
 static ANGVEL txAngVel;
@@ -62,10 +60,6 @@ void TaskInit_Navigation(void)
 	{
 		xSemaphoreGive(semDrNavi);
 	}
-
-	// Measurements.
-	accelOffset   = inertGetAccel();		// g
-	angularOffset = inertGetAngVel();		// dps
 
 	xTaskCreate(Task_Navigation,
 				"TASK_NAVIGATION",
@@ -94,6 +88,16 @@ void Task_Navigation(void* p)
 	naviInertOffsetCalibration();
 	naviInertOffsetCalibration();
 	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
 
 	while(1)
 	{
@@ -102,6 +106,7 @@ void Task_Navigation(void* p)
 		angularVelocity = inertGetAngVel();		// dps
 		// Velocity of the car (parallel with the movement) from the encoder.
 		v = speedGet();							// m/s
+		encVel = (double)v;
 
 		if (v == 0.0f)
 		{
@@ -139,12 +144,12 @@ void Task_Navigation(void* p)
 		else if (naviMethod == 2)
 		{
 			// OWN ALGORITHM
-			naviState = naviGetNaviDataEnc(v, w, NAVI_TASK_DELAY, eNAVI_ENC);
+			naviState = naviGetNaviDataEnc(encVel, w, NAVI_TASK_DELAY, eNAVI_ENC);
 		}
 		else if (naviMethod == 3)
 		{
 			// STM algorithm, gravitational correction
-			naviState = naviGetNaviDataEnc(v, w, NAVI_TASK_DELAY, eNAVI_ENC_GRAVY_CORR);
+			naviState = naviGetNaviDataEnc(encVel, w, NAVI_TASK_DELAY, eNAVI_ENC_GRAVY_CORR);
 		}
 		else
 		{
@@ -153,11 +158,15 @@ void Task_Navigation(void* p)
 		//______________________________________________________________________________________________________________
 
 		//___________________________________________________ TRACE ____________________________________________________
-		float psi = naviNormaliseOrientation(naviState.psi);
+		double psi = naviNormaliseOrientation(naviState.psi);
 
-		traceBluetooth(BT_LOG_NAVI_N, &naviState.p.n);
-		traceBluetooth(BT_LOG_NAVI_E, &naviState.p.e);
-		traceBluetooth(BT_LOG_NAVI_PSI, &psi);
+		float nav_psif = (float)psi;
+		float nav_n = (float)naviState.p.n;
+		float nav_e = (float)naviState.p.e;
+
+		traceBluetooth(BT_LOG_NAVI_N, &nav_n);
+		traceBluetooth(BT_LOG_NAVI_E, &nav_e);
+		traceBluetooth(BT_LOG_NAVI_PSI, &nav_psif);
 
 		traceBluetooth(BT_LOG_ENC_V, &v);
 
@@ -165,9 +174,13 @@ void Task_Navigation(void* p)
 		txAccel.a_y = naviConvertGToSI(acceleration.a_y);
 		txAccel.a_z = naviConvertGToSI(acceleration.a_z);
 
-		txAngVel.omega_x = naviConvertDpsToSI(angularVelocity.omega_x);
-		txAngVel.omega_y = naviConvertDpsToSI(angularVelocity.omega_y);
-		txAngVel.omega_z = naviConvertDpsToSI(angularVelocity.omega_z);
+		double w_x = naviConvertDpsToSI(angularVelocity.omega_x);
+		double w_y = naviConvertDpsToSI(angularVelocity.omega_y);
+		double w_z = naviConvertDpsToSI(angularVelocity.omega_z);
+
+		txAngVel.omega_x = (float)w_x;
+		txAngVel.omega_y = (float)w_y;
+		txAngVel.omega_z = (float)w_z;
 
 		traceBluetooth(BT_LOG_INERT_ACCEL_X, &txAccel.a_x);
 		traceBluetooth(BT_LOG_INERT_ACCEL_Y, &txAccel.a_y);
@@ -189,10 +202,10 @@ void Task_Navigation(void* p)
 
 static void naviInertOffsetCalibration (void)
 {
-	uint8_t wait = 5;
-	ANGVEL ofs[10];
-	ANGVEL avg;
-	ANGVEL sum;
+	uint8_t wait = 3;
+	ANGVELd ofs[10];
+	ANGVELd avg;
+	ANGVELd sum;
 	int i;
 	sum.omega_x = 0;
 	sum.omega_y = 0;

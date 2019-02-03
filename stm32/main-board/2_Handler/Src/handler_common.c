@@ -168,6 +168,15 @@ float hndlNumIntegTrapezoidal (const float a, const float b, const float fa, con
 	return integral;
 }
 
+double hndlNumIntegTrapezoidalDouble (const double a, const double b, const double fa, const double fb)
+{
+	double integral;
+
+	integral = (b - a) * (fb + fa) / 2;
+
+	return integral;
+}
+
 cMATRIX_3X3 hndlMatrixInversion (const cMATRIX_3X3 A)
 {
 	cMATRIX_3X3 invA;

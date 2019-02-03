@@ -76,6 +76,8 @@ void hndlPlaceFractionToAsciiMsg (
 
 float hndlNumIntegTrapezoidal (const float a, const float b, const float fa, const float fb);
 
+double hndlNumIntegTrapezoidalDouble (const double a, const double b, const double fa, const double fb);
+
 cMATRIX_3X3 hndlMatrixInversion (const cMATRIX_3X3 A);
 
 

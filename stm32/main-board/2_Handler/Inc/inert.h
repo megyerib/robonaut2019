@@ -30,17 +30,25 @@ typedef struct
 }
 ANGVEL;
 
+typedef struct
+{
+	double omega_x;
+	double omega_y;
+	double omega_z;
+}
+ANGVELd;
+
 // Variables -----------------------------------------------------------------------------------------------------------
 
 // Function prototypes -------------------------------------------------------------------------------------------------
 
 void inertInit();
 ACCEL inertGetAccel();
-ANGVEL inertGetAngVel();
+ANGVELd inertGetAngVel();
 
-void inertTriggerMeasurement();
+int inertTriggerMeasurement();
 
-void inertGyroOffsetCalibration (const ANGVEL ofs);
+void inertGyroOffsetCalibration (const ANGVELd ofs);
 
 void inert6PointCalibration(
 								const float Xgain,

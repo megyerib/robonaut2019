@@ -64,8 +64,8 @@ static bool accelCalibFinished;
 
 //Gyroscope_________________________________________
 
-static ANGVEL Wofs;
-static ANGVEL w;
+static ANGVELd Wofs;
+static ANGVELd w;
 
 static float AngX[6];	// Roll
 static float AngY[6];	// Pitch
@@ -106,7 +106,10 @@ void Task_InertialCalibration(void* p)
 	{
 		inertCal_DebounceButton();
 
-		//inertCal_Accelerometer();
+		if (accelCalibFinished)
+		{
+			inertCal_Accelerometer();
+		}
 
 		if (ofsSaved == false && measurementIndex == 0)
 		{
