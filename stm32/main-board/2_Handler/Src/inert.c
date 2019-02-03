@@ -75,9 +75,14 @@ static float WxOfs;
 static float WyOfs;
 static float WzOfs;
 
+//
+static ANGVEL bufferPsi[10];
+static uint8_t load = 0;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void WriteRegBlocking(uint8_t regAddr, uint8_t data);
+static ANGVEL inertPutInAvgBuffer (ANGVEL new, uint8_t size);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -118,9 +123,9 @@ void inertInit()
 	invParamsAng.a3[1] = 0;
 	invParamsAng.a3[2] = 1;
 
-	WxOfs = -603.5155232;
-	WyOfs = -334.282356;
-	WzOfs = -341.346629;
+	WxOfs = 0;
+	WyOfs = 0;
+	WzOfs = 0;
 }
 
 ACCEL inertGetAccel()
@@ -170,6 +175,9 @@ ANGVEL inertGetAngVel()
 	trueAngVel.omega_x = measuredAngVel.omega_x - WxOfs;
 	trueAngVel.omega_y = measuredAngVel.omega_y - WyOfs;
 	trueAngVel.omega_z = measuredAngVel.omega_z - WzOfs;
+
+
+	trueAngVel = inertPutInAvgBuffer(trueAngVel, 10);
 
 	return trueAngVel; //TODO
 }
@@ -259,4 +267,81 @@ static void WriteRegBlocking(uint8_t regAddr, uint8_t data)
 {
 	// Assuming SD0 is pulled down
 	HAL_I2C_Mem_Write(INERTIAL_I2C, LSM6DS3_ADDR0, regAddr, 1, &data, 1, HAL_MAX_DELAY);
+}
+
+static ANGVEL inertPutInAvgBuffer (ANGVEL new, uint8_t size)
+{
+	ANGVEL avg;
+	int i;
+	float threshold = 0.8f;
+
+	avg.omega_x = 0;
+	avg.omega_y = 0;
+	avg.omega_z = 0;
+
+	if (load < size)
+	{
+		load++;
+	}
+
+	for (int i = 0; i < load-1; i++)
+	{
+		bufferPsi[i+1].omega_x = bufferPsi[i].omega_x;
+		bufferPsi[i+1].omega_y = bufferPsi[i].omega_y;
+		bufferPsi[i+1].omega_z = bufferPsi[i].omega_z;
+	}
+
+	if (load == size)
+	{
+		/*if (new.omega_x < threshold * avg.omega_x)
+		{
+			bufferPsi[0].omega_x = new.omega_x;
+		}
+		else
+		{
+			bufferPsi[0].omega_x = avg.omega_x;
+		}
+
+		if (new.omega_y < threshold * avg.omega_y)
+		{
+			bufferPsi[0].omega_y = new.omega_y;
+		}
+		else
+		{
+			bufferPsi[0].omega_y = avg.omega_y;
+		}
+
+		if (new.omega_z < threshold * avg.omega_z)
+		{
+			bufferPsi[0].omega_z = new.omega_z;
+		}
+		else
+		{
+			bufferPsi[0].omega_z = avg.omega_z;
+		}*/
+
+		bufferPsi[0].omega_x = new.omega_x;
+		bufferPsi[0].omega_y = new.omega_y;
+		bufferPsi[0].omega_z = new.omega_z;
+	}
+	else
+	{
+		bufferPsi[0].omega_x = new.omega_x;
+		bufferPsi[0].omega_y = new.omega_y;
+		bufferPsi[0].omega_z = new.omega_z;
+	}
+
+
+	for (i = 0; i < load; i++)
+	{
+		avg.omega_x += bufferPsi[i].omega_x;
+		avg.omega_y += bufferPsi[i].omega_y;
+		avg.omega_z += bufferPsi[i].omega_z;
+	}
+
+	avg.omega_x /= load;
+	avg.omega_y /= load;
+	avg.omega_z /= load;
+
+	return avg;
 }

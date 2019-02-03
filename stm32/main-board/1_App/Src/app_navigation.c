@@ -24,6 +24,9 @@
 
 
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define NAVI_TASK_DELAY		5
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
@@ -78,6 +81,18 @@ void Task_Navigation(void* p)
 {
 	(void)p;
 
+	// Wait for the first measurement result.
+	vTaskDelay(300);
+
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
 	naviInertOffsetCalibration();
 
 	while(1)
@@ -87,6 +102,11 @@ void Task_Navigation(void* p)
 		angularVelocity = inertGetAngVel();		// dps
 		// Velocity of the car (parallel with the movement) from the encoder.
 		v = speedGet();							// m/s
+
+		if (v == 0.0f)
+		{
+			//inertGyroOffsetCalibration(inertGetAngVel());
+		}
 
 		//_____________________________________________________ CONVERSION _____________________________________________
 		// Parallel with the orientation of the car.
@@ -109,22 +129,22 @@ void Task_Navigation(void* p)
 		if (naviMethod == 0)
 		{
 			// OWN ALGORITHM
-			naviState = naviGetNaviDataInrt(a, w, TASK_DELAY_16_MS, eNAVI_INERT);
+			naviState = naviGetNaviDataInrt(a, w, NAVI_TASK_DELAY, eNAVI_INERT);
 		}
 		else if (naviMethod == 1)
 		{
 			// STM algorithm, gravitational correction
-			naviState = naviGetNaviDataInrt(a, w, TASK_DELAY_16_MS, eNAVI_INERT_GRAVY_CORR);
+			naviState = naviGetNaviDataInrt(a, w, NAVI_TASK_DELAY, eNAVI_INERT_GRAVY_CORR);
 		}
 		else if (naviMethod == 2)
 		{
 			// OWN ALGORITHM
-			naviState = naviGetNaviDataEnc(v, w, TASK_DELAY_16_MS, eNAVI_ENC);
+			naviState = naviGetNaviDataEnc(v, w, NAVI_TASK_DELAY, eNAVI_ENC);
 		}
 		else if (naviMethod == 3)
 		{
 			// STM algorithm, gravitational correction
-			naviState = naviGetNaviDataEnc(v, w, TASK_DELAY_16_MS, eNAVI_ENC_GRAVY_CORR);
+			naviState = naviGetNaviDataEnc(v, w, NAVI_TASK_DELAY, eNAVI_ENC_GRAVY_CORR);
 		}
 		else
 		{
@@ -133,9 +153,11 @@ void Task_Navigation(void* p)
 		//______________________________________________________________________________________________________________
 
 		//___________________________________________________ TRACE ____________________________________________________
+		float psi = naviNormaliseOrientation(naviState.psi);
+
 		traceBluetooth(BT_LOG_NAVI_N, &naviState.p.n);
 		traceBluetooth(BT_LOG_NAVI_E, &naviState.p.e);
-		traceBluetooth(BT_LOG_NAVI_PSI, &naviState.phi);
+		traceBluetooth(BT_LOG_NAVI_PSI, &psi);
 
 		traceBluetooth(BT_LOG_ENC_V, &v);
 
@@ -159,7 +181,7 @@ void Task_Navigation(void* p)
 		// Trigger the next conversion.
 		inertTriggerMeasurement();
 
-		vTaskDelay(TASK_DELAY_16_MS);
+		vTaskDelay(NAVI_TASK_DELAY);
 	}
 }
 
@@ -167,48 +189,64 @@ void Task_Navigation(void* p)
 
 static void naviInertOffsetCalibration (void)
 {
+	uint8_t wait = 5;
 	ANGVEL ofs[10];
-		ANGVEL avg;
-		ANGVEL sum;
-		int i;
-		sum.omega_x = 0;
-		sum.omega_y = 0;
-		sum.omega_z = 0;
+	ANGVEL avg;
+	ANGVEL sum;
+	int i;
+	sum.omega_x = 0;
+	sum.omega_y = 0;
+	sum.omega_z = 0;
 
-		// Wait for the first measurement result.
-		vTaskDelay(200);
+	inertTriggerMeasurement();
+	vTaskDelay(wait);
+	ofs[0] = inertGetAngVel();
 
-		vTaskDelay(10);
-		ofs[0] = inertGetAngVel();
-		vTaskDelay(10);
-		ofs[1] = inertGetAngVel();
-		vTaskDelay(10);
-		ofs[2] = inertGetAngVel();
-		vTaskDelay(10);
-		ofs[3] = inertGetAngVel();
-		vTaskDelay(10);
-		ofs[4] = inertGetAngVel();
-		vTaskDelay(10);
-		ofs[5] = inertGetAngVel();
-		vTaskDelay(10);
-		ofs[6] = inertGetAngVel();
-		vTaskDelay(10);
-		ofs[7] = inertGetAngVel();
-		vTaskDelay(10);
-		ofs[8] = inertGetAngVel();
-		vTaskDelay(10);
-		ofs[9] = inertGetAngVel();
+	inertTriggerMeasurement();
+	vTaskDelay(wait);
+	ofs[1] = inertGetAngVel();
 
-		for (i = 0; i < 10; i++)
-		{
-			sum.omega_x += ofs[i].omega_x;
-			sum.omega_y += ofs[i].omega_y;
-			sum.omega_z += ofs[i].omega_z;
-		}
+	inertTriggerMeasurement();
+	vTaskDelay(wait);
+	ofs[2] = inertGetAngVel();
 
-		avg.omega_x = sum.omega_x / 10.0f;
-		avg.omega_y = sum.omega_y / 10.0f;
-		avg.omega_z = sum.omega_z / 10.0f;
+	inertTriggerMeasurement();
+	vTaskDelay(wait);
+	ofs[3] = inertGetAngVel();
 
-		inertGyroOffsetCalibration(avg);
+	vTaskDelay(wait);
+	ofs[4] = inertGetAngVel();
+
+	inertTriggerMeasurement();
+	vTaskDelay(wait);
+	ofs[5] = inertGetAngVel();
+
+	inertTriggerMeasurement();
+	vTaskDelay(wait);
+	ofs[6] = inertGetAngVel();
+
+	inertTriggerMeasurement();
+	vTaskDelay(wait);
+	ofs[7] = inertGetAngVel();
+
+	inertTriggerMeasurement();
+	vTaskDelay(wait);
+	ofs[8] = inertGetAngVel();
+
+	inertTriggerMeasurement();
+	vTaskDelay(wait);
+	ofs[9] = inertGetAngVel();
+
+	for (i = 0; i < 10; i++)
+	{
+		sum.omega_x += ofs[i].omega_x;
+		sum.omega_y += ofs[i].omega_y;
+		sum.omega_z += ofs[i].omega_z;
+	}
+
+	avg.omega_x = sum.omega_x / 10.0f;
+	avg.omega_y = sum.omega_y / 10.0f;
+	avg.omega_z = sum.omega_z / 10.0f;
+
+	inertGyroOffsetCalibration(avg);
 }

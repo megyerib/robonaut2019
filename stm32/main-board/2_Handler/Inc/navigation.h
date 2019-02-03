@@ -51,7 +51,7 @@ typedef struct
 typedef struct
 {
 	cNED_COORD p;
-	float phi;
+	float psi;
 } cNAVI_STATE;
 
 // Variables -----------------------------------------------------------------------------------------------------------
@@ -92,6 +92,8 @@ float naviConvertDpsToSI (const float ang_dps);
 //!
 //**********************************************************************************************************************
 float naviConvertGToSI (const float accel_g);
+
+float naviNormaliseOrientation (const float psi);
 
 /* TODO Do we need this?
 cNED_COORD naviDRGetNedCoordinates (void);
