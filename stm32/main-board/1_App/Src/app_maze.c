@@ -157,7 +157,7 @@ void Task_Maze (void* p)
 		mazeLinePos = lineGetSingle();
 
 		// Run the state machine until the job is done or stop signal received.
-		if (mazeFinished == false && recStopCar == false)
+		if (mazeFinished == false && recStopCar == true)
 		{
 			//MazeCntrSpeed (r_speed);
 			MazeMainStateMachine();

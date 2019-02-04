@@ -217,7 +217,7 @@ void Task_CarDiagnosticsTool(void* p)
 		{
 			// Bluetooth trace to Car Diagnostics Tool.
 
-			traceFlushData();
+			//traceFlushData();
 
 			if (btMsgReceived == true)
 			{
@@ -234,7 +234,7 @@ void Task_CarDiagnosticsTool(void* p)
 		{
 			// USB trace.
 
-			traceFlushData();
+			//traceFlushData();
 
 			if (usbRec == true)
 			{

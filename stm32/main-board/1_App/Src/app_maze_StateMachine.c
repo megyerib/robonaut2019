@@ -138,6 +138,8 @@ void MazeMainStateMachine (void)
 				smMainState = eSTATE_MAIN_DISCOVER;
 				actualSegment = 1;
 				nextNewSegmentIndex = 2;
+
+				mazePlanExitRoute();
 			}
 			break;
 		}
@@ -732,6 +734,201 @@ static bool mazeAllSegmentsDiscovered (void)
 
 static void mazePlanExitRoute (void)
 {
+	uint8_t i;
+	uint8_t j;
+	uint8_t k;
+	uint8_t l;
+	uint8_t m;
+	uint8_t n;
+	uint8_t o;
+	uint8_t p;
+	uint8_t q;
+	uint8_t r;
+	uint8_t t;
+	uint8_t v;
+	bool pathFound = false;
+
+
+	actualSegment = 1;
+	inclinSegment = 7;
+
+	neighbourMatrixA[1][3] = 1;
+	neighbourMatrixA[2][3] = 1;
+	neighbourMatrixA[3][4] = 1;
+	neighbourMatrixA[3][5] = 1;
+	neighbourMatrixA[4][7] = 1;
+	neighbourMatrixA[5][7] = 1;
+	neighbourMatrixA[7][1] = 1;
+	neighbourMatrixA[7][2] = 1;
+
+
+	for (i = 1; i < MAZE_MAP_MAX_SEGEMENTS+1; ++i)
+	{
+		if (neighbourMatrixA[actualSegment][i] != 0 && pathFound == false)
+		{
+			if (i == inclinSegment)
+			{
+				exitRoute[0] = i;
+				pathFound = true;
+			}
+			else
+			{
+				for (j = 1; j < MAZE_MAP_MAX_SEGEMENTS+1; ++j)
+				{
+					if (neighbourMatrixA[i][j] != 0 && pathFound == false)
+					{
+						if (j == inclinSegment)
+						{
+							exitRoute[0] = i; exitRoute[1] = j;
+							pathFound = true;
+						}
+						else
+						{
+							for (k = 1; k < MAZE_MAP_MAX_SEGEMENTS+1; ++k)
+							{
+								if (neighbourMatrixA[j][k] != 0 && pathFound == false)
+								{
+									if (k == inclinSegment)
+									{
+										exitRoute[0] = i; exitRoute[1] = j; exitRoute[2] = k;
+										pathFound = true;
+									}
+									else
+									{
+										for (l = 1; l < MAZE_MAP_MAX_SEGEMENTS+1; ++l)
+										{
+											if (neighbourMatrixA[k][l] != 0 && pathFound == false)
+											{
+												if (l == inclinSegment)
+												{
+													exitRoute[0] = i; exitRoute[1] = j; exitRoute[2] = k; exitRoute[3] = l;
+													pathFound = true;
+												}
+												else
+												{
+													for (m = 1; m < MAZE_MAP_MAX_SEGEMENTS+1; ++m)
+													{
+														if (neighbourMatrixA[l][m] != 0 && pathFound == false)
+														{
+															if (m == inclinSegment)
+															{
+																exitRoute[0] = i; exitRoute[1] = j; exitRoute[2] = k; exitRoute[3] = l;
+																exitRoute[4] = m;
+																pathFound = true;
+															}
+															else
+															{
+																for (n = 1; n < MAZE_MAP_MAX_SEGEMENTS+1; ++n)
+																{
+																	if (neighbourMatrixA[m][n] != 0 && pathFound == false)
+																	{
+																		if (n == inclinSegment)
+																		{
+																			exitRoute[0] = i; exitRoute[1] = j; exitRoute[2] = k; exitRoute[3] = l;
+																			exitRoute[4] = m; exitRoute[5] = n;
+																			pathFound = true;
+																		}
+																		else
+																		{
+																			for (o = 1; o < MAZE_MAP_MAX_SEGEMENTS+1; ++o)
+																			{
+																				if (neighbourMatrixA[n][o] != 0 && pathFound == false)
+																				{
+																					if (o == inclinSegment)
+																					{
+																						exitRoute[0] = i; exitRoute[1] = j; exitRoute[2] = k; exitRoute[3] = l;
+																						exitRoute[4] = m; exitRoute[5] = n; exitRoute[6] = o;
+																						pathFound = true;
+																					}
+																					else
+																					{
+																						for (p = 1; p < MAZE_MAP_MAX_SEGEMENTS+1; ++p)
+																						{
+																							if (neighbourMatrixA[o][p] != 0 && pathFound == false)
+																							{
+																								if (p == inclinSegment)
+																								{
+																									exitRoute[0] = i; exitRoute[1] = j; exitRoute[2] = k; exitRoute[3] = l;
+																									exitRoute[4] = m; exitRoute[5] = n; exitRoute[6] = o; exitRoute[7] = p;
+																									pathFound = true;
+																								}
+																								else
+																								{
+																									for (q = 1; q < MAZE_MAP_MAX_SEGEMENTS+1; ++q)
+																									{
+																										if (neighbourMatrixA[p][q] != 0 && pathFound == false)
+																										{
+																											if (q == inclinSegment)
+																											{
+																												exitRoute[0] = i; exitRoute[1] = j; exitRoute[2] = k; exitRoute[3] = l;
+																												exitRoute[4] = m; exitRoute[5] = n; exitRoute[6] = o; exitRoute[7] = p;
+																												exitRoute[8] = q;
+																												pathFound = true;
+																											}
+																											else
+																											{
+																												for (r = 1; r < MAZE_MAP_MAX_SEGEMENTS+1; ++r)
+																												{
+																													if (neighbourMatrixA[q][r] != 0 && pathFound == false)
+																													{
+																														if (r == inclinSegment)
+																														{
+																															exitRoute[0] = i; exitRoute[1] = j; exitRoute[2] = k; exitRoute[3] = l;
+																															exitRoute[4] = m; exitRoute[5] = n; exitRoute[6] = o; exitRoute[7] = p;
+																															exitRoute[8] = q; exitRoute[9];
+																															pathFound = true;
+																														}
+																														else
+																														{
+																															for (r = 1; r < MAZE_MAP_MAX_SEGEMENTS+1; ++r)
+																															{
+																																if (neighbourMatrixA[q][r] != 0 && pathFound == false)
+																																{
+																																	if (r == inclinSegment)
+																																	{
+																																		exitRoute[0] = i; exitRoute[1] = j; exitRoute[2] = k; exitRoute[3] = l;
+																																		exitRoute[4] = m; exitRoute[5] = n; exitRoute[6] = o; exitRoute[7] = p;
+																																		exitRoute[8] = q; exitRoute[9]; exitRoute[10];
+																																		pathFound = true;
+																																	}
+																																	else
+																																	{
+																																		// NO PATH
+																																	}
+																																}
+																															}
+																														}
+																													}
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+
 	/*uint8_t plan[12];
 	uint8_t wantedSeg;
 	uint8_t preExitSeg[3];
