@@ -20,6 +20,10 @@
 #include "speed.h"
 #include "print.h"
 
+#include "random.h"
+#include "start.h"
+#include "inert.h"
+
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define LINE_BUF_SIZE   (3u)
@@ -95,16 +99,39 @@ void Task_roadSignal(void* p)
 	float line;
 	CROSSING_TYPE crossing;
 
+	while (startGetState() != s0)
+	{
+		vTaskDelay(5);
+	}
+
 	while (1)
 	{
 		crossing = getCrossingType();
 
 		if (crossing != NoCrossing)
 		{
-			traceCrossing(crossing);
+			if (crossing == CrossingAtoLB || crossing == CrossingAtoRB)
+			{
+				inertTriggerMeasurement();
+
+				ANGVELd angvel = inertGetAngVel();
+
+				if (random((float)angvel.omega_z))
+				{
+					line = getLeftLine();
+				}
+				else
+				{
+					line = getRightLine();
+				}
+			}
+		}
+		else
+		{
+			line = getPrevLine();
 		}
 
-		line = getPrevLine();
+		// LINE FOLLOW _____________________________________
 
 		lineFollow(
 			line,
