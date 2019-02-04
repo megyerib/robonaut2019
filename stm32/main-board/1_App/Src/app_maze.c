@@ -76,7 +76,7 @@ static bool mazeFinished;
 //! This variable indicates the actual state of the main state machine of the maze algorithm.
 static eSTATE_MAIN smMainState;
 //! The graph map of the labyrinth.
-static cSEGMENT map[20];
+//static cSEGMENT map[20];
 //! A list of the discoverable segments. A bit is set when the segment was found and the car has driven it through.
 static bool segements[12];
 //! The number of the segment where the exit point is to be found.
@@ -140,8 +140,8 @@ static float line_pos;
 
 static float speed_current;
 static float speed_prev;
-static uint32_t D_prev;
-static uint32_t D_curr;
+//static uint32_t D_prev;
+//static uint32_t D_curr;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -262,7 +262,7 @@ static void MazeMainStateMachine (void)
 			// Standing in the start position and radio trigger.
 			actualParams.Speed = 0;
 
-			//TODO Wait for the start radio signal.
+			// TODO on race use this! : if (startGetState() == s0)
 			if (true)
 			{
 				// Trigger received -> DISCOVER state.
@@ -359,7 +359,7 @@ static void	MazeCntrLineFollow (void)
 static void	MazeCntrSpeed (void)
 {
 	float r_speed = 1;
-	float e_speed;
+	//float e_speed;
 	float P_speed = 13;
 	uint32_t y_speed;
 

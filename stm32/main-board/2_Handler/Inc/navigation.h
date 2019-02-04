@@ -32,26 +32,26 @@ typedef enum
 
 typedef struct
 {
-	float u;
-	float v;
+	double u;
+	double v;
 } cVEC_ACCEL;
 
 typedef struct
 {
-	float u;
-	float v;
+	double u;
+	double v;
 } cVEC_VEL;
 
 typedef struct
 {
-	float n;
-	float e;
+	double n;
+	double e;
 } cNED_COORD;
 
 typedef struct
 {
 	cNED_COORD p;
-	float psi;
+	double psi;
 } cNAVI_STATE;
 
 // Variables -----------------------------------------------------------------------------------------------------------
@@ -73,27 +73,27 @@ void naviDRInit (void);
 //!
 //!
 //**********************************************************************************************************************
-cNAVI_STATE naviGetNaviDataEnc (const float v, const ANGVEL w, const uint32_t dt, const eNAVI_ENC_MODE mode);
+cNAVI_STATE naviGetNaviDataEnc (const double v, const ANGVELd w, const uint32_t dt, const eNAVI_ENC_MODE mode);
 
 //**********************************************************************************************************************
 //!
 //!
 //**********************************************************************************************************************
-cNAVI_STATE naviGetNaviDataInrt (const cVEC_ACCEL a, const ANGVEL w, const uint32_t dt, const eNAVI_INERT_MODE mode);
+cNAVI_STATE naviGetNaviDataInrt (const cVEC_ACCEL a, const ANGVELd w, const uint32_t dt, const eNAVI_INERT_MODE mode);
 
 //**********************************************************************************************************************
 //!
 //!
 //**********************************************************************************************************************
-float naviConvertDpsToSI (const float ang_dps);
+double naviConvertDpsToSI (const double ang_dps);
 
 //**********************************************************************************************************************
 //!
 //!
 //**********************************************************************************************************************
-float naviConvertGToSI (const float accel_g);
+double naviConvertGToSI (const double accel_g);
 
-float naviNormaliseOrientation (const float psi);
+double naviNormaliseOrientation (const double psi);
 
 /* TODO Do we need this?
 cNED_COORD naviDRGetNedCoordinates (void);

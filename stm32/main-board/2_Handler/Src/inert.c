@@ -28,8 +28,12 @@
 #define XL_C      (G * XL_CAL / XL_1G_VAL)
 
 #define G_C       (0.00875043752f) /* 1/114.28 */
+#define G_C_d     (0.00875043752) /* 1/114.28 */
 
-#define REGS_TO_READ (12u)
+//#define REGS_TO_READ (12u)
+#define REGS_TO_READ (2u)
+
+#define AVG_BUFF_SIZE 	(10)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -37,20 +41,18 @@
 
 static const uint8_t regSource[REGS_TO_READ] =
 {
-	OUTX_L_XL, OUTX_H_XL, // Accelerometer X
+	/*OUTX_L_XL, OUTX_H_XL, // Accelerometer X
 	OUTY_L_XL, OUTY_H_XL, // Accelerometer Y
 	OUTZ_L_XL, OUTZ_H_XL, // Accelerometer Z
 	OUTX_L_G,  OUTX_H_G,  // Gyroscope X
-	OUTY_L_G,  OUTY_H_G,  // Gyroscope Y
+	OUTY_L_G,  OUTY_H_G,  // Gyroscope Y*/
 	OUTZ_L_G,  OUTZ_H_G   // Gyroscope Z
 };
 
-static int16_t tmp_reading[6];
+//static int16_t tmp_reading[6];
+static int16_t angvel_z;
 
-static int16_t ret_accel[3];
-static int16_t ret_angvel[3];
-
-static int i_reg;
+static int i_reg = 0;
 
 // Calibration parameters for the acceleration measurement.
 static float Xgain = 1.0;
@@ -71,18 +73,18 @@ static cMATRIX_3X3 invParamsAcc;
 static cMATRIX_3X3 invParamsAng;
 
 // Gyroscope offsets.
-static float WxOfs;
-static float WyOfs;
-static float WzOfs;
+static double WxOfs;
+static double WyOfs;
+static double WzOfs;
 
 //
-static ANGVEL bufferPsi[10];
+static ANGVELd bufferPsi[AVG_BUFF_SIZE];
 static uint8_t load = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void WriteRegBlocking(uint8_t regAddr, uint8_t data);
-static ANGVEL inertPutInAvgBuffer (ANGVEL new, uint8_t size);
+static ANGVELd inertPutInAvgBuffer (ANGVELd new, uint8_t size);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -91,13 +93,13 @@ void inertInit()
 	HAL_GPIO_WritePin(INRT_SD0_GPIO_Port, INRT_SD0_Pin, GPIO_PIN_RESET); // Pull down SD0
 	HAL_GPIO_WritePin(INRT_CS_GPIO_Port, INRT_CS_Pin, GPIO_PIN_SET); // CS (Stays active 4ever)
 
-	// Enable accelerometer
+	/*// Enable accelerometer
 	WriteRegBlocking(CTRL9_XL, 0x38); // Acc X, Y, Z axes enabled
-	WriteRegBlocking(CTRL1_XL, 0x6C); // Acc = 416Hz (High-Performance mode); Full scale: +-8g
+	WriteRegBlocking(CTRL1_XL, 0x6C); // Acc = 416Hz (High-Performance mode); Full scale: +-8g*/
 
 	// Enable gyroscope
 	WriteRegBlocking(CTRL10_C, 0x38); // Gyro X, Y, Z axes enabled
-	WriteRegBlocking(CTRL2_G, 0x60);  // Gyro = 416Hz (High-Performance mode)
+	WriteRegBlocking(CTRL2_G, 0x80);  // Gyro = 1.66kHz (High-Performance mode), Full scale: +-250dps
 
 	// Last valid calibration:
 	//               - 2019.01.25. 12:23 by Joci
@@ -130,8 +132,8 @@ void inertInit()
 
 ACCEL inertGetAccel()
 {
-    ACCEL measuredAcc;
     ACCEL trueAcc;
+    /*ACCEL measuredAcc;
 
     // Changing directions to match the car's orientation.
     measuredAcc.a_x = ret_accel[1] * -XL_C; // X =  Y
@@ -147,19 +149,21 @@ ACCEL inertGetAccel()
 				  + invParamsAcc.a2[2] * (measuredAcc.a_z - Zofs);
     trueAcc.a_z = 	invParamsAcc.a3[0] * (measuredAcc.a_x - Xofs)
     		      + invParamsAcc.a3[1] * (measuredAcc.a_y - Yofs)
-				  + invParamsAcc.a3[2] * (measuredAcc.a_z - Zofs);
+				  + invParamsAcc.a3[2] * (measuredAcc.a_z - Zofs);*/
 
 	return trueAcc;
 }
 
-ANGVEL inertGetAngVel()
+ANGVELd inertGetAngVel()
 {
-	ANGVEL measuredAngVel;
-	ANGVEL trueAngVel;
+	ANGVELd measuredAngVel;
+	ANGVELd trueAngVel;
 
-	measuredAngVel.omega_x = ret_angvel[1] * -G_C;
-	measuredAngVel.omega_y = ret_angvel[0] *  G_C;
-	measuredAngVel.omega_z = ret_angvel[2] * -G_C;
+	/*measuredAngVel.omega_x = ret_angvel[1] * -G_C_d;
+	measuredAngVel.omega_y = ret_angvel[0] *  G_C_d;
+	measuredAngVel.omega_z = ret_angvel[2] * -G_C_d;*/
+
+	measuredAngVel.omega_z = angvel_z * -G_C_d;
 
 	// Get rid of the offset error. Calibration was made in standing-still only.
 	/*trueAngVel.omega_x =    invParamsAng.a1[0] * (measuredAngVel.omega_x - WxOfs)
@@ -177,18 +181,25 @@ ANGVEL inertGetAngVel()
 	trueAngVel.omega_z = measuredAngVel.omega_z - WzOfs;
 
 
-	trueAngVel = inertPutInAvgBuffer(trueAngVel, 10);
+	trueAngVel = inertPutInAvgBuffer(trueAngVel, AVG_BUFF_SIZE);
 
 	return trueAngVel; //TODO
 }
 
-void inertTriggerMeasurement()
+int inertTriggerMeasurement()
 {
-	i_reg = 0;
-	HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i_reg], 1, &((uint8_t*) tmp_reading)[i_reg], 1);
+	if (i_reg == 0) // Have we finished the last read sequence?
+	{
+		HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i_reg], 1, &((uint8_t*) &angvel_z)[i_reg], 1);
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
-void inertGyroOffsetCalibration (const ANGVEL ofs)
+void inertGyroOffsetCalibration (const ANGVELd ofs)
 {
 	WxOfs += ofs.omega_x;
 	WyOfs += ofs.omega_y;
@@ -246,18 +257,20 @@ void i2cInertialSensorMemRxCallback()
 
 	if (i_reg < REGS_TO_READ)
 	{
-		HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i_reg], 1, &((uint8_t*) tmp_reading)[i_reg], 1);
+		HAL_I2C_Mem_Read_IT(INERTIAL_I2C, LSM6DS3_ADDR0, regSource[i_reg], 1, &((uint8_t*) &angvel_z)[i_reg], 1);
 	}
 	else // Sensor reading finished
 	{
 		// Copy the temporary values to their final location
-		int j;
+		/*int j;
 
 		for (j = 0; j < 3; j++)
 		{
 			ret_accel[j]  = tmp_reading[j];
 			ret_angvel[j] = tmp_reading[j+3];
-		}
+		}*/
+
+		i_reg = 0;
 	}
 }
 
@@ -269,11 +282,11 @@ static void WriteRegBlocking(uint8_t regAddr, uint8_t data)
 	HAL_I2C_Mem_Write(INERTIAL_I2C, LSM6DS3_ADDR0, regAddr, 1, &data, 1, HAL_MAX_DELAY);
 }
 
-static ANGVEL inertPutInAvgBuffer (ANGVEL new, uint8_t size)
+static ANGVELd inertPutInAvgBuffer (ANGVELd new, uint8_t size)
 {
-	ANGVEL avg;
+	ANGVELd avg;
 	int i;
-	float threshold = 0.8f;
+	//float threshold = 0.8f;
 
 	avg.omega_x = 0;
 	avg.omega_y = 0;
