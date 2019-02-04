@@ -195,7 +195,7 @@ void TaskInit_Maze (void)
 void Task_Maze (void* p)
 {
 	(void)p;
-	float r_speed = 1.5;
+	float r_speed = 2;
 
 	while (1)
 	{
@@ -362,15 +362,15 @@ static void	MazeCntrSpeed (float r_speed)
 {
 	float e_speed;
 
-	float Ts = 5;			//sampling time in ms
-	float Ti = 20;			//integrating time ms
+	float Ts = 5.0;			//sampling time in ms
+	float Ti = 50.0;			//integrating time ms
 	float beta = exp(-Ts/Ti);
 	float fk = 0;
 
-	float Umin = 10;
-	float Umax = 85;
+	float Umin = 10.0;
+	float Umax = 85.0;
 	float uk;
-	float kc = 10;
+	float kc = 100.0;
 
 	speed_prev = speed_current;				// v previous
 	speed_current = speedGet();				// V actual
@@ -384,7 +384,7 @@ static void	MazeCntrSpeed (float r_speed)
 	{
 		uk = Umax;
 	}
-	fk = beta*fk + (1-beta*uk);
+	fk = beta*fk + ( 1 - beta*uk);
 
 	actualParams.Speed = (uint32_t) uk;
 
