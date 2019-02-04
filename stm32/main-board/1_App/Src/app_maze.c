@@ -128,7 +128,7 @@ void TaskInit_Maze (void)
 	mazeLinePos = 0;
 	mazeLinePosPrev = 0;
 
-	smMainState = eSTATE_MAIN_INCLINATION;
+	smMainState = eSTATE_MAIN_READY;
 
 	// Task can be created now.
 	xTaskCreate(Task_Maze,
