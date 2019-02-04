@@ -55,26 +55,35 @@ typedef enum
 }
 LINE_TYPE;
 
+typedef enum
+{
+	CrossingRtoA,   // Becsatlakozás jobb keresztezõdésbe: DoubleFar, DoubleNearLeft,  SingleRight
+	CrossingLtoA,   // Becsatlakozás bal keresztezõdésbe : DoubleFar, DoubleNearRight, SingleLeft
+	CrossingAtoLB,  // Bal keresztezõdés elõre           : Single,    DoubleNearRight
+	CrossingAtoRB,  // Jobb keresztezõdés elõre          : Single,    DoubleNearLeft
+	CrossingBtoA_R, // Jobb keresztezõdés vissza         : DoubleFar, DoubleNearRight,  SingleRight
+	CrossingBtoA_L  // Bal keresztezõdés vissza          : DoubleFar, DoubleNearLeft,   SingleLeft
+}
+CROSSING_TYPE;
+
 // Local (static) variables --------------------------------------------------------------------------------------------
 
-static int   actuateEnabled = 0;
 static float prevLine = 0;
-static int prevLineCnt = 0;
-
-static int prevLineTypes[3] = {0,0,0};
-static int pltIndex = 0;
 static LINE_TYPE prevLineType = None;
-static LSO_FLOAT lastDoubleLine;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void  remoteHandle();
+static int   remoteHandle();
 static void  lineFollow(float line_pos, float K_P, float K_D, int motor_d);
+
 static float followPrevLine();
 static float followRightLine();
 static float followLeftLine();
-static LINE_TYPE examineRoadSignals(LSO_FLOAT SensorOut);
+
+static LINE_TYPE getLineType(LSO_FLOAT SensorOut);
 static int   isLeft(LSO_FLOAT sensorData, float line);
+static void traceLineType(LINE_TYPE ltp);
+
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -95,19 +104,21 @@ void Task_roadSignal(void* p)
 
 	while (1)
 	{
-		remoteHandle();
-
 		line = followPrevLine();
 
-		lineType = examineRoadSignals(lineGetRawFrontFloat());
+		lineType = getLineType(lineGetRawFrontFloat());
 
-		prevLineType = lineType;
+		if (lineType != prevLineType)
+		{
+			traceLineType(lineType);
+			prevLineType = lineType;
+		}
 
 		lineFollow(
 			line,
 			K_P_VAL,
 			K_D_VAL,
-			actuateEnabled ? MOTOR_D : 0
+			remoteHandle() ? MOTOR_D : 0
 		);
 
 		// END DELAY _______________________________________
@@ -118,8 +129,10 @@ void Task_roadSignal(void* p)
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
-static void remoteHandle()
+static int remoteHandle()
 {
+	int actuateEnabled;
+
 	if (remoteGetState())
 	{
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
@@ -130,6 +143,8 @@ static void remoteHandle()
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 		actuateEnabled = 0;
 	}
+
+	return actuateEnabled;
 }
 
 static void lineFollow(float line_pos, float K_P, float K_D, int motor_d)
@@ -234,8 +249,13 @@ static float followRightLine()
 	return newLine;
 }
 
-static LINE_TYPE examineRoadSignals(LSO_FLOAT SensorOut)
+static LINE_TYPE getLineType(LSO_FLOAT SensorOut)
 {
+	static int prevLineCnt = 0;
+	static int prevLineTypes[3] = {0,0,0};
+	static int pltIndex = 0;
+	static LSO_FLOAT lastDoubleLine;
+
 	int prevLinesOk;
 	LINE_TYPE lineType = prevLineType;
 
@@ -260,19 +280,16 @@ static LINE_TYPE examineRoadSignals(LSO_FLOAT SensorOut)
 				{
 					if (isLeft(lastDoubleLine, SensorOut.lines[0]))
 					{
-						lineType = Single;
-						bspBtSend((uint8_t*)"Single left\r\n", 13);
+						lineType = SingleLeft;
 					}
 					else
 					{
-						lineType = Single;
-						bspBtSend((uint8_t*)"Single right\r\n", 14);
+						lineType = SingleRight;
 					}
 				}
 				else
 				{
 					lineType = Single;
-					bspBtSend((uint8_t*)"Single\r\n", 8); // & unemployed
 				}
 
 				break;
@@ -284,25 +301,21 @@ static LINE_TYPE examineRoadSignals(LSO_FLOAT SensorOut)
 					if (isLeft(SensorOut, prevLine))
 					{
 						lineType = DoubleNearLeft;
-						bspBtSend((uint8_t*)"Double near left\r\n", 18);
 					}
 					else
 					{
 						lineType = DoubleNearRight;
-						bspBtSend((uint8_t*)"Double near right\r\n", 19);
 					}
 				}
 				else
 				{
 					lineType = DoubleFar;
-					bspBtSend((uint8_t*)"Double far\r\n", 12);
 				}
 
 				break;
 			}
 			case 3:
 			{
-				bspBtSend((uint8_t*)"Triple\r\n", 8);
 				break;
 			}
 		}
@@ -315,7 +328,6 @@ static LINE_TYPE examineRoadSignals(LSO_FLOAT SensorOut)
 		if (SensorOut.lines[0] - SensorOut.lines[1] > DOUBLE_LINE_HYS_HIGH)
 		{
 			lineType = DoubleFar;
-			bspBtSend((uint8_t*)"Double far\r\n", 12);
 		}
 	}
 	else if (prevLinesOk && lineType == DoubleFar)
@@ -325,12 +337,10 @@ static LINE_TYPE examineRoadSignals(LSO_FLOAT SensorOut)
 			if (isLeft(SensorOut, prevLine))
 			{
 				lineType = DoubleNearLeft;
-				bspBtSend((uint8_t*)"Double near left\r\n", 18);
 			}
 			else
 			{
 				lineType = DoubleNearRight;
-				bspBtSend((uint8_t*)"Double near right\r\n", 19);
 			}
 		}
 	}
@@ -357,6 +367,51 @@ static int isLeft(LSO_FLOAT sensorData, float line)
 	else
 	{
 		return 0;
+	}
+}
+
+static void traceLineType(LINE_TYPE ltp)
+{
+	switch (ltp)
+	{
+		case None:
+		{
+			break;
+		}
+		case Single:
+		{
+			bspBtSend((uint8_t*)"Single\r\n", 8); // & unemployed
+			break;
+		}
+		case SingleRight:
+		{
+			bspBtSend((uint8_t*)"Single right\r\n", 14);
+			break;
+		}
+		case SingleLeft:
+		{
+			bspBtSend((uint8_t*)"Single left\r\n", 13);
+			break;
+		}
+		case DoubleNearRight:
+		{
+			bspBtSend((uint8_t*)"Double near right\r\n", 19);
+			break;
+		}
+		case DoubleNearLeft:
+		{
+			bspBtSend((uint8_t*)"Double near left\r\n", 18);
+			break;
+		}
+		case DoubleFar:
+		{
+			bspBtSend((uint8_t*)"Double far\r\n", 12);
+			break;
+		}
+		case Triple:
+		{
+			break;
+		}
 	}
 }
 
