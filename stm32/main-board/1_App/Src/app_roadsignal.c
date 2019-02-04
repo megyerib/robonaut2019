@@ -175,9 +175,9 @@ CROSSING_TYPE getCrossingType()
 			ret = CrossingBtoA_L;
 		}
 
-		CROSSING_TYPE smallLineType = examineExit(diff, lineType);
+		CROSSING_TYPE smallLineType = examineExit(prevTrackLen, prevSections[1]);
 
-		traceInt(prevTrackLen);
+		//traceInt(prevTrackLen);
 
 		if (smallLineType != NoCrossing)
 		{
@@ -594,6 +594,8 @@ static CROSSING_TYPE examineExit(int length, LINE_TYPE ltype)
 
 	if (length <= 20)
 	{
+		//traceInt(length);
+
 		smallLines[smallLineNum] = length;
 		smallLineNum++;
 
@@ -624,6 +626,10 @@ static CROSSING_TYPE examineExit(int length, LINE_TYPE ltype)
 		}
 
 		smallLineNum %= 9;
+	}
+	else
+	{
+		smallLineNum = 0;
 	}
 
 	return ret;
