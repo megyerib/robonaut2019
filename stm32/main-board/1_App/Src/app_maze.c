@@ -232,7 +232,6 @@ void Task_Maze (void* p)
 		// Detect line and control the servo and the speed of the car.
 		MazeCntrLineFollow();
 
-		//MazeCntrSpeed(); //TODO
 
 		// TODO Check for frontal collision.
 
