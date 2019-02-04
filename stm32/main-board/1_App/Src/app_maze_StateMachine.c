@@ -34,8 +34,8 @@ cSEGMENT map[MAZE_MAP_MAX_SEGEMENTS];
 bool segments[MAZE_FINDABLE_SEGEMNST];
 //! The number of the segment where the exit point is to be found.
 uint32_t inclinSegment;
-uint8_t inclinSegmentStart;	// 0 = negative, 1 = positive
-bool inclinDirection;		// left = false, rigth = true
+uint8_t inclinSegmentOrient;	// 0 = negative, 1 = positive
+bool inclinDirection;			// left = false, rigth = true
 
 uint32_t actualSegment;
 uint32_t nextNewSegmentIndex;
@@ -265,11 +265,11 @@ static void mazeStateMachineDiscovery (void)
 
 		if (/* inclin direction ok == */ false)
 		{
-			inclinSegmentStart = 1;
+			inclinSegmentOrient = 1;
 		}
 		else
 		{
-			inclinSegmentStart = 0;
+			inclinSegmentOrient = 0;
 		}
 
 		// inclinDirection =  get
@@ -653,11 +653,73 @@ static bool mazeAllSegmentsDiscovered (void)
 
 static void mazePlanExitRoute (void)
 {
+	/*uint8_t plan[12];
+	uint8_t wantedSeg;
+	uint8_t preExitSeg[3];
+	uint8_t secondSeg[3];
+	uint8_t thirdSeg[3];
 	uint8_t i;
-	for (i = 0; i < MAZE_MAP_MAX_SEGEMENTS; i++)
-	{
+	uint8_t j;
+	uint8_t k;
+	uint8_t l;
+	uint8_t m;
+	uint8_t n;
+	uint8_t o;
+	uint8_t p;
 
+	wantedSeg = inclinSegment;
+
+	secondSeg[0] = map[actualSegment].positive.left;
+	secondSeg[1] = map[actualSegment].positive.middle;
+	secondSeg[2] = map[actualSegment].positive.right;
+
+	plan[0] = actualSegment;
+
+	if (inclinSegmentOrient == true)
+	{
+		preExitSeg[0] = map[inclinSegment].positive.left;
+		preExitSeg[1] = map[inclinSegment].positive.middle;
+		preExitSeg[2] = map[inclinSegment].positive.right;
 	}
+	else
+	{
+		preExitSeg[0] = map[inclinSegment].negative.left;
+		preExitSeg[1] = map[inclinSegment].negative.middle;
+		preExitSeg[2] = map[inclinSegment].negative.right;
+	}
+
+
+	if (secondSeg[0] != 0)
+	{
+		plan[1] = secondSeg[0];
+
+		thirdSeg[0] = map[secondSeg].positive.left;
+		thirdSeg[1] = map[secondSeg].positive.middle;
+		thirdSeg[2] = map[secondSeg].positive.right;
+
+		if (thirdSeg[0] != 0)
+		{
+
+		}
+	}
+
+	for (i = 0; i < 3; ++i) {
+		for (j = 0; j < 3; ++j) {
+			for (k = 0; k < 3; ++k) {
+				for (l = 0; l < 3; ++l) {
+					for (m = 0; m < 3; ++m) {
+						for (n = 0; n < 3; ++n) {
+							for (o = 0; o < 3; ++o) {
+								for (p = 0; p < 3; ++p) {
+									//plan[0] = map[secondSeg].positive;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}*/
 }
 
 static void mazeFollowRoute (void)
