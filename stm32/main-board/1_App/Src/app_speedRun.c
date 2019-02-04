@@ -155,7 +155,7 @@ void Task_SpeedRun (void* p)
 		// Main state machine that drive though the speed run track.
 		if (speedRunStarted == true  && recStopCar == false)
 		{
-			sRunMainStateMachine();
+			//sRunMainStateMachine();
 			// TODO drive state machine needs to follow in which segment we are.
 		}
 		else if (recStopCar == true)
@@ -172,7 +172,7 @@ void Task_SpeedRun (void* p)
 		if (speedRunStarted == true)
 		{
 			// Detect line and control the servo and the speed of the car.
-			sRunCntrLineFollow();
+			//sRunCntrLineFollow();
 		}
 
 		// TODO Check for frontal collision.

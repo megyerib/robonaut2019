@@ -67,6 +67,8 @@ static float prevLine = 0;
 static LINE_TYPE prevSections[2];
 static int sectionStart;
 
+static int prevTrackLen;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static int   remoteHandle();
@@ -81,6 +83,8 @@ static int getDistance_cm();
 static void traceDistance();
 
 static void traceInt(int i);
+
+static CROSSING_TYPE examineExit(int length, LINE_TYPE ltype);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -152,8 +156,6 @@ CROSSING_TYPE getCrossingType()
 	CROSSING_TYPE ret = NoCrossing;
 	int diff = getDistance_cm() - sectionStart;
 
-	//traceInt(diff);
-
 	if (diff > 25)
 	{
 		if ((lineType == DoubleNearLeft) && (prevSections[0] == Single || prevSections[0] == SingleLeft || prevSections[0] == SingleRight))
@@ -199,17 +201,15 @@ CROSSING_TYPE getCrossingType()
 		{
 			ret = CrossingBtoA_L;
 		}
-		/*else if ((sec1 == Single || sec1 == SingleLeft || sec1 == SingleRight))
+
+		CROSSING_TYPE smallLineType = examineExit(prevTrackLen, prevSections[1]);
+
+		//traceInt(prevTrackLen);
+
+		if (smallLineType != NoCrossing)
 		{
-			if (sec2 == DoubleNearLeft && sec3 == DoubleFar)
-			{
-				ret = CrossingAtoRB;
-			}
-			else if (sec2 == DoubleNearRight && sec3 == DoubleFar)
-			{
-				ret = CrossingAtoLB;
-			}
-		}*/
+			ret = smallLineType;
+		}
 
 		prevSections[0] = prevSections[1];
 		prevSections[1]  = lineType;
@@ -261,8 +261,8 @@ static void lineFollow(float line_pos, float K_P, float K_D, int motor_d)
 
 	// ACTUATE _________________________________________
 
-	motorSetDutyCycle(motor_d);
-	servoSetAngle(angle);
+	//motorSetDutyCycle(motor_d);
+	//servoSetAngle(angle);
 }
 
 float getPrevLine()
@@ -440,9 +440,7 @@ static LINE_TYPE getLineType(LSO_FLOAT SensorOut)
 	// Ha változott a vonaltípus, távolságmentés
 	if (prevLineType_local != lineType)
 	{
-		//sectionStart = getDistance_cm();
-		//traceDistance();
-
+		prevTrackLen = getDistance_cm() - sectionStart;
 		sectionStart = getDistance_cm();
 	}
 
@@ -546,6 +544,26 @@ static void traceCrossing(CROSSING_TYPE ctype)
 			bspBtSend((uint8_t*) "\\|\r\n", 4);
 			break;
 		}
+		case ExitForwardRight:
+		{
+			bspBtSend((uint8_t*) "EFR\r\n", 5);
+			break;
+		}
+		case ExitForwardLeft:
+		{
+			bspBtSend((uint8_t*) "EFL\r\n", 5);
+			break;
+		}
+		case ExitBackwardRight:
+		{
+			bspBtSend((uint8_t*) "EBR\r\n", 5);
+			break;
+		}
+		case ExitBackwardLeft:
+		{
+			bspBtSend((uint8_t*) "EBL\r\n", 5);
+			break;
+		}
 		default:
 		{
 			break;
@@ -592,6 +610,56 @@ static void traceInt(int i)
 	numlen++;
 
 	bspBtSend((uint8_t*)distanceBuffer, numlen);
+}
+
+static int smallLines[9];
+static int smallLineNum = 0;
+
+static CROSSING_TYPE examineExit(int length, LINE_TYPE ltype)
+{
+	CROSSING_TYPE ret = NoCrossing;
+
+	if (length <= 20)
+	{
+		//traceInt(length);
+
+		smallLines[smallLineNum] = length;
+		smallLineNum++;
+
+		if (smallLineNum == 9)
+		{
+			if (ltype == DoubleNearLeft)
+			{
+				if (smallLines[0] > smallLines[8])
+				{
+					ret = ExitForwardRight;
+				}
+				else
+				{
+					ret = ExitBackwardLeft;
+				}
+			}
+			else if (ltype == DoubleNearRight)
+			{
+				if (smallLines[0] > smallLines[8])
+				{
+					ret = ExitForwardLeft;
+				}
+				else
+				{
+					ret = ExitBackwardRight;
+				}
+			}
+		}
+
+		smallLineNum %= 9;
+	}
+	else
+	{
+		smallLineNum = 0;
+	}
+
+	return ret;
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
