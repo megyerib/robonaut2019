@@ -10,6 +10,7 @@
 
 #include "app_maze_StateMachine.h"
 #include "line.h"
+#include "bsp_servo.h"
 #include <string.h>
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -32,11 +33,13 @@ cSEGMENT map[MAZE_MAP_MAX_SEGEMENTS];
 bool segments[MAZE_FINDABLE_SEGEMNST];
 //! The number of the segment where the exit point is to be found.
 uint32_t inclinSegment;
-uint8_t inclinSegmentStart;
+uint8_t inclinSegmentStart;	// 0 = negative, 1 = positive
+bool inclinDirection;		// left = false, rigth = true
 
 uint32_t actualSegment;
 uint32_t nextNewSegmentIndex;
 uint32_t alreadyFoundSegment;
+bool turnOffLineFollow;
 
 //! The controller parameters of the actual state in which the car is currently.
 cPD_CONTROLLER_PARAMS actualParams;
@@ -58,8 +61,7 @@ static void mazeStateMachineDiscovery   (void);
 static void mazeStateMachineInclination (void);
 
 static bool mazeCrossingAlreadyFound 	(const cNAVI_STATE crossingNaviState);
-static void mazeUpdateMap 	(const RoadSignal crossingType);
-static void mazeUpdateMapWithOneNew 	(const RoadSignal crossingType);
+static void mazeUpdateMap 				(const RoadSignal crossingType);
 static void mazeCheckDiscoveredSegments (void);
 static void mazeMergeSegments 			(void);
 
@@ -99,6 +101,8 @@ void MazeStateMachinesInit (void)
 	actualSegment = 0;
 	nextNewSegmentIndex = 1;
 	alreadyFoundSegment = 0;
+
+	turnOffLineFollow = false;
 }
 
 //! Function: MazeMainStateMachine
@@ -260,12 +264,14 @@ static void mazeStateMachineDiscovery (void)
 
 		if (/* inclin direction ok == */ false)
 		{
-			inclinSegmentStart = map[actualSegment].start;
+			inclinSegmentStart = 1;
 		}
 		else
 		{
-			inclinSegmentStart = map[actualSegment].end;
+			inclinSegmentStart = 0;
 		}
+
+		// inclinDirection =  get
 	}
 	else
 	{
@@ -292,6 +298,24 @@ static void mazeStateMachineInclination (void)
 		if (/* exit */ false)
 		{
 			// Steer in the direction if the markings until the car leaves the lines (45deg).
+			if (inclinDirection == false)
+			{
+				servoSetAngle(PI/180*150);
+			}
+			else
+			{
+				servoSetAngle(PI/180*60);
+			}
+
+			// Wait to leave the line.
+			if (/*no line detected*/ false)
+			{
+				turnOffLineFollow = false;
+			}
+			else
+			{
+				turnOffLineFollow = true;
+			}
 
 			// Check the distance sensor for collision and go until the new line is found. If collision warning,
 			// then stop.
@@ -586,7 +610,7 @@ static void mazeMergeSegments (void)
 	}
 
 	// Change the redundant segments to the corrected.
-	for (i = 0; i < max; i++)
+	for (i = 0; i < MAZE_MAP_MAX_SEGEMENTS; i++)
 	{
 		if (actualSegment < alreadyFoundSegment)
 		{
@@ -607,7 +631,6 @@ static void mazeMergeSegments (void)
 			if(map[i].positive.right  == actualSegment)  map[i].positive.right  = alreadyFoundSegment;
 		}
 	}
-
 }
 
 static bool mazeAllSegmentsDiscovered (void)
@@ -625,7 +648,11 @@ static bool mazeAllSegmentsDiscovered (void)
 
 static void mazePlanExitRoute (void)
 {
+	uint8_t i;
+	for (i = 0; i < MAZE_MAP_MAX_SEGEMENTS; i++)
+	{
 
+	}
 }
 
 static void mazeFollowRoute (void)

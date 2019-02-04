@@ -37,6 +37,8 @@ extern uint32_t inclinSegment;
 extern cPD_CONTROLLER_PARAMS actualParams;
 extern cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
+extern bool turnOffLineFollow;
+
 //! Structure that contain the received serial data.
 static cTRACE_RX_DATA rxData;
 //! Flag that indicates if the car must be stopped.
@@ -207,8 +209,11 @@ static void	MazeCntrLineFollow (void)
 	servo_angle = -0.75f * (P_modifier + D_modifier);
 
 	// Actuate.
-	motorSetDutyCycle(actualParams.Speed);
-	servoSetAngle(servo_angle);
+	if (turnOffLineFollow == true)
+	{
+		motorSetDutyCycle(actualParams.Speed);
+		servoSetAngle(servo_angle);
+	}
 
 	// Trace
 	txServoAngle = servo_angle;
