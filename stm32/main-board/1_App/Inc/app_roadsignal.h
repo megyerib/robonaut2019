@@ -21,8 +21,10 @@ typedef enum
 	CrossingAtoRB,  // Jobb keresztezõdés elõre          : Single,    DoubleNearLeft
 	CrossingBtoA_R, // Jobb keresztezõdés vissza         : DoubleFar, DoubleNearRight,  SingleRight
 	CrossingBtoA_L, // Bal keresztezõdés vissza          : DoubleFar, DoubleNearLeft,   SingleLeft
-	ExitForward,
-	ExitBackward
+	ExitForwardRight,
+	ExitForwardLeft,
+	ExitBackwardRight,
+	ExitBackwardLeft
 }
 CROSSING_TYPE;
 
