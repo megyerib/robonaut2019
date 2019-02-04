@@ -26,9 +26,9 @@
 
 #define K_P_VAL         (0.02f)
 #define K_D_VAL         (3.5f)
-#define MOTOR_D         (19u)
+#define MOTOR_D         (18u)
 
-#define PREV_LINES      (3u)
+#define PREV_LINES      (4u)
 
 #define DOUBLE_LINE_THRESHOLD  (0.09f)
 #define DOUBLE_LINE_HYS_LOW    (0.06f)
@@ -45,8 +45,7 @@ FILTERED_LINES;
 
 typedef enum
 {
-	None = 0,
-	Single,
+	Single = 0,
 	SingleRight,
 	SingleLeft,
 	DoubleNearRight,
@@ -59,16 +58,14 @@ LINE_TYPE;
 // Local (static) variables --------------------------------------------------------------------------------------------
 
 static float prevLine = 0;
-static LINE_TYPE prevLineType = None;
+
+static LINE_TYPE prevSections[2];
+static float prevSectionStart = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static int   remoteHandle();
 static void  lineFollow(float line_pos, float K_P, float K_D, int motor_d);
-
-static float followPrevLine();
-static float followRightLine();
-static float followLeftLine();
 
 static LINE_TYPE getLineType(LSO_FLOAT SensorOut);
 static int   isLeft(LSO_FLOAT sensorData, float line);
@@ -95,7 +92,7 @@ void Task_roadSignal(void* p)
 	{
 		getCrossingType();
 
-		line = followPrevLine();
+		line = getPrevLine();
 
 		lineFollow(
 			line,
@@ -112,56 +109,80 @@ void Task_roadSignal(void* p)
 
 CROSSING_TYPE getCrossingType()
 {
-	static LINE_TYPE prevSections[2];
-	static float prevSectionStart;
-
 	LINE_TYPE lineType = getLineType(lineGetRawFrontFloat());
 	CROSSING_TYPE ret = NoCrossing;
+	float dist = speedGetDistance();
+	float len = dist - prevSectionStart;
+
+	/*if (len > 0.3f)
+	{
+		if ((lineType == DoubleNearLeft) && (prevSections[1] == Single || prevSections[1] == SingleLeft || prevSections[1] == SingleRight))
+		{
+			// Jobb keresztezõdés elõre
+			ret = CrossingAtoRB;
+
+			prevSections[0] = DoubleNearLeft;
+			prevSections[1] = DoubleNearLeft;
+
+			bspBtSend((uint8_t*) "|/\r\n", 4);
+		}
+
+		if ((lineType == DoubleNearRight) && (prevSections[1] == Single || prevSections[1] == SingleLeft || prevSections[1] == SingleRight))
+		{
+			// Bal keresztezõdés elõre
+			ret = CrossingAtoLB;
+
+			prevSections[0] = DoubleNearRight;
+			prevSections[1] = DoubleNearRight;
+
+			bspBtSend((uint8_t*) "\\|\r\n", 4);
+		}
+	}*/
 
 	if (lineType != prevSections[1])
 	{
 		LINE_TYPE sec1 = prevSections[0];
 		LINE_TYPE sec2 = prevSections[1];
 		LINE_TYPE sec3 = lineType;
-		float sectionEnd = speedGetDistance();
-		float len = sectionEnd - prevSectionStart;
 
 		if (sec1 == DoubleFar && sec2 == DoubleNearLeft && sec3 == SingleRight)
 		{
-			bspBtSend((uint8_t*) "RtoA\r\n", 6);
+			bspBtSend((uint8_t*) "> /|\r\n", 6);
 			ret = CrossingRtoA;
 		}
 		else if (sec1 == DoubleFar && sec2 == DoubleNearRight && sec3 == SingleLeft)
 		{
-			bspBtSend((uint8_t*) "LtoA\r\n", 6);
+			bspBtSend((uint8_t*) "|\\ <\r\n", 6);
 			ret = CrossingLtoA;
-		}
-		else if ((sec2 == Single || sec2 == SingleLeft || sec3 == SingleRight) && sec3 == DoubleNearRight)
-		{
-			bspBtSend((uint8_t*) "AtoLB\r\n", 7);
-			ret = CrossingAtoLB;
-		}
-		else if ((sec2 == Single || sec2 == SingleLeft || sec3 == SingleRight) && sec3 == DoubleNearLeft)
-		{
-			bspBtSend((uint8_t*) "AtoRB\r\n", 7);
-			ret = CrossingAtoRB;
 		}
 		else if (sec1 == DoubleFar && sec2 == DoubleNearRight && sec3 == SingleRight)
 		{
-			bspBtSend((uint8_t*) "BtoAR\r\n", 7);
+			bspBtSend((uint8_t*) "/| <\r\n", 6);
 			ret = CrossingBtoA_R;
 		}
 		else if (sec1 == DoubleFar && sec2 == DoubleNearLeft && sec3 == SingleLeft)
 		{
-			bspBtSend((uint8_t*) "BtoAL\r\n", 7);
+			bspBtSend((uint8_t*) "> |\\\r\n", 6);
 			ret = CrossingBtoA_L;
+		}
+		else if ((sec1 == Single || sec1 == SingleLeft || sec1 == SingleRight))
+		{
+			if (sec2 == DoubleNearLeft && sec3 == DoubleFar)
+			{
+				bspBtSend((uint8_t*) "|/\r\n", 4);
+				ret = CrossingAtoRB;
+			}
+			else if (sec2 == DoubleNearRight && sec3 == DoubleFar)
+			{
+				bspBtSend((uint8_t*) "\\|\r\n", 4);
+				ret = CrossingAtoLB;
+			}
 		}
 
 		prevSections[0] = prevSections[1];
 		prevSections[1]  = lineType;
-		prevSectionStart = sectionEnd;
 
-		prevLineType = lineType;
+		prevSectionStart = dist;
 	}
 
 	return ret;
@@ -214,7 +235,7 @@ static void lineFollow(float line_pos, float K_P, float K_D, int motor_d)
 	servoSetAngle(angle);
 }
 
-static float followPrevLine()
+float getPrevLine()
 {
 	float newLine;
 	float minDiff;
@@ -249,7 +270,7 @@ static float followPrevLine()
 	return newLine;
 }
 
-static float followLeftLine()
+float getLeftLine()
 {
 	float newLine;
 
@@ -269,7 +290,7 @@ static float followLeftLine()
 	return newLine;
 }
 
-static float followRightLine()
+float getRightLine()
 {
 	float newLine;
 
@@ -297,7 +318,7 @@ static LINE_TYPE getLineType(LSO_FLOAT SensorOut)
 	static LSO_FLOAT lastDoubleLine;
 
 	int prevLinesOk;
-	LINE_TYPE lineType = prevLineType;
+	LINE_TYPE lineType = prevSections[1];
 
 	prevLineTypes[pltIndex] = SensorOut.cnt;
 	pltIndex++;
@@ -316,7 +337,7 @@ static LINE_TYPE getLineType(LSO_FLOAT SensorOut)
 		{
 			case 1:
 			{
-				if (prevLineCnt == 2 && (prevLineType == DoubleNearRight || prevLineType == DoubleNearLeft))
+				if (prevLineCnt == 2 && (prevSections[1] == DoubleNearRight || prevSections[1] == DoubleNearLeft))
 				{
 					if (isLeft(lastDoubleLine, SensorOut.lines[0]))
 					{
@@ -414,10 +435,6 @@ static void traceLineType(LINE_TYPE ltp)
 {
 	switch (ltp)
 	{
-		case None:
-		{
-			break;
-		}
 		case Single:
 		{
 			bspBtSend((uint8_t*)"Single\r\n", 8); // & unemployed
