@@ -36,6 +36,10 @@ bool segments[MAZE_FINDABLE_SEGEMNST];
 uint32_t inclinSegment;
 uint8_t inclinSegmentOrient;	// 0 = negative, 1 = positive
 bool inclinDirection;			// left = false, rigth = true
+uint32_t inclinTime;
+bool inclinStarted;
+bool inclinTimeUp;
+uint32_t inlcinStopTime = 400;
 
 uint32_t actualSegment;
 uint32_t nextNewSegmentIndex;
@@ -58,6 +62,9 @@ static uint8_t exitRoute[20];
 extern QueueHandle_t qNaviN_f;
 extern QueueHandle_t qNaviE_f;
 extern QueueHandle_t qNaviPSI_f;
+
+float mazeLinePos;
+float mazeLinePosPrev;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -107,6 +114,11 @@ void MazeStateMachinesInit (void)
 	alreadyFoundSegment = 0;
 
 	turnOffLineFollow = false;
+
+	mazeLinePos = 0.0f;
+	mazeLinePosPrev = 0.0f;
+
+	inclinTimeUp =  false;
 }
 
 //! Function: MazeMainStateMachine
@@ -138,7 +150,7 @@ void MazeMainStateMachine (void)
 
 			// Map making, navigation, path tracking.
 			//TODO implement
-			if (mazeFinished != true)
+			if (mazeAllSegmentsDiscovered() != true)
 			{
 				mazeStateMachineDiscovery();
 			}
@@ -162,13 +174,18 @@ void MazeMainStateMachine (void)
 		}
 		case eSTATE_MAIN_OUT:
 		{
-			vTaskDelay(2000);
+			if (inlcinStopTime == 0)
+			{
+				// Stop/Park behind the safety-car.
+				actualParams.Speed = 0;
 
-			// Stop/Park behind the safety-car.
-			actualParams.Speed = 0;
-
-			// Maze task is finished.
-			mazeFinished = true;
+				// Maze task is finished.
+				mazeFinished = true;
+			}
+			else
+			{
+				inlcinStopTime--;
+			}
 			break;
 		}
 		default:
@@ -189,37 +206,36 @@ static void mazeStateMachineDiscovery (void)
 	currCross = getCrossingType();
 
 	// Select the appropriate reaction.
-	if (/* cross roads */ true)	// TODO
+	if (currCross != NoCrossing)
 	{
 		// Get navigation status.
-		xQueuePeek(qNaviN_f,   &naviStateCar.p.n, 0);
-		xQueuePeek(qNaviE_f,   &naviStateCar.p.e, 0);
-		xQueuePeek(qNaviPSI_f, &naviStateCar.psi, 0);
+		xQueuePeek(qNaviN_f,   &naviStateCrossing.p.n, 0);
+		xQueuePeek(qNaviE_f,   &naviStateCrossing.p.e, 0);
+		xQueuePeek(qNaviPSI_f, &naviStateCrossing.psi, 0);
 
 		// Check if the crossing was already found.
 		if (mazeCrossingAlreadyFound(naviStateCrossing) == false)
 		{
 			// 2 new segments found.
-			mazeUpdateMap(currRoad);
+			mazeUpdateMap(currCross);
 
 			// Follow one direction.
 			if (map[actualSegment].positive[0] != 0)
 			{
-				// Turn left. TODO
-
-
+				// Turn left.
+				mazeLinePos = getLeftLine();
 				actualSegment = map[actualSegment].positive[0];
 			}
 			else if (map[actualSegment].positive[1] != 0)
 			{
-				// Turn middle. TODO
-
+				// Turn middle.
+				mazeLinePos = getPrevLine();
 				actualSegment = map[actualSegment].positive[1];
 			}
 			else if (map[actualSegment].positive[2] != 0)
 			{
-				// Turn right. TODO
-
+				// Turn right.
+				mazeLinePos = getRightLine();
 				actualSegment = map[actualSegment].positive[2];
 			}
 		}
@@ -228,25 +244,42 @@ static void mazeStateMachineDiscovery (void)
 			// Turn to an undiscovered direction.
 			if (map[actualSegment].positive[0] != alreadyFoundSegment && map[actualSegment].positive[0] != 0)
 			{
-				// Turn left. TODO
-
+				// Turn left.
+				mazeLinePos = getLeftLine();
 				actualSegment = map[actualSegment].positive[0];
 			}
 			else if (map[actualSegment].positive[1] != alreadyFoundSegment && map[actualSegment].positive[1] != 0)
 			{
-				// Turn middle. TODO
-
+				// Turn middle.
+				mazeLinePos = getPrevLine();
 				actualSegment = map[actualSegment].positive[1];
 			}
 			else if (map[actualSegment].positive[2] != alreadyFoundSegment && map[actualSegment].positive[2] != 0)
 			{
-				// Turn right. TODO
-
+				// Turn right.
+				mazeLinePos = getRightLine();
 				actualSegment = map[actualSegment].positive[2];
 			}
 			else
 			{
-				// Turn random. TODO
+				// Turn random.
+				uint8_t random = (uint32_t)(naviStateCrossing.psi * 10000) % 10;
+
+				if (random >= 5)
+				{
+					mazeLinePos = getPrevLine();
+				}
+				else
+				{
+					if (map[actualSegment].positive[0] != 0)
+					{
+						mazeLinePos = getLeftLine();
+					}
+					else if (map[actualSegment].positive[2] != 0)
+					{
+						mazeLinePos = getRightLine();
+					}
+				}
 			}
 		}
 
@@ -262,24 +295,22 @@ static void mazeStateMachineDiscovery (void)
 			smMainState = eSTATE_MAIN_INCLINATION;
 		}
 	}
-	else if (/* exit */ false)
+	else if (currCross == ExitForward)
 	{
 		inclinSegment = actualSegment;
 
-		if (/* inclin direction ok == */ false)
-		{
-			inclinSegmentOrient = 1;
-		}
-		else
-		{
-			inclinSegmentOrient = 0;
-		}
+		inclinSegmentOrient = 1;
+	}
+	else if ((currCross == ExitBackward))
+	{
+		inclinSegment = actualSegment;
 
-		// inclinDirection =  get
+		inclinSegmentOrient = 0;
 	}
 	else
 	{
 		// Follow the main line.
+		mazeLinePos = getPrevLine();
 	}
 
 }
@@ -287,11 +318,13 @@ static void mazeStateMachineDiscovery (void)
 static void mazeStateMachineInclination (void)
 {
 	CROSSING_TYPE crossing;
+	uint8_t lineNbr;
 
 	crossing = getCrossingType();
+	lineNbr = lineGetRawFrontFloat().cnt;
 
 	//____________________________________________STEP 1________________________________________________
-	if (actualSegment != inclinSegment)	// TODO check direction
+	if (/*actualSegment != inclinSegment*/ false)	// TODO check direction
 	{
 		// Plan a path to the exit
 		mazePlanExitRoute();
@@ -303,35 +336,55 @@ static void mazeStateMachineInclination (void)
 	{
 		//____________________________________________STEP 2________________________________________________
 		// At the exit find the markings and slow down.
-		if (crossing == CrossingAtoLB)		// TODO
+		if (true)//(crossing == ExitForward)		// TODO
 		{
-			// Steer in the direction if the markings until the car leaves the lines (45deg).
-			if (inclinDirection == false)
-			{
-				servoSetAngle(PI/180*150);
-			}
-			else
-			{
-				servoSetAngle(PI/180*60);
-			}
-
-			// Wait to leave the line.
-			if (/*no line detected*/ false)
-			{
-				turnOffLineFollow = false;
-			}
-			else
+			// Trigger maneuver.
+			if (lineNbr > 0 && inclinStarted == false)
 			{
 				turnOffLineFollow = true;
+				inclinStarted = true;
+				inclinTime = 200;		// TODO define * 5ms
+
+				// Steer in the direction if the markings until the car leaves the lines (45deg).
+				if (inclinDirection == false)
+				{
+					servoSetAngle(PI/180 * 30);
+				}
+				else
+				{
+					servoSetAngle(PI/180 * -30);
+				}
+			}
+
+			if (inclinStarted == true && inclinTimeUp == false)
+			{
+				if (inclinTime == 0)
+				{
+					inclinTimeUp =  true;
+					servoSetAngle(0);
+				}
+				else
+				{
+					inclinTime--;
+				}
 			}
 
 			// Check the distance sensor for collision and go until the new line is found. If collision warning,
 			// then stop.
 
-			// New lines found -> OUT state.
-			if (/* vonal */ false)
+			if (inclinTimeUp == true)
 			{
-				smMainState = eSTATE_MAIN_OUT;
+				// New lines found -> OUT state.
+				if (lineNbr > 0)
+				{
+					lineNbr = lineGetRawFrontFloat().cnt;
+
+					if (lineNbr > 0)
+					turnOffLineFollow = false;
+					mazeLinePos = lineGetSingle();
+					mazeLinePosPrev = 0;
+					smMainState = eSTATE_MAIN_OUT;
+				}
 			}
 		}
 	}
@@ -378,7 +431,7 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 	//				  CR
 	switch (crossingType)
 	{
-		case 0:	// TODO
+		case CrossingAtoLB:
 		{
 			// From A to B and CL direction.
 
@@ -406,7 +459,7 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			nextNewSegmentIndex++;
 			break;
 		}
-		case 1: // TODO
+		case CrossingAtoRB:
 		{
 			// From A to B and CR direction.
 
@@ -434,7 +487,7 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			nextNewSegmentIndex++;
 			break;
 		}
-		case 2: // TODO
+		case CrossingBtoA_L: // TODO
 		{
 			// From B to A and CL direction.
 
@@ -462,7 +515,7 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			nextNewSegmentIndex++;
 			break;
 		}
-		case 3: // TODO
+		case CrossingBtoA_R:
 		{
 			// From B to A and CR direction.
 
@@ -490,7 +543,7 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			nextNewSegmentIndex++;
 			break;
 		}
-		case 4: // TODO
+		case CrossingLtoA:
 		{
 			// From CL to A.
 
@@ -518,7 +571,7 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			nextNewSegmentIndex++;
 			break;
 		}
-		case 5:	//TODO
+		case CrossingRtoA:
 		{
 			// From CR to A.
 
@@ -679,7 +732,7 @@ static bool mazeAllSegmentsDiscovered (void)
 
 static void mazePlanExitRoute (void)
 {
-	/uint8_t plan[12];
+	/*uint8_t plan[12];
 	uint8_t wantedSeg;
 	uint8_t preExitSeg[3];
 	uint8_t secondSeg[3];
@@ -753,7 +806,7 @@ static void mazePlanExitRoute (void)
 				}
 			}
 		}
-	}
+	}*/
 }
 
 static void mazeFollowRoute (void)

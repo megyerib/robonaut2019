@@ -571,8 +571,8 @@ void sRunCntrLineFollow (void)
 	servo_angle = -0.75f * (P_modifier + D_modifier);
 
 	// Actuate.
-	motorSetDutyCycle(actualParamsSRun.Speed);
-	servoSetAngle(servo_angle);
+	//motorSetDutyCycle(actualParamsSRun.Speed);	TODO
+	//servoSetAngle(servo_angle);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
