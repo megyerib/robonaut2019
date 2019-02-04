@@ -11,6 +11,7 @@
 #include "FreeRTOS.h"
 #include "event_groups.h"
 #include "app_maze.h"
+#include "app_maze_StateMachine.h"
 #include "app_common.h"
 #include "navigation.h"
 #include "trace.h"
@@ -23,69 +24,18 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
-
-//**********************************************************************************************************************
-//! States of the main state machine of the maze algorithm.
-//**********************************************************************************************************************
-typedef enum
-{
-	eSTATE_MAIN_READY       = 0,		//!< Start position and car waits for a trigger.
-	eSTATE_MAIN_DISCOVER,				//!< The car is driving through the maze, finding crossings and segments.
-	eSTATE_MAIN_INCLINATION,			//!< The car has discovered the maze, it has to leave it now.
-	eSTATE_MAIN_OUT						//!< The car is out of the maze
-} eSTATE_MAIN;
-
-//**********************************************************************************************************************
-//! List that contain all of the control parameters.
-//**********************************************************************************************************************
-typedef struct
-{
-	cPD_CONTROLLER_PARAMS discover;		//!< Contains the control parameters of the Discover state.
-	cPD_CONTROLLER_PARAMS inclination;	//!< Contains the control parameters of the Inclination state.
-} cMAZE_PD_CONTROL_PARAM_LIST;
-
-//**********************************************************************************************************************
-//!
-//**********************************************************************************************************************
-typedef struct
-{
-	cNAVI_STATE start;
-	cNAVI_STATE end;
-	struct cSEGMENT* left;
-	struct cSEGMENT* midle;
-	struct cSEGMENT* right;
-} cSEGMENT_INFO;
-
-//**********************************************************************************************************************
-//!
-//**********************************************************************************************************************
-typedef struct
-{
-	cSEGMENT_INFO alfa;
-	cSEGMENT_INFO beta;
-	bool dir;
-} cSEGMENT;
-
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
 //! Event flag (first bit) that indicates if we have left the maze.
 EventGroupHandle_t event_MazeOut;
-//! Flag that indicates if the maze task is finished.
-static bool mazeFinished;
 
-//! This variable indicates the actual state of the main state machine of the maze algorithm.
-static eSTATE_MAIN smMainState;
-//! The graph map of the labyrinth.
-//static cSEGMENT map[20];
-//! A list of the discoverable segments. A bit is set when the segment was found and the car has driven it through.
-static bool segements[12];
-//! The number of the segment where the exit point is to be found.
-static uint32_t inclinSegment;
-
-//! The controller parameters of the actual state in which the car is currently.
-static cPD_CONTROLLER_PARAMS actualParams;
-//! List of the controller parameters for all of the main states.
-static cMAZE_PD_CONTROL_PARAM_LIST paramList;
+extern bool mazeFinished;
+extern eSTATE_MAIN smMainState;
+extern cSEGMENT map[20];
+extern bool segments[12];
+extern uint32_t inclinSegment;
+extern cPD_CONTROLLER_PARAMS actualParams;
+extern cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
 //! Structure that contain the received serial data.
 static cTRACE_RX_DATA rxData;
@@ -145,7 +95,6 @@ static float speed_prev;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void 	MazeMainStateMachine   (void);
 static void 	MazeProcessRecCommands (void);
 static void 	MazeCheckRemote		   (void);
 static void 	MazeTraceInformations  (void);
@@ -160,14 +109,7 @@ void TaskInit_Maze (void)
 	event_MazeOut = xEventGroupCreate();
 	xEventGroupClearBits(event_MazeOut, 1);
 
-	mazeFinished = false;
-
-	// Start in the Ready state.
-	smMainState = eSTATE_MAIN_READY;
-
-	// Reset trackers.
-	memset(segements, 0, 12);
-	inclinSegment = 0;
+	MazeStateMachinesInit();
 
 	// Initial parameters of the Discover state.
 	paramList.discover.Kp	 = 0.025;
@@ -241,89 +183,6 @@ void Task_Maze (void* p)
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-//**********************************************************************************************************************
-//! This function holds the main state machine that can navigate through the labyrinth.
-//!
-//! The main state machine has 4 states: Ready, Discover, Inclination, Out. The car starts in the Ready state and waits
-//! for a trigger (remote, start gate). On trigger the car gets into the Discover state. In this state the car runs
-//! through the labyrinth looking for the segments and the inclination point. When this point and all of the segments
-//! are found and discovered, then the car gets into the Inclination state. Now the car plans a route to leave the
-//! labyrinth and changes lane to the speed run route, behind the safety car. This is the Out state.
-//!
-//! @return -
-//**********************************************************************************************************************
-static void MazeMainStateMachine (void)
-{
-	switch (smMainState)
-	{
-		case eSTATE_MAIN_READY:
-		{
-			// Standing in the start position and radio trigger.
-			actualParams.Speed = 0;
-
-			// TODO on race use this! : if (startGetState() == s0)
-			if (true)
-			{
-				// Trigger received -> DISCOVER state.
-				smMainState = eSTATE_MAIN_DISCOVER;
-			}
-			break;
-		}
-		case eSTATE_MAIN_DISCOVER:
-		{
-			// Load in the control parameters.
-			actualParams.Kp = paramList.discover.Kp;
-			actualParams.Kd = paramList.discover.Kd;
-			actualParams.Speed = paramList.discover.Speed;
-
-			// Map making, navigation, path tracking.
-			//TODO implement
-
-			// All of the segments are discovered and reached -> INCLINATION state.
-			//smMainState = eSTATE_MAIN_INCLINATION;
-			break;
-		}
-		case eSTATE_MAIN_INCLINATION:
-		{
-			// Load in control parameters.
-			actualParams.Kp = paramList.inclination.Kp;
-			actualParams.Kd = paramList.inclination.Kd;
-			actualParams.Speed = paramList.inclination.Speed;
-
-			//____________________________________________STEP 1________________________________________________
-			// Plan a path to the exit
-
-			// Drive to the exit
-
-			//____________________________________________STEP 2________________________________________________
-			// At the exit find the markings and slow down.
-
-			// Steer in the direction if the markings until the car leaves the lines (45deg).
-
-			// Check the distance sensor for collision and go until the new line is found. If collision warning,
-			// then stop.
-
-			// New lines found -> OUT state.
-			//smMainState = eSTATE_MAIN_OUT;
-			break;
-		}
-		case eSTATE_MAIN_OUT:
-		{
-			// Stop/Park behind the safety-car.
-			actualParams.Speed = 0;
-
-			// Maze task is finished.
-			mazeFinished = true;
-			break;
-		}
-		default:
-		{
-			// NOP
-			break;
-		}
-	}
-}
 
 //**********************************************************************************************************************
 //! TODO
@@ -540,18 +399,18 @@ static uint32_t MazeSegmentsConverter  (void)
 {
 	uint32_t retVal = 0;
 
-	if (segements[0] == true)	retVal += 2048;
-	if (segements[1] == true)	retVal += 1024;
-	if (segements[2] == true)	retVal += 512;
-	if (segements[3] == true)	retVal += 256;
-	if (segements[4] == true)	retVal += 128;
-	if (segements[5] == true)	retVal += 64;
-	if (segements[6] == true)	retVal += 32;
-	if (segements[7] == true)	retVal += 16;
-	if (segements[8] == true)	retVal += 8;
-	if (segements[9] == true)	retVal += 4;
-	if (segements[10] == true)	retVal += 2;
-	if (segements[11] == true)	retVal += 1;
+	if (segments[0] == true)	retVal += 2048;
+	if (segments[1] == true)	retVal += 1024;
+	if (segments[2] == true)	retVal += 512;
+	if (segments[3] == true)	retVal += 256;
+	if (segments[4] == true)	retVal += 128;
+	if (segments[5] == true)	retVal += 64;
+	if (segments[6] == true)	retVal += 32;
+	if (segments[7] == true)	retVal += 16;
+	if (segments[8] == true)	retVal += 8;
+	if (segments[9] == true)	retVal += 4;
+	if (segments[10] == true)	retVal += 2;
+	if (segments[11] == true)	retVal += 1;
 
 	return retVal;
 }
