@@ -17,6 +17,7 @@
 #include "bsp_servo.h"
 #include <math.h>
 #include "bsp_bluetooth.h"
+#include "speed.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -55,17 +56,6 @@ typedef enum
 }
 LINE_TYPE;
 
-typedef enum
-{
-	CrossingRtoA,   // Becsatlakozás jobb keresztezõdésbe: DoubleFar, DoubleNearLeft,  SingleRight
-	CrossingLtoA,   // Becsatlakozás bal keresztezõdésbe : DoubleFar, DoubleNearRight, SingleLeft
-	CrossingAtoLB,  // Bal keresztezõdés elõre           : Single,    DoubleNearRight
-	CrossingAtoRB,  // Jobb keresztezõdés elõre          : Single,    DoubleNearLeft
-	CrossingBtoA_R, // Jobb keresztezõdés vissza         : DoubleFar, DoubleNearRight,  SingleRight
-	CrossingBtoA_L  // Bal keresztezõdés vissza          : DoubleFar, DoubleNearLeft,   SingleLeft
-}
-CROSSING_TYPE;
-
 // Local (static) variables --------------------------------------------------------------------------------------------
 
 static float prevLine = 0;
@@ -84,7 +74,6 @@ static LINE_TYPE getLineType(LSO_FLOAT SensorOut);
 static int   isLeft(LSO_FLOAT sensorData, float line);
 static void traceLineType(LINE_TYPE ltp);
 
-
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void TaskInit_roadSignal(void)
@@ -100,19 +89,13 @@ void TaskInit_roadSignal(void)
 void Task_roadSignal(void* p)
 {
 	float line;
-	LINE_TYPE lineType;
+	CROSSING_TYPE crossing;
 
 	while (1)
 	{
+		getCrossingType();
+
 		line = followPrevLine();
-
-		lineType = getLineType(lineGetRawFrontFloat());
-
-		if (lineType != prevLineType)
-		{
-			traceLineType(lineType);
-			prevLineType = lineType;
-		}
 
 		lineFollow(
 			line,
@@ -125,6 +108,63 @@ void Task_roadSignal(void* p)
 
 		vTaskDelay(5);
 	}
+}
+
+CROSSING_TYPE getCrossingType()
+{
+	static LINE_TYPE prevSections[2];
+	static float prevSectionStart;
+
+	LINE_TYPE lineType = getLineType(lineGetRawFrontFloat());
+	CROSSING_TYPE ret = NoCrossing;
+
+	if (lineType != prevSections[1])
+	{
+		LINE_TYPE sec1 = prevSections[0];
+		LINE_TYPE sec2 = prevSections[1];
+		LINE_TYPE sec3 = lineType;
+		float sectionEnd = speedGetDistance();
+		float len = sectionEnd - prevSectionStart;
+
+		if (sec1 == DoubleFar && sec2 == DoubleNearLeft && sec3 == SingleRight)
+		{
+			bspBtSend((uint8_t*) "RtoA\r\n", 6);
+			ret = CrossingRtoA;
+		}
+		else if (sec1 == DoubleFar && sec2 == DoubleNearRight && sec3 == SingleLeft)
+		{
+			bspBtSend((uint8_t*) "LtoA\r\n", 6);
+			ret = CrossingLtoA;
+		}
+		else if ((sec2 == Single || sec2 == SingleLeft || sec3 == SingleRight) && sec3 == DoubleNearRight)
+		{
+			bspBtSend((uint8_t*) "AtoLB\r\n", 7);
+			ret = CrossingAtoLB;
+		}
+		else if ((sec2 == Single || sec2 == SingleLeft || sec3 == SingleRight) && sec3 == DoubleNearLeft)
+		{
+			bspBtSend((uint8_t*) "AtoRB\r\n", 7);
+			ret = CrossingAtoRB;
+		}
+		else if (sec1 == DoubleFar && sec2 == DoubleNearRight && sec3 == SingleRight)
+		{
+			bspBtSend((uint8_t*) "BtoAR\r\n", 7);
+			ret = CrossingBtoA_R;
+		}
+		else if (sec1 == DoubleFar && sec2 == DoubleNearLeft && sec3 == SingleLeft)
+		{
+			bspBtSend((uint8_t*) "BtoAL\r\n", 7);
+			ret = CrossingBtoA_L;
+		}
+
+		prevSections[0] = prevSections[1];
+		prevSections[1]  = lineType;
+		prevSectionStart = sectionEnd;
+
+		prevLineType = lineType;
+	}
+
+	return ret;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
