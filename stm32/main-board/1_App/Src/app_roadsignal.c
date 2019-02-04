@@ -18,6 +18,7 @@
 #include <math.h>
 #include "bsp_bluetooth.h"
 #include "speed.h"
+#include "print.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -60,8 +61,7 @@ LINE_TYPE;
 static float prevLine = 0;
 
 static LINE_TYPE prevSections[2];
-static float prevSectionStart = 0;
-static CROSSING_TYPE prevCrossingType = NoCrossing;
+static int sectionStart;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -72,6 +72,11 @@ static LINE_TYPE getLineType(LSO_FLOAT SensorOut);
 static int   isLeft(LSO_FLOAT sensorData, float line);
 static void traceLineType(LINE_TYPE ltp);
 static void traceCrossing(CROSSING_TYPE ctype);
+
+static int getDistance_cm();
+static void traceDistance();
+
+static void traceInt(int i);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -94,10 +99,9 @@ void Task_roadSignal(void* p)
 	{
 		crossing = getCrossingType();
 
-		if (crossing != prevCrossingType)
+		if (crossing != NoCrossing)
 		{
 			traceCrossing(crossing);
-			prevCrossingType = crossing;
 		}
 
 		line = getPrevLine();
@@ -119,39 +123,38 @@ CROSSING_TYPE getCrossingType()
 {
 	LINE_TYPE lineType = getLineType(lineGetRawFrontFloat());
 	CROSSING_TYPE ret = NoCrossing;
-	float dist = speedGetDistance();
-	float len = dist - prevSectionStart;
+	int diff = getDistance_cm() - sectionStart;
 
-	/*if (len > 0.3f)
+	//traceInt(diff);
+
+	if (diff > 25)
 	{
-		if ((lineType == DoubleNearLeft) && (prevSections[1] == Single || prevSections[1] == SingleLeft || prevSections[1] == SingleRight))
+		if ((lineType == DoubleNearLeft) && (prevSections[0] == Single || prevSections[0] == SingleLeft || prevSections[0] == SingleRight))
 		{
 			// Jobb keresztezõdés elõre
 			ret = CrossingAtoRB;
 
 			prevSections[0] = DoubleNearLeft;
 			prevSections[1] = DoubleNearLeft;
-
-			bspBtSend((uint8_t*) "|/\r\n", 4);
 		}
 
-		if ((lineType == DoubleNearRight) && (prevSections[1] == Single || prevSections[1] == SingleLeft || prevSections[1] == SingleRight))
+		if ((lineType == DoubleNearRight) && (prevSections[0] == Single || prevSections[0] == SingleLeft || prevSections[0] == SingleRight))
 		{
 			// Bal keresztezõdés elõre
 			ret = CrossingAtoLB;
 
 			prevSections[0] = DoubleNearRight;
 			prevSections[1] = DoubleNearRight;
-
-			bspBtSend((uint8_t*) "\\|\r\n", 4);
 		}
-	}*/
+	}
 
 	if (lineType != prevSections[1])
 	{
 		LINE_TYPE sec1 = prevSections[0];
 		LINE_TYPE sec2 = prevSections[1];
 		LINE_TYPE sec3 = lineType;
+
+		//traceDistance();
 
 		if (sec1 == DoubleFar && sec2 == DoubleNearLeft && sec3 == SingleRight)
 		{
@@ -169,7 +172,7 @@ CROSSING_TYPE getCrossingType()
 		{
 			ret = CrossingBtoA_L;
 		}
-		else if ((sec1 == Single || sec1 == SingleLeft || sec1 == SingleRight))
+		/*else if ((sec1 == Single || sec1 == SingleLeft || sec1 == SingleRight))
 		{
 			if (sec2 == DoubleNearLeft && sec3 == DoubleFar)
 			{
@@ -179,12 +182,10 @@ CROSSING_TYPE getCrossingType()
 			{
 				ret = CrossingAtoLB;
 			}
-		}
+		}*/
 
 		prevSections[0] = prevSections[1];
 		prevSections[1]  = lineType;
-
-		prevSectionStart = dist;
 	}
 
 	return ret;
@@ -321,6 +322,7 @@ static LINE_TYPE getLineType(LSO_FLOAT SensorOut)
 
 	int prevLinesOk;
 	LINE_TYPE lineType = prevSections[1];
+	LINE_TYPE prevLineType_local = lineType;
 
 	prevLineTypes[pltIndex] = SensorOut.cnt;
 	pltIndex++;
@@ -406,6 +408,15 @@ static LINE_TYPE getLineType(LSO_FLOAT SensorOut)
 				lineType = DoubleNearRight;
 			}
 		}
+	}
+
+	// Ha változott a vonaltípus, távolságmentés
+	if (prevLineType_local != lineType)
+	{
+		//sectionStart = getDistance_cm();
+		//traceDistance();
+
+		sectionStart = getDistance_cm();
 	}
 
 	return lineType;
@@ -508,7 +519,52 @@ static void traceCrossing(CROSSING_TYPE ctype)
 			bspBtSend((uint8_t*) "\\|\r\n", 4);
 			break;
 		}
+		default:
+		{
+			break;
+		}
 	}
+}
+
+static int getDistance_cm()
+{
+	float dst = speedGetDistance();
+	dst *= 100; // m -> cm
+
+	return (int) dst;
+}
+
+static void traceDistance()
+{
+	static char distanceBuffer[20];
+	int numlen = 0;
+
+	int diff = getDistance_cm() - sectionStart;
+	sectionStart = getDistance_cm();
+
+	print_uint32_t(diff, distanceBuffer, &numlen);
+
+	distanceBuffer[numlen] = '\r';
+	numlen++;
+	distanceBuffer[numlen] = '\n';
+	numlen++;
+
+	bspBtSend((uint8_t*)distanceBuffer, numlen);
+}
+
+static void traceInt(int i)
+{
+	static char distanceBuffer[20];
+	int numlen = 0;
+
+	print_uint32_t(i, distanceBuffer, &numlen);
+
+	distanceBuffer[numlen] = '\r';
+	numlen++;
+	distanceBuffer[numlen] = '\n';
+	numlen++;
+
+	bspBtSend((uint8_t*)distanceBuffer, numlen);
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
