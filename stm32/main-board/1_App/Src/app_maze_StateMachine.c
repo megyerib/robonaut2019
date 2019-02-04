@@ -9,6 +9,7 @@
 // Includes ------------------------------------------------------------------------------------------------------------
 
 #include "app_maze_StateMachine.h"
+#include "app_roadsignal.h"
 #include "line.h"
 #include "bsp_servo.h"
 #include <string.h>
@@ -282,8 +283,12 @@ static void mazeStateMachineDiscovery (void)
 
 static void mazeStateMachineInclination (void)
 {
+	CROSSING_TYPE crossing;
+
+	crossing = getCrossingType();
+
 	//____________________________________________STEP 1________________________________________________
-	if (actualSegment != inclinSegment)
+	if (actualSegment != inclinSegment)	// TODO check direction
 	{
 		// Plan a path to the exit
 		mazePlanExitRoute();
@@ -295,7 +300,7 @@ static void mazeStateMachineInclination (void)
 	{
 		//____________________________________________STEP 2________________________________________________
 		// At the exit find the markings and slow down.
-		if (/* exit */ false)
+		if (crossing == CrossingAtoLB)		// TODO
 		{
 			// Steer in the direction if the markings until the car leaves the lines (45deg).
 			if (inclinDirection == false)
