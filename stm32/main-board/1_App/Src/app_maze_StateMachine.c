@@ -32,6 +32,7 @@ cSEGMENT map[MAZE_MAP_MAX_SEGEMENTS];
 bool segments[MAZE_FINDABLE_SEGEMNST];
 //! The number of the segment where the exit point is to be found.
 uint32_t inclinSegment;
+uint8_t inclinSegmentStart;
 
 uint32_t actualSegment;
 uint32_t nextNewSegmentIndex;
@@ -44,6 +45,8 @@ cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
 static cNAVI_STATE naviStateCrossing;
 static cNAVI_STATE naviStateCar;
+
+static uint8_t exitRoute[20];
 
 extern QueueHandle_t qNaviN_f;
 extern QueueHandle_t qNaviE_f;
@@ -61,6 +64,8 @@ static void mazeCheckDiscoveredSegments (void);
 static void mazeMergeSegments 			(void);
 
 static bool mazeAllSegmentsDiscovered	(void);
+static void mazePlanExitRoute			(void);
+static void mazeFollowRoute 			(void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -149,6 +154,8 @@ void MazeMainStateMachine (void)
 		}
 		case eSTATE_MAIN_OUT:
 		{
+			vTaskDelay(2000);
+
 			// Stop/Park behind the safety-car.
 			actualParams.Speed = 0;
 
@@ -191,14 +198,21 @@ static void mazeStateMachineDiscovery (void)
 			if (map[actualSegment].positive.left != 0)
 			{
 				// Turn left. TODO
+
+
+				actualSegment = map[actualSegment].positive.left;
 			}
 			else if (map[actualSegment].positive.middle != 0)
 			{
 				// Turn middle. TODO
+
+				actualSegment = map[actualSegment].positive.middle;
 			}
 			else if (map[actualSegment].positive.right != 0)
 			{
 				// Turn right. TODO
+
+				actualSegment = map[actualSegment].positive.right;
 			}
 		}
 		else
@@ -207,14 +221,24 @@ static void mazeStateMachineDiscovery (void)
 			if (map[actualSegment].positive.left != alreadyFoundSegment && map[actualSegment].positive.left != 0)
 			{
 				// Turn left. TODO
+
+				actualSegment = map[actualSegment].positive.left;
 			}
 			else if (map[actualSegment].positive.middle != alreadyFoundSegment && map[actualSegment].positive.middle != 0)
 			{
 				// Turn middle. TODO
+
+				actualSegment = map[actualSegment].positive.middle;
 			}
 			else if (map[actualSegment].positive.right != alreadyFoundSegment && map[actualSegment].positive.right != 0)
 			{
 				// Turn right. TODO
+
+				actualSegment = map[actualSegment].positive.right;
+			}
+			else
+			{
+				// Turn random. TODO
 			}
 		}
 
@@ -227,12 +251,21 @@ static void mazeStateMachineDiscovery (void)
 		// Check if the labyrinth is fully discovered.
 		if (mazeAllSegmentsDiscovered() == true)
 		{
-			mazeFinished = true;
+			smMainState = eSTATE_MAIN_INCLINATION;
 		}
 	}
 	else if (/* exit */ false)
 	{
 		inclinSegment = actualSegment;
+
+		if (/* inclin direction ok == */ false)
+		{
+			inclinSegmentStart = map[actualSegment].start;
+		}
+		else
+		{
+			inclinSegmentStart = map[actualSegment].end;
+		}
 	}
 	else
 	{
@@ -244,20 +277,32 @@ static void mazeStateMachineDiscovery (void)
 static void mazeStateMachineInclination (void)
 {
 	//____________________________________________STEP 1________________________________________________
-	// Plan a path to the exit
+	if (actualSegment != inclinSegment)
+	{
+		// Plan a path to the exit
+		mazePlanExitRoute();
 
-	// Drive to the exit
+		// Drive to the exit segment
+		mazeFollowRoute();
+	}
+	else
+	{
+		//____________________________________________STEP 2________________________________________________
+		// At the exit find the markings and slow down.
+		if (/* exit */ false)
+		{
+			// Steer in the direction if the markings until the car leaves the lines (45deg).
 
-	//____________________________________________STEP 2________________________________________________
-	// At the exit find the markings and slow down.
+			// Check the distance sensor for collision and go until the new line is found. If collision warning,
+			// then stop.
 
-	// Steer in the direction if the markings until the car leaves the lines (45deg).
-
-	// Check the distance sensor for collision and go until the new line is found. If collision warning,
-	// then stop.
-
-	// New lines found -> OUT state.
-	//smMainState = eSTATE_MAIN_OUT;
+			// New lines found -> OUT state.
+			if (/* vonal */ false)
+			{
+				smMainState = eSTATE_MAIN_OUT;
+			}
+		}
+	}
 }
 
 static bool mazeCrossingAlreadyFound (const cNAVI_STATE crossingNaviState)
@@ -454,11 +499,6 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 	}
 }
 
-static void mazeUpdateMapWithOneNew (const RoadSignal crossingType)
-{
-
-}
-
 static void mazeCheckDiscoveredSegments (void)
 {
 	uint8_t i;
@@ -475,31 +515,99 @@ static void mazeCheckDiscoveredSegments (void)
 
 static void mazeMergeSegments (void)
 {
-	if (actualSegment < alreadyFoundSegment)
+	uint8_t i;
+
+	if (   map[actualSegment].positive.left   == map[alreadyFoundSegment].positive.left
+		&& map[actualSegment].positive.middle == map[alreadyFoundSegment].positive.middle
+		&& map[actualSegment].positive.right  == map[alreadyFoundSegment].positive.right
+		)
 	{
-		// Actual and prev positive sides are equal.
-		if (   map[actualSegment].positive.left   == map[alreadyFoundSegment].positive.left
-			&& map[actualSegment].positive.middle == map[alreadyFoundSegment].positive.middle
-			&& map[actualSegment].positive.right  == map[alreadyFoundSegment].positive.right
-			)
+		// The turning directions in the same orientation are the same
+		if (map[actualSegment].negative.left == 0 && map[actualSegment].negative.middle == 0 && map[actualSegment].negative.right  == 0)
 		{
-			// Actual
-			map[actualSegment].positive.left   = map[alreadyFoundSegment].positive.left;
-			map[actualSegment].positive.middle = map[alreadyFoundSegment].positive.middle;
-			map[actualSegment].positive.right  = map[alreadyFoundSegment].positive.right;
+			// The actual segment turning directions are incomplete.
+			map[actualSegment].negative.left   = map[alreadyFoundSegment].negative.left;
+			map[actualSegment].negative.middle = map[alreadyFoundSegment].negative.middle;
+			map[actualSegment].negative.right  = map[alreadyFoundSegment].negative.right;
 		}
-		else if (  map[actualSegment].positive.left   == map[alreadyFoundSegment].positive.left
-				&& map[actualSegment].positive.middle == map[alreadyFoundSegment].positive.middle
-				&& map[actualSegment].positive.right  == map[alreadyFoundSegment].positive.right
-				)
+		else if (map[alreadyFoundSegment].negative.left == 0 && map[alreadyFoundSegment].negative.middle == 0 && map[alreadyFoundSegment].negative.right  == 0)
 		{
+			// The actual segment turning directions are incomplete.
+			map[alreadyFoundSegment].negative.left   = map[actualSegment].negative.left;
+			map[alreadyFoundSegment].negative.middle = map[actualSegment].negative.middle;
+			map[alreadyFoundSegment].negative.right  = map[actualSegment].negative.right;
+		}
+	}
+	else if (   map[actualSegment].positive.left   == map[alreadyFoundSegment].negative.left
+			 && map[actualSegment].positive.middle == map[alreadyFoundSegment].negative.middle
+			 && map[actualSegment].positive.right  == map[alreadyFoundSegment].negative.right
+			)
+	{
+		//
+		if (map[actualSegment].negative.left == 0 && map[actualSegment].negative.middle == 0 && map[actualSegment].negative.right  == 0)
+		{
+			// The actual segment turning directions are incomplete.
+			map[actualSegment].negative.left   = map[alreadyFoundSegment].positive.left;
+			map[actualSegment].negative.middle = map[alreadyFoundSegment].positive.middle;
+			map[actualSegment].negative.right  = map[alreadyFoundSegment].positive.right;
+
+		}
+		else if (map[alreadyFoundSegment].negative.left == 0 && map[alreadyFoundSegment].negative.middle == 0 && map[alreadyFoundSegment].negative.right  == 0)
+		{
+			// The actual segment turning directions are incomplete.
+			map[alreadyFoundSegment].positive.left   = map[actualSegment].negative.left;
+			map[alreadyFoundSegment].positive.middle = map[actualSegment].negative.middle;
+			map[alreadyFoundSegment].positive.right  = map[actualSegment].negative.right;
 
 		}
 	}
-	else
+	else if (   map[actualSegment].negative.left   == map[alreadyFoundSegment].negative.left
+			 && map[actualSegment].negative.middle == map[alreadyFoundSegment].negative.middle
+			 && map[actualSegment].negative.right  == map[alreadyFoundSegment].negative.right
+			)
 	{
-		map[alreadyFoundSegment] = map[actualSegment];
+		// The turning directions in the same orientation are the same
+
+		if (map[actualSegment].negative.left == 0 && map[actualSegment].negative.middle == 0 && map[actualSegment].negative.right  == 0)
+		{
+			// The actual segment turning directions are incomplete.
+			map[actualSegment].positive.left   = map[alreadyFoundSegment].positive.left;
+			map[actualSegment].positive.middle = map[alreadyFoundSegment].positive.middle;
+			map[actualSegment].positive.right  = map[alreadyFoundSegment].positive.right;
+
+		}
+		else if (map[alreadyFoundSegment].negative.left == 0 && map[alreadyFoundSegment].negative.middle == 0 && map[alreadyFoundSegment].negative.right  == 0)
+		{
+			// The actual segment turning directions are incomplete.
+			map[alreadyFoundSegment].positive.left   = map[actualSegment].positive.left;
+			map[alreadyFoundSegment].positive.middle = map[actualSegment].positive.middle;
+			map[alreadyFoundSegment].positive.right  = map[actualSegment].positive.right;
+		}
 	}
+
+	// Change the redundant segments to the corrected.
+	for (i = 0; i < max; i++)
+	{
+		if (actualSegment < alreadyFoundSegment)
+		{
+			if(map[i].negative.left   == alreadyFoundSegment)  map[i].negative.left   = actualSegment;
+			if(map[i].negative.middle == alreadyFoundSegment)  map[i].negative.middle = actualSegment;
+			if(map[i].negative.right  == alreadyFoundSegment)  map[i].negative.right  = actualSegment;
+			if(map[i].positive.left   == alreadyFoundSegment)  map[i].positive.left   = actualSegment;
+			if(map[i].positive.middle == alreadyFoundSegment)  map[i].positive.middle = actualSegment;
+			if(map[i].positive.right  == alreadyFoundSegment)  map[i].positive.right  = actualSegment;
+		}
+		else
+		{
+			if(map[i].negative.left   == actualSegment)  map[i].negative.left   = alreadyFoundSegment;
+			if(map[i].negative.middle == actualSegment)  map[i].negative.middle = alreadyFoundSegment;
+			if(map[i].negative.right  == actualSegment)  map[i].negative.right  = alreadyFoundSegment;
+			if(map[i].positive.left   == actualSegment)  map[i].positive.left   = alreadyFoundSegment;
+			if(map[i].positive.middle == actualSegment)  map[i].positive.middle = alreadyFoundSegment;
+			if(map[i].positive.right  == actualSegment)  map[i].positive.right  = alreadyFoundSegment;
+		}
+	}
+
 }
 
 static bool mazeAllSegmentsDiscovered (void)
@@ -515,3 +623,12 @@ static bool mazeAllSegmentsDiscovered (void)
 	return temp;
 }
 
+static void mazePlanExitRoute (void)
+{
+
+}
+
+static void mazeFollowRoute (void)
+{
+
+}
