@@ -61,6 +61,7 @@ static float prevLine = 0;
 
 static LINE_TYPE prevSections[2];
 static float prevSectionStart = 0;
+static CROSSING_TYPE prevCrossingType = NoCrossing;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -70,6 +71,7 @@ static void  lineFollow(float line_pos, float K_P, float K_D, int motor_d);
 static LINE_TYPE getLineType(LSO_FLOAT SensorOut);
 static int   isLeft(LSO_FLOAT sensorData, float line);
 static void traceLineType(LINE_TYPE ltp);
+static void traceCrossing(CROSSING_TYPE ctype);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -90,7 +92,13 @@ void Task_roadSignal(void* p)
 
 	while (1)
 	{
-		getCrossingType();
+		crossing = getCrossingType();
+
+		if (crossing != prevCrossingType)
+		{
+			traceCrossing(crossing);
+			prevCrossingType = crossing;
+		}
 
 		line = getPrevLine();
 
@@ -147,34 +155,28 @@ CROSSING_TYPE getCrossingType()
 
 		if (sec1 == DoubleFar && sec2 == DoubleNearLeft && sec3 == SingleRight)
 		{
-			bspBtSend((uint8_t*) "> /|\r\n", 6);
 			ret = CrossingRtoA;
 		}
 		else if (sec1 == DoubleFar && sec2 == DoubleNearRight && sec3 == SingleLeft)
 		{
-			bspBtSend((uint8_t*) "|\\ <\r\n", 6);
 			ret = CrossingLtoA;
 		}
 		else if (sec1 == DoubleFar && sec2 == DoubleNearRight && sec3 == SingleRight)
 		{
-			bspBtSend((uint8_t*) "/| <\r\n", 6);
 			ret = CrossingBtoA_R;
 		}
 		else if (sec1 == DoubleFar && sec2 == DoubleNearLeft && sec3 == SingleLeft)
 		{
-			bspBtSend((uint8_t*) "> |\\\r\n", 6);
 			ret = CrossingBtoA_L;
 		}
 		else if ((sec1 == Single || sec1 == SingleLeft || sec1 == SingleRight))
 		{
 			if (sec2 == DoubleNearLeft && sec3 == DoubleFar)
 			{
-				bspBtSend((uint8_t*) "|/\r\n", 4);
 				ret = CrossingAtoRB;
 			}
 			else if (sec2 == DoubleNearRight && sec3 == DoubleFar)
 			{
-				bspBtSend((uint8_t*) "\\|\r\n", 4);
 				ret = CrossingAtoLB;
 			}
 		}
@@ -467,6 +469,43 @@ static void traceLineType(LINE_TYPE ltp)
 		}
 		case Triple:
 		{
+			break;
+		}
+	}
+}
+
+static void traceCrossing(CROSSING_TYPE ctype)
+{
+	switch (ctype)
+	{
+		case CrossingRtoA:
+		{
+			bspBtSend((uint8_t*) "> /|\r\n", 6);
+			break;
+		}
+		case CrossingLtoA:
+		{
+			bspBtSend((uint8_t*) "|\\ <\r\n", 6);
+			break;
+		}
+		case CrossingBtoA_R:
+		{
+			bspBtSend((uint8_t*) "/| <\r\n", 6);
+			break;
+		}
+		case CrossingBtoA_L:
+		{
+			bspBtSend((uint8_t*) "> |\\\r\n", 6);
+			break;
+		}
+		case CrossingAtoRB:
+		{
+			bspBtSend((uint8_t*) "|/\r\n", 4);
+			break;
+		}
+		case CrossingAtoLB:
+		{
+			bspBtSend((uint8_t*) "\\|\r\n", 4);
 			break;
 		}
 	}
