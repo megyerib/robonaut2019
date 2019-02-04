@@ -12,6 +12,7 @@
 #include "event_groups.h"
 #include "app_maze.h"
 #include "app_maze_StateMachine.h"
+#include "app_roadsignal.h"
 #include "app_common.h"
 #include "navigation.h"
 #include "trace.h"
@@ -86,9 +87,9 @@ static float txLineMainLinePos;
 static float txLineSecLinePos;
 
 //! Position of the main line in the previous task period.
-static float line_prevPos;
+extern float mazeLinePosPrev;
 //! Position of the main line in the current task period.
-static float line_pos;
+extern float mazeLinePos;
 
 static float speed_current;
 static float speed_prev;
@@ -120,12 +121,14 @@ void TaskInit_Maze (void)
 
 	// Initial parameters of the Discover state.
 	paramList.inclination.Kp	 = 0.025;
-	paramList.inclination.Kd	 = 3.5;
+	paramList.inclination.Kd	 = 4;
 	paramList.inclination.Speed  = 15;
 
 	// Initial parameters for the line follower controller.
-	line_pos 	 = 0;
-	line_prevPos = 0;
+	mazeLinePos = 0;
+	mazeLinePosPrev = 0;
+
+	smMainState = eSTATE_MAIN_READY;
 
 	// Task can be created now.
 	xTaskCreate(Task_Maze,
@@ -139,7 +142,7 @@ void TaskInit_Maze (void)
 void Task_Maze (void* p)
 {
 	(void)p;
-	float r_speed = 2;
+	//float r_speed = 2;
 
 	while (1)
 	{
@@ -149,8 +152,12 @@ void Task_Maze (void* p)
 		// Check for the remote controller signal.
 		MazeCheckRemote();
 
+		// Get actual data.
+		mazeLinePosPrev = mazeLinePos;
+		mazeLinePos = lineGetSingle();
+
 		// Run the state machine until the job is done or stop signal received.
-		if (mazeFinished == false && recStopCar == false)
+		if (mazeFinished == false && recStopCar == true)
 		{
 			//MazeCntrSpeed (r_speed);
 			MazeMainStateMachine();
@@ -160,6 +167,7 @@ void Task_Maze (void* p)
 			// Stop signal is received, stop the car.
 			actualParams.Speed = 0;
 			motorSetDutyCycle(0);
+			mazeLinePos = getPrevLine();
 		}
 
 		// Indicate if the maze is finished and signal the app_speedRun to start. If hard reset is present, then skip
@@ -175,7 +183,7 @@ void Task_Maze (void* p)
 
 		// Detect line and control the servo and the speed of the car.
 		MazeCntrLineFollow();
-
+		motorSetDutyCycle(actualParams.Speed);
 		//MazeCntrSpeed(); //TODO
 
 		// TODO Check for frontal collision.
@@ -202,25 +210,24 @@ static void	MazeCntrLineFollow (void)
 	float D_modifier;
 
 	// Detect line.
-	line_prevPos = line_pos;
-	line_pos = lineGetSingle() * 1000; // m -> mm
-	line_diff = line_pos - line_prevPos;
+
+	mazeLinePos *= 1000;
+	line_diff = mazeLinePos - mazeLinePosPrev;
 
 	// Control the servo.
-	P_modifier = line_pos  * actualParams.Kp;
+	P_modifier = mazeLinePos  * actualParams.Kp;
 	D_modifier = line_diff * actualParams.Kd;
 	servo_angle = -0.75f * (P_modifier + D_modifier);
 
 	// Actuate.
-	if (turnOffLineFollow == true)
+	if (turnOffLineFollow == false)
 	{
-		motorSetDutyCycle(actualParams.Speed);
 		servoSetAngle(servo_angle);
 	}
 
 	// Trace
 	txServoAngle = servo_angle;
-	txLineMainLinePos = line_pos;
+	txLineMainLinePos = mazeLinePos;
 }
 
 static void	MazeCntrSpeed (float r_speed)

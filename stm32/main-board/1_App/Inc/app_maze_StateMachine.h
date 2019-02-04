@@ -54,8 +54,8 @@ typedef struct
 {
 	cNAVI_STATE start;
 	cNAVI_STATE end;
-	cSEGMENT_CROSSINGS positive;
-	cSEGMENT_CROSSINGS negative;
+	uint32_t positive[3];		// 0 = L, 1 = M, 2 = R
+	uint32_t negative[3];		// 0 = L, 1 = M, 2 = R
 } cSEGMENT;
 
 // Variables -----------------------------------------------------------------------------------------------------------

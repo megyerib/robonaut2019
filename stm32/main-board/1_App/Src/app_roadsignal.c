@@ -234,8 +234,8 @@ static void lineFollow(float line_pos, float K_P, float K_D, int motor_d)
 
 	// ACTUATE _________________________________________
 
-	motorSetDutyCycle(motor_d);
-	servoSetAngle(angle);
+	//motorSetDutyCycle(motor_d);
+	//servoSetAngle(angle);
 }
 
 float getPrevLine()
