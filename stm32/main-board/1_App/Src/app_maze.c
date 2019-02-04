@@ -119,9 +119,9 @@ void TaskInit_Maze (void)
 	paramList.discover.Speed = 19;
 
 	// Initial parameters of the Discover state.
-	paramList.inclination.Kp	 = 1;
-	paramList.inclination.Kd	 = 1;
-	paramList.inclination.Speed  = 0;
+	paramList.inclination.Kp	 = 0.025;
+	paramList.inclination.Kd	 = 3.5;
+	paramList.inclination.Speed  = 15;
 
 	// Initial parameters for the line follower controller.
 	line_pos 	 = 0;
@@ -130,7 +130,7 @@ void TaskInit_Maze (void)
 	// Task can be created now.
 	xTaskCreate(Task_Maze,
 				"TASK_MAZE",
-				DEFAULT_STACK_SIZE,
+				DEFAULT_STACK_SIZE+200,
 				NULL,
 				TASK_MAZE_PRIO,
 				NULL);
@@ -152,7 +152,7 @@ void Task_Maze (void* p)
 		// Run the state machine until the job is done or stop signal received.
 		if (mazeFinished == false && recStopCar == false)
 		{
-			MazeCntrSpeed (r_speed);
+			//MazeCntrSpeed (r_speed);
 			MazeMainStateMachine();
 		}
 		else if (recStopCar == true)

@@ -90,10 +90,10 @@ static float txGetKd;
 static uint32_t	txGetSpeed;
 
 extern bool tryToOvertake;
-extern eSTATE_MAIN smMainState;
+extern eSTATE_MAIN smMainStateSRun;
 extern uint8_t actLapSegment;
-extern cPD_CONTROLLER_PARAMS actualParams;
-extern cSRUN_PD_CONTROL_PARAM_LIST paramList;
+extern cPD_CONTROLLER_PARAMS actualParamsSRun;
+extern cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -193,24 +193,24 @@ void Task_SpeedRun (void* p)
 //**********************************************************************************************************************
 static void sRunSetLap1Parameters (void)
 {
-	paramList.lap1[0].P = 0;	paramList.lap1[0].Kp = 0;	paramList.lap1[0].Kd = 0;	paramList.lap1[0].Speed = 0;
-	paramList.lap1[1].P = 0; 	paramList.lap1[1].Kp = 0;	paramList.lap1[1].Kd = 0;	paramList.lap1[1].Speed = 0;
-	paramList.lap1[2].P = 0; 	paramList.lap1[2].Kp = 0;	paramList.lap1[2].Kd = 0;	paramList.lap1[2].Speed = 0;
-	paramList.lap1[3].P = 0; 	paramList.lap1[3].Kp = 0;	paramList.lap1[3].Kd = 0;	paramList.lap1[3].Speed = 0;
-	paramList.lap1[4].P = 0; 	paramList.lap1[4].Kp = 0;	paramList.lap1[4].Kd = 0;	paramList.lap1[4].Speed = 0;
+	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0;	paramListSRun.lap1[0].Kd = 0;	paramListSRun.lap1[0].Speed = 0;
+	paramListSRun.lap1[1].P = 0; 	paramListSRun.lap1[1].Kp = 0;	paramListSRun.lap1[1].Kd = 0;	paramListSRun.lap1[1].Speed = 0;
+	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0;	paramListSRun.lap1[2].Kd = 0;	paramListSRun.lap1[2].Speed = 0;
+	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0;	paramListSRun.lap1[3].Kd = 0;	paramListSRun.lap1[3].Speed = 0;
+	paramListSRun.lap1[4].P = 0; 	paramListSRun.lap1[4].Kp = 0;	paramListSRun.lap1[4].Kd = 0;	paramListSRun.lap1[4].Speed = 0;
 
-	paramList.lap1[5].P = 0; 	paramList.lap1[5].Kp = 0;	paramList.lap1[5].Kd = 0;	paramList.lap1[5].Speed = 0;
-	paramList.lap1[6].P = 0; 	paramList.lap1[6].Kp = 0;	paramList.lap1[6].Kd = 0;	paramList.lap1[6].Speed = 0;
-	paramList.lap1[7].P = 0; 	paramList.lap1[7].Kp = 0;	paramList.lap1[7].Kd = 0;	paramList.lap1[7].Speed = 0;
-	paramList.lap1[8].P = 0; 	paramList.lap1[8].Kp = 0;	paramList.lap1[8].Kd = 0;	paramList.lap1[8].Speed = 0;
-	paramList.lap1[9].P = 0; 	paramList.lap1[9].Kp = 0;	paramList.lap1[9].Kd = 0;	paramList.lap1[9].Speed = 0;
+	paramListSRun.lap1[5].P = 0; 	paramListSRun.lap1[5].Kp = 0;	paramListSRun.lap1[5].Kd = 0;	paramListSRun.lap1[5].Speed = 0;
+	paramListSRun.lap1[6].P = 0; 	paramListSRun.lap1[6].Kp = 0;	paramListSRun.lap1[6].Kd = 0;	paramListSRun.lap1[6].Speed = 0;
+	paramListSRun.lap1[7].P = 0; 	paramListSRun.lap1[7].Kp = 0;	paramListSRun.lap1[7].Kd = 0;	paramListSRun.lap1[7].Speed = 0;
+	paramListSRun.lap1[8].P = 0; 	paramListSRun.lap1[8].Kp = 0;	paramListSRun.lap1[8].Kd = 0;	paramListSRun.lap1[8].Speed = 0;
+	paramListSRun.lap1[9].P = 0; 	paramListSRun.lap1[9].Kp = 0;	paramListSRun.lap1[9].Kd = 0;	paramListSRun.lap1[9].Speed = 0;
 
-	paramList.lap1[10].P = 0;	paramList.lap1[10].Kp = 0;	paramList.lap1[10].Kd = 0;	paramList.lap1[10].Speed = 0;
-	paramList.lap1[11].P = 0;	paramList.lap1[11].Kp = 0;	paramList.lap1[11].Kd = 0;	paramList.lap1[11].Speed = 0;
-	paramList.lap1[12].P = 0;	paramList.lap1[12].Kp = 0;	paramList.lap1[12].Kd = 0;	paramList.lap1[12].Speed = 0;
-	paramList.lap1[13].P = 0;	paramList.lap1[13].Kp = 0;	paramList.lap1[13].Kd = 0;	paramList.lap1[13].Speed = 0;
-	paramList.lap1[14].P = 0;	paramList.lap1[14].Kp = 0;	paramList.lap1[14].Kd = 0;	paramList.lap1[14].Speed = 0;
-	paramList.lap1[15].P = 0;	paramList.lap1[15].Kp = 0;	paramList.lap1[15].Kd = 0;	paramList.lap1[15].Speed = 0;
+	paramListSRun.lap1[10].P = 0;	paramListSRun.lap1[10].Kp = 0;	paramListSRun.lap1[10].Kd = 0;	paramListSRun.lap1[10].Speed = 0;
+	paramListSRun.lap1[11].P = 0;	paramListSRun.lap1[11].Kp = 0;	paramListSRun.lap1[11].Kd = 0;	paramListSRun.lap1[11].Speed = 0;
+	paramListSRun.lap1[12].P = 0;	paramListSRun.lap1[12].Kp = 0;	paramListSRun.lap1[12].Kd = 0;	paramListSRun.lap1[12].Speed = 0;
+	paramListSRun.lap1[13].P = 0;	paramListSRun.lap1[13].Kp = 0;	paramListSRun.lap1[13].Kd = 0;	paramListSRun.lap1[13].Speed = 0;
+	paramListSRun.lap1[14].P = 0;	paramListSRun.lap1[14].Kp = 0;	paramListSRun.lap1[14].Kd = 0;	paramListSRun.lap1[14].Speed = 0;
+	paramListSRun.lap1[15].P = 0;	paramListSRun.lap1[15].Kp = 0;	paramListSRun.lap1[15].Kd = 0;	paramListSRun.lap1[15].Speed = 0;
 }
 
 //**********************************************************************************************************************
@@ -220,24 +220,24 @@ static void sRunSetLap1Parameters (void)
 //**********************************************************************************************************************
 static void sRunSetLap2Parameters (void)
 {
-	paramList.lap2[0].P = 0;	paramList.lap2[0].Kp = 0;	paramList.lap2[0].Kd = 0;	paramList.lap2[0].Speed = 0;
-	paramList.lap2[1].P = 0; 	paramList.lap2[1].Kp = 0;	paramList.lap2[1].Kd = 0;	paramList.lap2[1].Speed = 0;
-	paramList.lap2[2].P = 0; 	paramList.lap2[2].Kp = 0;	paramList.lap2[2].Kd = 0;	paramList.lap2[2].Speed = 0;
-	paramList.lap2[3].P = 0; 	paramList.lap2[3].Kp = 0;	paramList.lap2[3].Kd = 0;	paramList.lap2[3].Speed = 0;
-	paramList.lap2[4].P = 0; 	paramList.lap2[4].Kp = 0;	paramList.lap2[4].Kd = 0;	paramList.lap2[4].Speed = 0;
+	paramListSRun.lap2[0].P = 0;	paramListSRun.lap2[0].Kp = 0;	paramListSRun.lap2[0].Kd = 0;	paramListSRun.lap2[0].Speed = 0;
+	paramListSRun.lap2[1].P = 0; 	paramListSRun.lap2[1].Kp = 0;	paramListSRun.lap2[1].Kd = 0;	paramListSRun.lap2[1].Speed = 0;
+	paramListSRun.lap2[2].P = 0; 	paramListSRun.lap2[2].Kp = 0;	paramListSRun.lap2[2].Kd = 0;	paramListSRun.lap2[2].Speed = 0;
+	paramListSRun.lap2[3].P = 0; 	paramListSRun.lap2[3].Kp = 0;	paramListSRun.lap2[3].Kd = 0;	paramListSRun.lap2[3].Speed = 0;
+	paramListSRun.lap2[4].P = 0; 	paramListSRun.lap2[4].Kp = 0;	paramListSRun.lap2[4].Kd = 0;	paramListSRun.lap2[4].Speed = 0;
 
-	paramList.lap2[5].P = 0; 	paramList.lap2[5].Kp = 0;	paramList.lap2[5].Kd = 0;	paramList.lap2[5].Speed = 0;
-	paramList.lap2[6].P = 0; 	paramList.lap2[6].Kp = 0;	paramList.lap2[6].Kd = 0;	paramList.lap2[6].Speed = 0;
-	paramList.lap2[7].P = 0; 	paramList.lap2[7].Kp = 0;	paramList.lap2[7].Kd = 0;	paramList.lap2[7].Speed = 0;
-	paramList.lap2[8].P = 0; 	paramList.lap2[8].Kp = 0;	paramList.lap2[8].Kd = 0;	paramList.lap2[8].Speed = 0;
-	paramList.lap2[9].P = 0; 	paramList.lap2[9].Kp = 0;	paramList.lap2[9].Kd = 0;	paramList.lap2[9].Speed = 0;
+	paramListSRun.lap2[5].P = 0; 	paramListSRun.lap2[5].Kp = 0;	paramListSRun.lap2[5].Kd = 0;	paramListSRun.lap2[5].Speed = 0;
+	paramListSRun.lap2[6].P = 0; 	paramListSRun.lap2[6].Kp = 0;	paramListSRun.lap2[6].Kd = 0;	paramListSRun.lap2[6].Speed = 0;
+	paramListSRun.lap2[7].P = 0; 	paramListSRun.lap2[7].Kp = 0;	paramListSRun.lap2[7].Kd = 0;	paramListSRun.lap2[7].Speed = 0;
+	paramListSRun.lap2[8].P = 0; 	paramListSRun.lap2[8].Kp = 0;	paramListSRun.lap2[8].Kd = 0;	paramListSRun.lap2[8].Speed = 0;
+	paramListSRun.lap2[9].P = 0; 	paramListSRun.lap2[9].Kp = 0;	paramListSRun.lap2[9].Kd = 0;	paramListSRun.lap2[9].Speed = 0;
 
-	paramList.lap2[10].P = 0;	paramList.lap2[10].Kp = 0;	paramList.lap2[10].Kd = 0;	paramList.lap2[10].Speed = 0;
-	paramList.lap2[11].P = 0;	paramList.lap2[11].Kp = 0;	paramList.lap2[11].Kd = 0;	paramList.lap2[11].Speed = 0;
-	paramList.lap2[12].P = 0;	paramList.lap2[12].Kp = 0;	paramList.lap2[12].Kd = 0;	paramList.lap2[12].Speed = 0;
-	paramList.lap2[13].P = 0;	paramList.lap2[13].Kp = 0;	paramList.lap2[13].Kd = 0;	paramList.lap2[13].Speed = 0;
-	paramList.lap2[14].P = 0;	paramList.lap2[14].Kp = 0;	paramList.lap2[14].Kd = 0;	paramList.lap2[14].Speed = 0;
-	paramList.lap2[15].P = 0;	paramList.lap2[15].Kp = 0;	paramList.lap2[15].Kd = 0;	paramList.lap2[15].Speed = 0;
+	paramListSRun.lap2[10].P = 0;	paramListSRun.lap2[10].Kp = 0;	paramListSRun.lap2[10].Kd = 0;	paramListSRun.lap2[10].Speed = 0;
+	paramListSRun.lap2[11].P = 0;	paramListSRun.lap2[11].Kp = 0;	paramListSRun.lap2[11].Kd = 0;	paramListSRun.lap2[11].Speed = 0;
+	paramListSRun.lap2[12].P = 0;	paramListSRun.lap2[12].Kp = 0;	paramListSRun.lap2[12].Kd = 0;	paramListSRun.lap2[12].Speed = 0;
+	paramListSRun.lap2[13].P = 0;	paramListSRun.lap2[13].Kp = 0;	paramListSRun.lap2[13].Kd = 0;	paramListSRun.lap2[13].Speed = 0;
+	paramListSRun.lap2[14].P = 0;	paramListSRun.lap2[14].Kp = 0;	paramListSRun.lap2[14].Kd = 0;	paramListSRun.lap2[14].Speed = 0;
+	paramListSRun.lap2[15].P = 0;	paramListSRun.lap2[15].Kp = 0;	paramListSRun.lap2[15].Kd = 0;	paramListSRun.lap2[15].Speed = 0;
 }
 
 //**********************************************************************************************************************
@@ -247,24 +247,24 @@ static void sRunSetLap2Parameters (void)
 //**********************************************************************************************************************
 static void sRunSetLap3Parameters (void)
 {
-	paramList.lap3[0].P = 0;	paramList.lap3[0].Kp = 0;	paramList.lap3[0].Kd = 0;	paramList.lap3[0].Speed = 0;
-	paramList.lap3[1].P = 0; 	paramList.lap3[1].Kp = 0;	paramList.lap3[1].Kd = 0;	paramList.lap3[1].Speed = 0;
-	paramList.lap3[2].P = 0; 	paramList.lap3[2].Kp = 0;	paramList.lap3[2].Kd = 0;	paramList.lap3[2].Speed = 0;
-	paramList.lap3[3].P = 0; 	paramList.lap3[3].Kp = 0;	paramList.lap3[3].Kd = 0;	paramList.lap3[3].Speed = 0;
-	paramList.lap3[4].P = 0; 	paramList.lap3[4].Kp = 0;	paramList.lap3[4].Kd = 0;	paramList.lap3[4].Speed = 0;
+	paramListSRun.lap3[0].P = 0;	paramListSRun.lap3[0].Kp = 0;	paramListSRun.lap3[0].Kd = 0;	paramListSRun.lap3[0].Speed = 0;
+	paramListSRun.lap3[1].P = 0; 	paramListSRun.lap3[1].Kp = 0;	paramListSRun.lap3[1].Kd = 0;	paramListSRun.lap3[1].Speed = 0;
+	paramListSRun.lap3[2].P = 0; 	paramListSRun.lap3[2].Kp = 0;	paramListSRun.lap3[2].Kd = 0;	paramListSRun.lap3[2].Speed = 0;
+	paramListSRun.lap3[3].P = 0; 	paramListSRun.lap3[3].Kp = 0;	paramListSRun.lap3[3].Kd = 0;	paramListSRun.lap3[3].Speed = 0;
+	paramListSRun.lap3[4].P = 0; 	paramListSRun.lap3[4].Kp = 0;	paramListSRun.lap3[4].Kd = 0;	paramListSRun.lap3[4].Speed = 0;
 
-	paramList.lap3[5].P = 0; 	paramList.lap3[5].Kp = 0;	paramList.lap3[5].Kd = 0;	paramList.lap3[5].Speed = 0;
-	paramList.lap3[6].P = 0; 	paramList.lap3[6].Kp = 0;	paramList.lap3[6].Kd = 0;	paramList.lap3[6].Speed = 0;
-	paramList.lap3[7].P = 0; 	paramList.lap3[7].Kp = 0;	paramList.lap3[7].Kd = 0;	paramList.lap3[7].Speed = 0;
-	paramList.lap3[8].P = 0; 	paramList.lap3[8].Kp = 0;	paramList.lap3[8].Kd = 0;	paramList.lap3[8].Speed = 0;
-	paramList.lap3[9].P = 0; 	paramList.lap3[9].Kp = 0;	paramList.lap3[9].Kd = 0;	paramList.lap3[9].Speed = 0;
+	paramListSRun.lap3[5].P = 0; 	paramListSRun.lap3[5].Kp = 0;	paramListSRun.lap3[5].Kd = 0;	paramListSRun.lap3[5].Speed = 0;
+	paramListSRun.lap3[6].P = 0; 	paramListSRun.lap3[6].Kp = 0;	paramListSRun.lap3[6].Kd = 0;	paramListSRun.lap3[6].Speed = 0;
+	paramListSRun.lap3[7].P = 0; 	paramListSRun.lap3[7].Kp = 0;	paramListSRun.lap3[7].Kd = 0;	paramListSRun.lap3[7].Speed = 0;
+	paramListSRun.lap3[8].P = 0; 	paramListSRun.lap3[8].Kp = 0;	paramListSRun.lap3[8].Kd = 0;	paramListSRun.lap3[8].Speed = 0;
+	paramListSRun.lap3[9].P = 0; 	paramListSRun.lap3[9].Kp = 0;	paramListSRun.lap3[9].Kd = 0;	paramListSRun.lap3[9].Speed = 0;
 
-	paramList.lap3[10].P = 0;	paramList.lap3[10].Kp = 0;	paramList.lap3[10].Kd = 0;	paramList.lap3[10].Speed = 0;
-	paramList.lap3[11].P = 0;	paramList.lap3[11].Kp = 0;	paramList.lap3[11].Kd = 0;	paramList.lap3[11].Speed = 0;
-	paramList.lap3[12].P = 0;	paramList.lap3[12].Kp = 0;	paramList.lap3[12].Kd = 0;	paramList.lap3[12].Speed = 0;
-	paramList.lap3[13].P = 0;	paramList.lap3[13].Kp = 0;	paramList.lap3[13].Kd = 0;	paramList.lap3[13].Speed = 0;
-	paramList.lap3[14].P = 0;	paramList.lap3[14].Kp = 0;	paramList.lap3[14].Kd = 0;	paramList.lap3[14].Speed = 0;
-	paramList.lap3[15].P = 0;	paramList.lap3[15].Kp = 0;	paramList.lap3[15].Kd = 0;	paramList.lap3[15].Speed = 0;
+	paramListSRun.lap3[10].P = 0;	paramListSRun.lap3[10].Kp = 0;	paramListSRun.lap3[10].Kd = 0;	paramListSRun.lap3[10].Speed = 0;
+	paramListSRun.lap3[11].P = 0;	paramListSRun.lap3[11].Kp = 0;	paramListSRun.lap3[11].Kd = 0;	paramListSRun.lap3[11].Speed = 0;
+	paramListSRun.lap3[12].P = 0;	paramListSRun.lap3[12].Kp = 0;	paramListSRun.lap3[12].Kd = 0;	paramListSRun.lap3[12].Speed = 0;
+	paramListSRun.lap3[13].P = 0;	paramListSRun.lap3[13].Kp = 0;	paramListSRun.lap3[13].Kd = 0;	paramListSRun.lap3[13].Speed = 0;
+	paramListSRun.lap3[14].P = 0;	paramListSRun.lap3[14].Kp = 0;	paramListSRun.lap3[14].Kd = 0;	paramListSRun.lap3[14].Speed = 0;
+	paramListSRun.lap3[15].P = 0;	paramListSRun.lap3[15].Kp = 0;	paramListSRun.lap3[15].Kd = 0;	paramListSRun.lap3[15].Speed = 0;
 }
 
 //**********************************************************************************************************************
@@ -307,12 +307,12 @@ static void sRunProcessRecCommands (void)
 //**********************************************************************************************************************
 static void sRunTraceInformations  (void)
 {
-	txMainSm   = smMainState;
+	txMainSm   = smMainStateSRun;
 	txActState = actLapSegment;
-	txActP	   = actualParams.P;
-	txActKp	   = actualParams.Kp;
-	txActKd    = actualParams.Kp;
-	txActSpeed = actualParams.Speed;
+	txActP	   = actualParamsSRun.P;
+	txActKp	   = actualParamsSRun.Kp;
+	txActKd    = actualParamsSRun.Kp;
+	txActSpeed = actualParamsSRun.Speed;
 
 	traceBluetooth(BT_LOG_SRUN_MAIN_SM, 	&txMainSm);
 	traceBluetooth(BT_LOG_SRUN_ACT_STATE, 	&txActState);
@@ -333,46 +333,46 @@ static void sRunTraceInformations  (void)
 //**********************************************************************************************************************
 static void sRunCollectGetParams (void)
 {
-	switch (smMainState)
+	switch (smMainStateSRun)
 	{
 		case eSTATE_MAIN_PARADE_LAP:
 		{
-			txGetP		= paramList.lapParade.P;
-			txGetKp		= paramList.lapParade.Kp;
-			txGetKd		= paramList.lapParade.Kd;
-			txGetSpeed	= paramList.lapParade.Speed;
+			txGetP		= paramListSRun.lapParade.P;
+			txGetKp		= paramListSRun.lapParade.Kp;
+			txGetKd		= paramListSRun.lapParade.Kd;
+			txGetSpeed	= paramListSRun.lapParade.Speed;
 			break;
 		}
 		case eSTATE_MAIN_OVERTAKING:
 		{
-			txGetP		= paramList.overtaking.P;
-			txGetKp		= paramList.overtaking.Kp;
-			txGetKd		= paramList.overtaking.Kd;
-			txGetSpeed	= paramList.overtaking.Speed;
+			txGetP		= paramListSRun.overtaking.P;
+			txGetKp		= paramListSRun.overtaking.Kp;
+			txGetKd		= paramListSRun.overtaking.Kd;
+			txGetSpeed	= paramListSRun.overtaking.Speed;
 			break;
 		}
 		case eSTATE_MAIN_LAP_1:
 		{
-			txGetP		= paramList.lap1[recGetState].P;
-			txGetKp		= paramList.lap1[recGetState].Kp;
-			txGetKd		= paramList.lap1[recGetState].Kd;
-			txGetSpeed	= paramList.lap1[recGetState].Speed;
+			txGetP		= paramListSRun.lap1[recGetState].P;
+			txGetKp		= paramListSRun.lap1[recGetState].Kp;
+			txGetKd		= paramListSRun.lap1[recGetState].Kd;
+			txGetSpeed	= paramListSRun.lap1[recGetState].Speed;
 			break;
 		}
 		case eSTATE_MAIN_LAP_2:
 		{
-			txGetP		= paramList.lap2[recGetState].P;
-			txGetKp		= paramList.lap2[recGetState].Kp;
-			txGetKd		= paramList.lap2[recGetState].Kd;
-			txGetSpeed	= paramList.lap2[recGetState].Speed;
+			txGetP		= paramListSRun.lap2[recGetState].P;
+			txGetKp		= paramListSRun.lap2[recGetState].Kp;
+			txGetKd		= paramListSRun.lap2[recGetState].Kd;
+			txGetSpeed	= paramListSRun.lap2[recGetState].Speed;
 			break;
 		}
 		case eSTATE_MAIN_LAP_3:
 		{
-			txGetP		= paramList.lap3[recGetState].P;
-			txGetKp		= paramList.lap3[recGetState].Kp;
-			txGetKd		= paramList.lap3[recGetState].Kd;
-			txGetSpeed	= paramList.lap3[recGetState].Speed;
+			txGetP		= paramListSRun.lap3[recGetState].P;
+			txGetKp		= paramListSRun.lap3[recGetState].Kp;
+			txGetKd		= paramListSRun.lap3[recGetState].Kd;
+			txGetSpeed	= paramListSRun.lap3[recGetState].Speed;
 			break;
 		}
 		default:
@@ -389,46 +389,46 @@ static void sRunCollectGetParams (void)
 //**********************************************************************************************************************
 static void sRunUpdateParams (void)
 {
-	switch (smMainState)
+	switch (smMainStateSRun)
 	{
 		case eSTATE_MAIN_PARADE_LAP:
 		{
-			paramList.lapParade.P     = recSetP;
-			paramList.lapParade.Kp	  = recSetKp;
-			paramList.lapParade.Kd	  =	recSetKd;
-			paramList.lapParade.Speed = recSetSpeed;
+			paramListSRun.lapParade.P     = recSetP;
+			paramListSRun.lapParade.Kp	  = recSetKp;
+			paramListSRun.lapParade.Kd	  =	recSetKd;
+			paramListSRun.lapParade.Speed = recSetSpeed;
 			break;
 		}
 		case eSTATE_MAIN_OVERTAKING:
 		{
-			paramList.overtaking.P     = recSetP;
-			paramList.overtaking.Kp	   = recSetKp;
-			paramList.overtaking.Kd	   = recSetKd;
-			paramList.overtaking.Speed = recSetSpeed;
+			paramListSRun.overtaking.P     = recSetP;
+			paramListSRun.overtaking.Kp	   = recSetKp;
+			paramListSRun.overtaking.Kd	   = recSetKd;
+			paramListSRun.overtaking.Speed = recSetSpeed;
 			break;
 		}
 		case eSTATE_MAIN_LAP_1:
 		{
-			paramList.lap1[recSetState].P     = recSetP;
-			paramList.lap1[recSetState].Kp	  = recSetKp;
-			paramList.lap1[recSetState].Kd	  =	recSetKd;
-			paramList.lap1[recSetState].Speed = recSetSpeed;
+			paramListSRun.lap1[recSetState].P     = recSetP;
+			paramListSRun.lap1[recSetState].Kp	  = recSetKp;
+			paramListSRun.lap1[recSetState].Kd	  =	recSetKd;
+			paramListSRun.lap1[recSetState].Speed = recSetSpeed;
 			break;
 		}
 		case eSTATE_MAIN_LAP_2:
 		{
-			paramList.lap2[recSetState].P     = recSetP;
-			paramList.lap2[recSetState].Kp	  = recSetKp;
-			paramList.lap2[recSetState].Kd	  =	recSetKd;
-			paramList.lap2[recSetState].Speed = recSetSpeed;
+			paramListSRun.lap2[recSetState].P     = recSetP;
+			paramListSRun.lap2[recSetState].Kp	  = recSetKp;
+			paramListSRun.lap2[recSetState].Kd	  =	recSetKd;
+			paramListSRun.lap2[recSetState].Speed = recSetSpeed;
 			break;
 		}
 		case eSTATE_MAIN_LAP_3:
 		{
-			paramList.lap3[recSetState].P     = recSetP;
-			paramList.lap3[recSetState].Kp	  = recSetKp;
-			paramList.lap3[recSetState].Kd	  =	recSetKd;
-			paramList.lap3[recSetState].Speed = recSetSpeed;
+			paramListSRun.lap3[recSetState].P     = recSetP;
+			paramListSRun.lap3[recSetState].Kp	  = recSetKp;
+			paramListSRun.lap3[recSetState].Kd	  =	recSetKd;
+			paramListSRun.lap3[recSetState].Speed = recSetSpeed;
 			break;
 		}
 		default:
@@ -451,7 +451,7 @@ static void sRunCheckButtonHardRst (void)
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
 
 		// Reset the state machine.
-		smMainState = eSTATE_MAIN_PARADE_LAP;
+		smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
 		actLapSegment = 0;
 
 		// Signal to the maze task that we are out of the maze.
@@ -476,7 +476,7 @@ static void sRunCheckButtonSoftRst (void)
 
 		if (recSoftReset == true)
 		{
-			smMainState = recSoftResetTo;
+			smMainStateSRun = recSoftResetTo;
 		}
 		else
 		{
