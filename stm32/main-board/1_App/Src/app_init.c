@@ -8,6 +8,8 @@
 
 // Includes ------------------------------------------------------------------------------------------------------------
 
+#include <app_encoderCalibration.h>
+#include <app_servoCalibration.h>
 #include "bsp_common.h"
 #include "handler_common.h"
 
@@ -19,8 +21,7 @@
 #include "app_inertCalibration.h"
 #include "app_maze.h"
 #include "app_speedRun.h"
-#include "app_speedcal.h"
-#include "app_servo.h"
+#include "app_roadsignal.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -50,11 +51,12 @@ void Init()
 static void appInit()
 {
 	//______________________Race:
-	TaskInit_CarDiagnosticsTool();
-	TaskInit_Navigation();
+	//TaskInit_CarDiagnosticsTool();
+	//TaskInit_Navigation();
 
-	TaskInit_Maze();
-	TaskInit_SpeedRun();
+	//TaskInit_Maze();
+	//TaskInit_SpeedRun();
+	TaskInit_roadSignal();
 
 	//_______________________Calibration:
 	//TaskInit_InertialCalibration();

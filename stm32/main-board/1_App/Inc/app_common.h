@@ -24,6 +24,9 @@
 // TODO rethink priorities
 #define 	DEFAULT_STACK_SIZE 				128
 
+// All tasks for testing purposes
+#define     TEST_TASK_PRIO                  tskIDLE_PRIORITY+4
+
 #define		TASK_CDT_PRIO					tskIDLE_PRIORITY+4
 #define 	TASK_MAZE_PRIO					tskIDLE_PRIORITY+5
 #define 	TASK_SRUN_PRIO					tskIDLE_PRIORITY+5

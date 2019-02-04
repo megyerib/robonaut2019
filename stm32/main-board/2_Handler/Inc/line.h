@@ -47,6 +47,13 @@ typedef enum
 }
 ArcDir;
 
+typedef struct
+{
+	float lines[MAXLINES];
+	int   cnt;
+}
+LSO_FLOAT;
+
 // Variables -----------------------------------------------------------------------------------------------------------
 
 // Function prototypes -------------------------------------------------------------------------------------------------
@@ -54,6 +61,7 @@ ArcDir;
 void lineInit();
 float lineGetSingle();
 LINE_SENSOR_OUT lineGetRawFront();
+LSO_FLOAT lineGetRawFrontFloat();
 LINE_SENSOR_OUT lineGetRawRear();
 Arc lineGetArc(uint16_t r_mm, ArcDir dir);
 RoadSignal lineGetRoadSignal();
