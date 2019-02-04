@@ -50,13 +50,13 @@ float speedGet()
 
 int32_t speedGetCounter()
 {
-	return cur_cntrval;
+	return TIM5->CNT;
 }
 
 float speedGetDistance()
 {
 	// incr/(incr/m) = m
-	return cur_cntrval / INC_PER_M;
+	return TIM5->CNT / INC_PER_M;
 }
 
 void speedCallback()

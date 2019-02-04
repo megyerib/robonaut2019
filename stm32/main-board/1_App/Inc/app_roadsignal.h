@@ -34,4 +34,8 @@ void TaskInit_roadSignal(void);
 void Task_roadSignal(void* p);
 CROSSING_TYPE getCrossingType();
 
+float getPrevLine();
+float getLeftLine();
+float getRightLine();
+
 // END -----------------------------------------------------------------------------------------------------------------
