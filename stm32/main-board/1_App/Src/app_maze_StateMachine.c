@@ -50,6 +50,9 @@ cMAZE_PD_CONTROL_PARAM_LIST paramList;
 static cNAVI_STATE naviStateCrossing;
 static cNAVI_STATE naviStateCar;
 
+static uint8_t neighbourMatrixA [MAZE_MAP_MAX_SEGEMENTS][MAZE_MAP_MAX_SEGEMENTS];
+static uint8_t neighbourMatrixB [MAZE_MAP_MAX_SEGEMENTS][MAZE_MAP_MAX_SEGEMENTS];
+
 static uint8_t exitRoute[20];
 
 extern QueueHandle_t qNaviN_f;
@@ -87,12 +90,12 @@ void MazeStateMachinesInit (void)
 		map[i].start.p.n = 0;
 		map[i].start.p.e = 0;
 		map[i].start.psi = 0;
-		map[i].negative.left   = 0;
-		map[i].negative.middle = 0;
-		map[i].negative.right  = 0;
-		map[i].positive.left   = 0;
-		map[i].positive.middle = 0;
-		map[i].positive.right  = 0;
+		map[i].negative[0]   = 0;
+		map[i].negative[1] = 0;
+		map[i].negative[2]  = 0;
+		map[i].positive[0]   = 0;
+		map[i].positive[1] = 0;
+		map[i].positive[2]  = 0;
 	}
 
 	// Reset trackers.
@@ -180,10 +183,10 @@ void MazeMainStateMachine (void)
 
 static void mazeStateMachineDiscovery (void)
 {
-	RoadSignal currRoad;
+	CROSSING_TYPE currCross;
 
 	//  Ask the line sensor for the actual road sign.
-	currRoad = lineGetRoadSignal();
+	currCross = getCrossingType();
 
 	// Select the appropriate reaction.
 	if (/* cross roads */ true)	// TODO
@@ -200,46 +203,46 @@ static void mazeStateMachineDiscovery (void)
 			mazeUpdateMap(currRoad);
 
 			// Follow one direction.
-			if (map[actualSegment].positive.left != 0)
+			if (map[actualSegment].positive[0] != 0)
 			{
 				// Turn left. TODO
 
 
-				actualSegment = map[actualSegment].positive.left;
+				actualSegment = map[actualSegment].positive[0];
 			}
-			else if (map[actualSegment].positive.middle != 0)
+			else if (map[actualSegment].positive[1] != 0)
 			{
 				// Turn middle. TODO
 
-				actualSegment = map[actualSegment].positive.middle;
+				actualSegment = map[actualSegment].positive[1];
 			}
-			else if (map[actualSegment].positive.right != 0)
+			else if (map[actualSegment].positive[2] != 0)
 			{
 				// Turn right. TODO
 
-				actualSegment = map[actualSegment].positive.right;
+				actualSegment = map[actualSegment].positive[2];
 			}
 		}
 		else
 		{
 			// Turn to an undiscovered direction.
-			if (map[actualSegment].positive.left != alreadyFoundSegment && map[actualSegment].positive.left != 0)
+			if (map[actualSegment].positive[0] != alreadyFoundSegment && map[actualSegment].positive[0] != 0)
 			{
 				// Turn left. TODO
 
-				actualSegment = map[actualSegment].positive.left;
+				actualSegment = map[actualSegment].positive[0];
 			}
-			else if (map[actualSegment].positive.middle != alreadyFoundSegment && map[actualSegment].positive.middle != 0)
+			else if (map[actualSegment].positive[1] != alreadyFoundSegment && map[actualSegment].positive[1] != 0)
 			{
 				// Turn middle. TODO
 
-				actualSegment = map[actualSegment].positive.middle;
+				actualSegment = map[actualSegment].positive[1];
 			}
-			else if (map[actualSegment].positive.right != alreadyFoundSegment && map[actualSegment].positive.right != 0)
+			else if (map[actualSegment].positive[2] != alreadyFoundSegment && map[actualSegment].positive[2] != 0)
 			{
 				// Turn right. TODO
 
-				actualSegment = map[actualSegment].positive.right;
+				actualSegment = map[actualSegment].positive[2];
 			}
 			else
 			{
@@ -380,24 +383,27 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			// From A to B and CL direction.
 
 			// Directions in the crossing from A.
-			map[actualSegment].positive.left = nextNewSegmentIndex + 1;
-			map[actualSegment].positive.middle = nextNewSegmentIndex;
-			map[actualSegment].positive.right = 0;
+			map[actualSegment].positive[0] = nextNewSegmentIndex + 1;
+			map[actualSegment].positive[1] = nextNewSegmentIndex;
+			map[actualSegment].positive[2] = 0;
+			neighbourMatrixA[actualSegment][nextNewSegmentIndex + 1] = 1;
+			neighbourMatrixA[actualSegment][nextNewSegmentIndex] = 1;
 
 			// New segment B.
 			map[nextNewSegmentIndex].start = naviStateCrossing;
-			map[nextNewSegmentIndex].negative.left 	 = 0;
-			map[nextNewSegmentIndex].negative.middle = actualSegment;
-			map[nextNewSegmentIndex].negative.right  = 0;
+			map[nextNewSegmentIndex].negative[0] = 0;
+			map[nextNewSegmentIndex].negative[1] = actualSegment;
+			map[nextNewSegmentIndex].negative[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][actualSegment] = 1;
 			nextNewSegmentIndex++;
 
 			// New segment CL.
 			map[nextNewSegmentIndex].start = naviStateCrossing;
-			map[nextNewSegmentIndex].negative.left 	 = 0;
-			map[nextNewSegmentIndex].negative.middle = actualSegment;
-			map[nextNewSegmentIndex].negative.right  = 0;
+			map[nextNewSegmentIndex].negative[0] = 0;
+			map[nextNewSegmentIndex].negative[1] = actualSegment;
+			map[nextNewSegmentIndex].negative[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][actualSegment] = 1;
 			nextNewSegmentIndex++;
-
 			break;
 		}
 		case 1: // TODO
@@ -405,22 +411,26 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			// From A to B and CR direction.
 
 			// Directions in the crossing from A.
-			map[actualSegment].positive.left = 0;
-			map[actualSegment].positive.middle = nextNewSegmentIndex;
-			map[actualSegment].positive.right = nextNewSegmentIndex + 1;
+			map[actualSegment].positive[0] = 0;
+			map[actualSegment].positive[1] = nextNewSegmentIndex;
+			map[actualSegment].positive[2] = nextNewSegmentIndex + 1;
+			neighbourMatrixA[actualSegment][nextNewSegmentIndex + 1] = 1;
+			neighbourMatrixA[actualSegment][nextNewSegmentIndex] = 1;
 
 			// New segment B
 			map[nextNewSegmentIndex].start = naviStateCrossing;
-			map[nextNewSegmentIndex].negative.left 	 = 0;
-			map[nextNewSegmentIndex].negative.middle = actualSegment;
-			map[nextNewSegmentIndex].negative.right  = 0;
+			map[nextNewSegmentIndex].negative[0] = 0;
+			map[nextNewSegmentIndex].negative[1] = actualSegment;
+			map[nextNewSegmentIndex].negative[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][actualSegment] = 1;
 			nextNewSegmentIndex++;
 
 			// New segment CR
 			map[nextNewSegmentIndex].start = naviStateCrossing;
-			map[nextNewSegmentIndex].negative.left 	 = 0;
-			map[nextNewSegmentIndex].negative.middle = actualSegment;
-			map[nextNewSegmentIndex].negative.right  = 0;
+			map[nextNewSegmentIndex].negative[0] = 0;
+			map[nextNewSegmentIndex].negative[1] = actualSegment;
+			map[nextNewSegmentIndex].negative[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][actualSegment] = 1;
 			nextNewSegmentIndex++;
 			break;
 		}
@@ -429,22 +439,26 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			// From B to A and CL direction.
 
 			// Directions in the crossing from B.
-			map[actualSegment].positive.left = 0;
-			map[actualSegment].positive.middle = nextNewSegmentIndex + 1;
-			map[actualSegment].positive.right = 0;
+			map[actualSegment].positive[0] = 0;
+			map[actualSegment].positive[1] = nextNewSegmentIndex + 1;
+			map[actualSegment].positive[2] = 0;
+			neighbourMatrixA[actualSegment][nextNewSegmentIndex+1] = 1;
 
 			// New segment CL.
 			map[nextNewSegmentIndex].end = naviStateCrossing;
-			map[nextNewSegmentIndex].positive.left 	 = 0;
-			map[nextNewSegmentIndex].positive.middle = nextNewSegmentIndex + 1;
-			map[nextNewSegmentIndex].positive.right  = 0;
+			map[nextNewSegmentIndex].positive[0] = 0;
+			map[nextNewSegmentIndex].positive[1] = nextNewSegmentIndex + 1;
+			map[nextNewSegmentIndex].positive[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][nextNewSegmentIndex + 1] = 1;
 			nextNewSegmentIndex++;
 
 			// New segment A.
 			map[nextNewSegmentIndex].start = naviStateCrossing;
-			map[nextNewSegmentIndex].negative.left 	 = nextNewSegmentIndex - 1;
-			map[nextNewSegmentIndex].negative.middle = actualSegment;
-			map[nextNewSegmentIndex].negative.right  = 0;
+			map[nextNewSegmentIndex].negative[0] = nextNewSegmentIndex - 1;
+			map[nextNewSegmentIndex].negative[1] = actualSegment;
+			map[nextNewSegmentIndex].negative[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][actualSegment] = 1;
+			neighbourMatrixB[nextNewSegmentIndex][nextNewSegmentIndex - 1] = 1;
 			nextNewSegmentIndex++;
 			break;
 		}
@@ -453,22 +467,26 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			// From B to A and CR direction.
 
 			// Directions in the crossing from B.
-			map[actualSegment].positive.left = 0;
-			map[actualSegment].positive.middle = nextNewSegmentIndex;
-			map[actualSegment].positive.right = 0;
+			map[actualSegment].positive[0] = 0;
+			map[actualSegment].positive[1] = nextNewSegmentIndex;
+			map[actualSegment].positive[2] = 0;
+			neighbourMatrixA[actualSegment][nextNewSegmentIndex] = 1;
 
 			// New segment A.
 			map[nextNewSegmentIndex].start = naviStateCrossing;
-			map[nextNewSegmentIndex].negative.left 	 = 0;
-			map[nextNewSegmentIndex].negative.middle = actualSegment;
-			map[nextNewSegmentIndex].negative.right  = nextNewSegmentIndex + 1;
+			map[nextNewSegmentIndex].negative[0] = 0;
+			map[nextNewSegmentIndex].negative[1] = actualSegment;
+			map[nextNewSegmentIndex].negative[2] = nextNewSegmentIndex + 1;
+			neighbourMatrixB[nextNewSegmentIndex][actualSegment] = 1;
+			neighbourMatrixB[nextNewSegmentIndex][nextNewSegmentIndex + 1] = 1;
 			nextNewSegmentIndex++;
 
 			// New segment CR.
 			map[nextNewSegmentIndex].end = naviStateCrossing;
-			map[nextNewSegmentIndex].positive.left 	 = 0;
-			map[nextNewSegmentIndex].positive.middle = nextNewSegmentIndex - 1;
-			map[nextNewSegmentIndex].positive.right  = 0;
+			map[nextNewSegmentIndex].positive[0] = 0;
+			map[nextNewSegmentIndex].positive[1] = nextNewSegmentIndex - 1;
+			map[nextNewSegmentIndex].positive[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][nextNewSegmentIndex - 1] = 1;
 			nextNewSegmentIndex++;
 			break;
 		}
@@ -477,22 +495,26 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			// From CL to A.
 
 			// Direction from CL in the crossing.
-			map[actualSegment].positive.left = 0;
-			map[actualSegment].positive.middle = nextNewSegmentIndex;
-			map[actualSegment].positive.right = 0;
+			map[actualSegment].positive[0] = 0;
+			map[actualSegment].positive[1] = nextNewSegmentIndex;
+			map[actualSegment].positive[2] = 0;
+			neighbourMatrixA[actualSegment][nextNewSegmentIndex] = 1;
 
 			// New segment A.
 			map[nextNewSegmentIndex].start = naviStateCrossing;
-			map[nextNewSegmentIndex].negative.left 	 = actualSegment;
-			map[nextNewSegmentIndex].negative.middle = nextNewSegmentIndex + 1;
-			map[nextNewSegmentIndex].negative.right  = 0;
+			map[nextNewSegmentIndex].negative[0] = actualSegment;
+			map[nextNewSegmentIndex].negative[1] = nextNewSegmentIndex + 1;
+			map[nextNewSegmentIndex].negative[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][actualSegment] = 1;
+			neighbourMatrixB[nextNewSegmentIndex][nextNewSegmentIndex + 1] = 1;
 			nextNewSegmentIndex++;
 
 			// New segment B.
 			map[nextNewSegmentIndex].end = naviStateCrossing;
-			map[nextNewSegmentIndex].positive.left 	 = 0;
-			map[nextNewSegmentIndex].positive.middle = nextNewSegmentIndex - 1;
-			map[nextNewSegmentIndex].positive.right  = 0;
+			map[nextNewSegmentIndex].positive[0] = 0;
+			map[nextNewSegmentIndex].positive[1] = nextNewSegmentIndex - 1;
+			map[nextNewSegmentIndex].positive[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][nextNewSegmentIndex - 1] = 1;
 			nextNewSegmentIndex++;
 			break;
 		}
@@ -501,22 +523,26 @@ static void mazeUpdateMap (const RoadSignal crossingType)
 			// From CR to A.
 
 			// Direction from CR in the crossing.
-			map[actualSegment].positive.left = 0;
-			map[actualSegment].positive.middle = nextNewSegmentIndex;
-			map[actualSegment].positive.right = 0;
+			map[actualSegment].positive[0] = 0;
+			map[actualSegment].positive[1] = nextNewSegmentIndex;
+			map[actualSegment].positive[2] = 0;
+			neighbourMatrixA[actualSegment][nextNewSegmentIndex] = 1;
 
 			// New segment A.
 			map[nextNewSegmentIndex].start = naviStateCrossing;
-			map[nextNewSegmentIndex].negative.left 	 = 0;
-			map[nextNewSegmentIndex].negative.middle = nextNewSegmentIndex + 1;
-			map[nextNewSegmentIndex].negative.right  = actualSegment;
+			map[nextNewSegmentIndex].negative[0] = 0;
+			map[nextNewSegmentIndex].negative[1] = nextNewSegmentIndex + 1;
+			map[nextNewSegmentIndex].negative[2] = actualSegment;
+			neighbourMatrixB[nextNewSegmentIndex][actualSegment] = 1;
+			neighbourMatrixB[nextNewSegmentIndex][nextNewSegmentIndex + 1] = 1;
 			nextNewSegmentIndex++;
 
 			// New segment B.
 			map[nextNewSegmentIndex].end = naviStateCrossing;
-			map[nextNewSegmentIndex].positive.left 	 = 0;
-			map[nextNewSegmentIndex].positive.middle = nextNewSegmentIndex - 1;
-			map[nextNewSegmentIndex].positive.right  = 0;
+			map[nextNewSegmentIndex].positive[0] = 0;
+			map[nextNewSegmentIndex].positive[1] = nextNewSegmentIndex - 1;
+			map[nextNewSegmentIndex].positive[2] = 0;
+			neighbourMatrixB[nextNewSegmentIndex][nextNewSegmentIndex - 1] = 1;
 			nextNewSegmentIndex++;
 			break;
 		}
@@ -546,71 +572,71 @@ static void mazeMergeSegments (void)
 {
 	uint8_t i;
 
-	if (   map[actualSegment].positive.left   == map[alreadyFoundSegment].positive.left
-		&& map[actualSegment].positive.middle == map[alreadyFoundSegment].positive.middle
-		&& map[actualSegment].positive.right  == map[alreadyFoundSegment].positive.right
+	if (   map[actualSegment].positive[0] == map[alreadyFoundSegment].positive[0]
+		&& map[actualSegment].positive[1] == map[alreadyFoundSegment].positive[1]
+		&& map[actualSegment].positive[2] == map[alreadyFoundSegment].positive[2]
 		)
 	{
 		// The turning directions in the same orientation are the same
-		if (map[actualSegment].negative.left == 0 && map[actualSegment].negative.middle == 0 && map[actualSegment].negative.right  == 0)
+		if (map[actualSegment].negative[0] == 0 && map[actualSegment].negative[1] == 0 && map[actualSegment].negative[2]  == 0)
 		{
 			// The actual segment turning directions are incomplete.
-			map[actualSegment].negative.left   = map[alreadyFoundSegment].negative.left;
-			map[actualSegment].negative.middle = map[alreadyFoundSegment].negative.middle;
-			map[actualSegment].negative.right  = map[alreadyFoundSegment].negative.right;
+			map[actualSegment].negative[0] = map[alreadyFoundSegment].negative[0];
+			map[actualSegment].negative[1] = map[alreadyFoundSegment].negative[1];
+			map[actualSegment].negative[2] = map[alreadyFoundSegment].negative[2];
 		}
-		else if (map[alreadyFoundSegment].negative.left == 0 && map[alreadyFoundSegment].negative.middle == 0 && map[alreadyFoundSegment].negative.right  == 0)
+		else if (map[alreadyFoundSegment].negative[0] == 0 && map[alreadyFoundSegment].negative[1] == 0 && map[alreadyFoundSegment].negative[2]  == 0)
 		{
 			// The actual segment turning directions are incomplete.
-			map[alreadyFoundSegment].negative.left   = map[actualSegment].negative.left;
-			map[alreadyFoundSegment].negative.middle = map[actualSegment].negative.middle;
-			map[alreadyFoundSegment].negative.right  = map[actualSegment].negative.right;
+			map[alreadyFoundSegment].negative[0] = map[actualSegment].negative[0];
+			map[alreadyFoundSegment].negative[1] = map[actualSegment].negative[1];
+			map[alreadyFoundSegment].negative[2] = map[actualSegment].negative[2];
 		}
 	}
-	else if (   map[actualSegment].positive.left   == map[alreadyFoundSegment].negative.left
-			 && map[actualSegment].positive.middle == map[alreadyFoundSegment].negative.middle
-			 && map[actualSegment].positive.right  == map[alreadyFoundSegment].negative.right
+	else if (   map[actualSegment].positive[0] == map[alreadyFoundSegment].negative[0]
+			 && map[actualSegment].positive[1] == map[alreadyFoundSegment].negative[1]
+			 && map[actualSegment].positive[2] == map[alreadyFoundSegment].negative[2]
 			)
 	{
 		//
-		if (map[actualSegment].negative.left == 0 && map[actualSegment].negative.middle == 0 && map[actualSegment].negative.right  == 0)
+		if (map[actualSegment].negative[0] == 0 && map[actualSegment].negative[1] == 0 && map[actualSegment].negative[2]  == 0)
 		{
 			// The actual segment turning directions are incomplete.
-			map[actualSegment].negative.left   = map[alreadyFoundSegment].positive.left;
-			map[actualSegment].negative.middle = map[alreadyFoundSegment].positive.middle;
-			map[actualSegment].negative.right  = map[alreadyFoundSegment].positive.right;
+			map[actualSegment].negative[0] = map[alreadyFoundSegment].positive[0];
+			map[actualSegment].negative[1] = map[alreadyFoundSegment].positive[1];
+			map[actualSegment].negative[2] = map[alreadyFoundSegment].positive[2];
 
 		}
-		else if (map[alreadyFoundSegment].negative.left == 0 && map[alreadyFoundSegment].negative.middle == 0 && map[alreadyFoundSegment].negative.right  == 0)
+		else if (map[alreadyFoundSegment].negative[0] == 0 && map[alreadyFoundSegment].negative[1] == 0 && map[alreadyFoundSegment].negative[2]  == 0)
 		{
 			// The actual segment turning directions are incomplete.
-			map[alreadyFoundSegment].positive.left   = map[actualSegment].negative.left;
-			map[alreadyFoundSegment].positive.middle = map[actualSegment].negative.middle;
-			map[alreadyFoundSegment].positive.right  = map[actualSegment].negative.right;
+			map[alreadyFoundSegment].positive[0] = map[actualSegment].negative[0];
+			map[alreadyFoundSegment].positive[1] = map[actualSegment].negative[1];
+			map[alreadyFoundSegment].positive[2] = map[actualSegment].negative[2];
 
 		}
 	}
-	else if (   map[actualSegment].negative.left   == map[alreadyFoundSegment].negative.left
-			 && map[actualSegment].negative.middle == map[alreadyFoundSegment].negative.middle
-			 && map[actualSegment].negative.right  == map[alreadyFoundSegment].negative.right
+	else if (   map[actualSegment].negative[0] == map[alreadyFoundSegment].negative[0]
+			 && map[actualSegment].negative[1] == map[alreadyFoundSegment].negative[1]
+			 && map[actualSegment].negative[2] == map[alreadyFoundSegment].negative[2]
 			)
 	{
 		// The turning directions in the same orientation are the same
 
-		if (map[actualSegment].negative.left == 0 && map[actualSegment].negative.middle == 0 && map[actualSegment].negative.right  == 0)
+		if (map[actualSegment].negative[0] == 0 && map[actualSegment].negative[1] == 0 && map[actualSegment].negative[2]  == 0)
 		{
 			// The actual segment turning directions are incomplete.
-			map[actualSegment].positive.left   = map[alreadyFoundSegment].positive.left;
-			map[actualSegment].positive.middle = map[alreadyFoundSegment].positive.middle;
-			map[actualSegment].positive.right  = map[alreadyFoundSegment].positive.right;
+			map[actualSegment].positive[0] = map[alreadyFoundSegment].positive[0];
+			map[actualSegment].positive[1] = map[alreadyFoundSegment].positive[1];
+			map[actualSegment].positive[2] = map[alreadyFoundSegment].positive[2];
 
 		}
-		else if (map[alreadyFoundSegment].negative.left == 0 && map[alreadyFoundSegment].negative.middle == 0 && map[alreadyFoundSegment].negative.right  == 0)
+		else if (map[alreadyFoundSegment].negative[0] == 0 && map[alreadyFoundSegment].negative[1] == 0 && map[alreadyFoundSegment].negative[2]  == 0)
 		{
 			// The actual segment turning directions are incomplete.
-			map[alreadyFoundSegment].positive.left   = map[actualSegment].positive.left;
-			map[alreadyFoundSegment].positive.middle = map[actualSegment].positive.middle;
-			map[alreadyFoundSegment].positive.right  = map[actualSegment].positive.right;
+			map[alreadyFoundSegment].positive[0] = map[actualSegment].positive[0];
+			map[alreadyFoundSegment].positive[1] = map[actualSegment].positive[1];
+			map[alreadyFoundSegment].positive[2] = map[actualSegment].positive[2];
 		}
 	}
 
@@ -619,21 +645,21 @@ static void mazeMergeSegments (void)
 	{
 		if (actualSegment < alreadyFoundSegment)
 		{
-			if(map[i].negative.left   == alreadyFoundSegment)  map[i].negative.left   = actualSegment;
-			if(map[i].negative.middle == alreadyFoundSegment)  map[i].negative.middle = actualSegment;
-			if(map[i].negative.right  == alreadyFoundSegment)  map[i].negative.right  = actualSegment;
-			if(map[i].positive.left   == alreadyFoundSegment)  map[i].positive.left   = actualSegment;
-			if(map[i].positive.middle == alreadyFoundSegment)  map[i].positive.middle = actualSegment;
-			if(map[i].positive.right  == alreadyFoundSegment)  map[i].positive.right  = actualSegment;
+			if(map[i].negative[0] == alreadyFoundSegment)  map[i].negative[0] = actualSegment;
+			if(map[i].negative[1] == alreadyFoundSegment)  map[i].negative[1] = actualSegment;
+			if(map[i].negative[2] == alreadyFoundSegment)  map[i].negative[2] = actualSegment;
+			if(map[i].positive[0] == alreadyFoundSegment)  map[i].positive[0] = actualSegment;
+			if(map[i].positive[1] == alreadyFoundSegment)  map[i].positive[1] = actualSegment;
+			if(map[i].positive[2] == alreadyFoundSegment)  map[i].positive[2] = actualSegment;
 		}
 		else
 		{
-			if(map[i].negative.left   == actualSegment)  map[i].negative.left   = alreadyFoundSegment;
-			if(map[i].negative.middle == actualSegment)  map[i].negative.middle = alreadyFoundSegment;
-			if(map[i].negative.right  == actualSegment)  map[i].negative.right  = alreadyFoundSegment;
-			if(map[i].positive.left   == actualSegment)  map[i].positive.left   = alreadyFoundSegment;
-			if(map[i].positive.middle == actualSegment)  map[i].positive.middle = alreadyFoundSegment;
-			if(map[i].positive.right  == actualSegment)  map[i].positive.right  = alreadyFoundSegment;
+			if(map[i].negative[0] == actualSegment)  map[i].negative[0] = alreadyFoundSegment;
+			if(map[i].negative[1] == actualSegment)  map[i].negative[1] = alreadyFoundSegment;
+			if(map[i].negative[2] == actualSegment)  map[i].negative[2] = alreadyFoundSegment;
+			if(map[i].positive[0] == actualSegment)  map[i].positive[0] = alreadyFoundSegment;
+			if(map[i].positive[1] == actualSegment)  map[i].positive[1] = alreadyFoundSegment;
+			if(map[i].positive[2] == actualSegment)  map[i].positive[2] = alreadyFoundSegment;
 		}
 	}
 }
@@ -653,7 +679,7 @@ static bool mazeAllSegmentsDiscovered (void)
 
 static void mazePlanExitRoute (void)
 {
-	/*uint8_t plan[12];
+	/uint8_t plan[12];
 	uint8_t wantedSeg;
 	uint8_t preExitSeg[3];
 	uint8_t secondSeg[3];
@@ -669,23 +695,23 @@ static void mazePlanExitRoute (void)
 
 	wantedSeg = inclinSegment;
 
-	secondSeg[0] = map[actualSegment].positive.left;
-	secondSeg[1] = map[actualSegment].positive.middle;
-	secondSeg[2] = map[actualSegment].positive.right;
+	secondSeg[0] = map[actualSegment].positive[0];
+	secondSeg[1] = map[actualSegment].positive[1];
+	secondSeg[2] = map[actualSegment].positive[2];
 
 	plan[0] = actualSegment;
 
 	if (inclinSegmentOrient == true)
 	{
-		preExitSeg[0] = map[inclinSegment].positive.left;
-		preExitSeg[1] = map[inclinSegment].positive.middle;
-		preExitSeg[2] = map[inclinSegment].positive.right;
+		preExitSeg[0] = map[inclinSegment].positive[0];
+		preExitSeg[1] = map[inclinSegment].positive[1];
+		preExitSeg[2] = map[inclinSegment].positive[2];
 	}
 	else
 	{
-		preExitSeg[0] = map[inclinSegment].negative.left;
-		preExitSeg[1] = map[inclinSegment].negative.middle;
-		preExitSeg[2] = map[inclinSegment].negative.right;
+		preExitSeg[0] = map[inclinSegment].negative[0];
+		preExitSeg[1] = map[inclinSegment].negative[1];
+		preExitSeg[2] = map[inclinSegment].negative[2];
 	}
 
 
@@ -693,15 +719,16 @@ static void mazePlanExitRoute (void)
 	{
 		plan[1] = secondSeg[0];
 
-		thirdSeg[0] = map[secondSeg].positive.left;
-		thirdSeg[1] = map[secondSeg].positive.middle;
-		thirdSeg[2] = map[secondSeg].positive.right;
+		thirdSeg[0] = map[secondSeg].positive[0];
+		thirdSeg[1] = map[secondSeg].positive[1];
+		thirdSeg[2] = map[secondSeg].positive[2];
 
 		if (thirdSeg[0] != 0)
 		{
 
 		}
 	}
+
 
 	for (i = 0; i < 3; ++i) {
 		for (j = 0; j < 3; ++j) {
@@ -711,7 +738,14 @@ static void mazePlanExitRoute (void)
 						for (n = 0; n < 3; ++n) {
 							for (o = 0; o < 3; ++o) {
 								for (p = 0; p < 3; ++p) {
-									//plan[0] = map[secondSeg].positive;
+									plan[0] = actualSegment;
+									plan[1] = map[i].positive[j];
+									plan[1] = map[j].positive[j];
+									plan[1] = map[k].positive[j];
+									plan[1] = map[l].positive[j];
+									plan[1] = map[i].positive[j];
+									plan[1] = map[i].positive[j];
+									plan[1] = map[i].positive[j];
 								}
 							}
 						}
@@ -719,7 +753,7 @@ static void mazePlanExitRoute (void)
 				}
 			}
 		}
-	}*/
+	}
 }
 
 static void mazeFollowRoute (void)
