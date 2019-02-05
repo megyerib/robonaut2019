@@ -613,9 +613,9 @@ static void sRunCntrKeepDistance (void)
 	{
 		speed = 0;
 	}
-	else if (speed > 20)
+	else if (speed > 18)
 	{
-		speed = 20;
+		speed = 17;
 	}
 
 	actualParamsSRun.Speed = speed;
