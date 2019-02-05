@@ -33,7 +33,7 @@
 //**********************************************************************************************************************
 typedef enum
 {
-	eSTATE_MAIN_READY       = 0,	//!< The car is waiting behind the safety car to start.
+	eSTATE_MAIN_WAIT_BEHIND         = 0,	//!< The car is waiting behind the safety car to start.
 	eSTATE_MAIN_PARADE_LAP,			//!< The car is following the safety car  in this lap.
 	eSTATE_MAIN_OVERTAKING,			//!< The car is overtaking the safety car.
 	eSTATE_MAIN_LAP_1,				//!< First lap: The safest algorithm and slowest lap (secure race points).

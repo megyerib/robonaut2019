@@ -64,6 +64,10 @@ static uint32_t lineTimePoint;
 static uint8_t prevSegmentType;
 static bool lineNewLine;
 
+float sRunActLine;
+float sRunPrevLine;
+float sRunServoAngle;
+
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -75,15 +79,20 @@ static eSEGMENT_TYPE sRunGetSegmentType (void);
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_READY;
+	smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
 	actLapSegment = 0;
 	overtakeState = eSTATE_OVERTAKE_LEAVE_LINE;
 	actLapIsFinished = false;
 
-	actualParamsSRun.P		= 0;
-	actualParamsSRun.Kp		= 0;
-	actualParamsSRun.Kd		= 0;
-	actualParamsSRun.Speed	= 0;
+	actualParamsSRun.P		= 0.05;
+	actualParamsSRun.Kp		= 0.02;
+	actualParamsSRun.Kd		= 3.5;
+	actualParamsSRun.Speed	= 18;
+
+	paramListSRun.lapParade.P = 0.05;
+	paramListSRun.lapParade.Kp = 0.025;
+	paramListSRun.lapParade.Kd = 3.5;
+	paramListSRun.lapParade.Speed = 18;
 
 	tryToOvertake 	= false;
 	behindSafetyCar = true;
@@ -105,7 +114,7 @@ void sRunMainStateMachine (void)
 {
 	switch (smMainStateSRun)
 	{
-		case eSTATE_MAIN_READY:
+		case eSTATE_MAIN_WAIT_BEHIND:
 		{
 			// Check the distance change of the safety car.
 			dist_frontPrev_SRun = dist_front_SRun;
@@ -114,7 +123,7 @@ void sRunMainStateMachine (void)
 			if (dist_front_SRun >= SRUN_FOLLOW_DISTANCE)
 			{
 				// Trigger: safety car starts.
-				//smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+				smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
 			}
 			break;
 		}
@@ -524,7 +533,6 @@ void sRunParadeLapAlgorithm (void)
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
 		sRunCntrKeepDistance();
-		sRunCntrLineFollow();
 
 		// In the right place check if we can try overtaking.
 
@@ -571,23 +579,16 @@ void sRunParadeLapAlgorithm (void)
 void sRunCntrLineFollow (void)
 {
 	float line_diff;
-	float servo_angle;
 	float P_modifier;
 	float D_modifier;
 
 	// Detect line.
-	line_prevPos_SRun = line_pos_SRun;
-	line_pos_SRun = lineGetSingle() / 1000; // m -> mm
-	line_diff = line_pos_SRun - line_prevPos_SRun;
+	line_diff = sRunActLine - sRunPrevLine;
 
 	// Control the servo.
-	P_modifier = line_pos_SRun  * actualParamsSRun.Kp;
+	P_modifier = sRunActLine  * actualParamsSRun.Kp;
 	D_modifier = line_diff * actualParamsSRun.Kd;
-	servo_angle = -0.75f * (P_modifier + D_modifier);
-
-	// Actuate.
-	//motorSetDutyCycle(actualParamsSRun.Speed);	TODO
-	//servoSetAngle(servo_angle);
+	sRunServoAngle = -0.75f * (P_modifier + D_modifier);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
@@ -601,11 +602,23 @@ static void sRunCntrKeepDistance (void)
 {
 	float dist_front;
 	float dist_diff;
+	float speed;
 
 	dist_front = sharpGetMeasurement().Distance;
-	dist_diff = SRUN_FOLLOW_DISTANCE - dist_front;
+	dist_diff = dist_front - SRUN_FOLLOW_DISTANCE;
 
-	actualParamsSRun.Speed = actualParamsSRun.P * dist_diff;
+	speed = actualParamsSRun.P * dist_diff;
+
+	if (speed < 0)
+	{
+		speed = 0;
+	}
+	else if (speed > 20)
+	{
+		speed = 20;
+	}
+
+	actualParamsSRun.Speed = speed;
 }
 
 //**********************************************************************************************************************

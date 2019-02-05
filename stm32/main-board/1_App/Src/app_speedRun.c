@@ -17,6 +17,7 @@
 #include "line.h"
 #include "bsp_servo.h"
 #include "bsp_sharp.h"
+#include "remote.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 // Typedefs ------------------------------------------------------------------------------------------------------------
@@ -95,6 +96,16 @@ extern uint8_t actLapSegment;
 extern cPD_CNTRL_PARAMS actualParamsSRun;
 extern cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
 
+extern float sRunActLine;
+extern float sRunPrevLine;
+extern float sRunServoAngle;
+
+static float txSteerWheelAngle;
+static float txServoAngle;
+static uint8_t txLineNumber;
+static float txLineMainLinePos;
+static float txLineSecLinePos;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void sRunSetLap1Parameters	 (void);
@@ -107,6 +118,7 @@ static void sRunUpdateParams	     (void);
 static void sRunCheckButtonHardRst   (void);
 static void sRunCheckButtonSoftRst   (void);
 static void sRunCheckStartCondition  (void);
+static void SRun_CheckRemote			 (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -122,7 +134,7 @@ void TaskInit_SpeedRun (void)
 	//btnSoftRst_Pin   = GPIO_PIN_x;
 
 	// Reset the module.
-	speedRunStarted = false;
+	speedRunStarted = true;  	//TODO remove
 	sRunSetLap1Parameters();
 	sRunSetLap2Parameters();
 	sRunSetLap3Parameters();
@@ -145,13 +157,27 @@ void Task_SpeedRun (void* p)
 
 	while (1)
 	{
-		// Receive and process the data from the CDT application.
-		sRunProcessRecCommands();
-
 		// Wait until the maze task is running.
 		if (speedRunStarted == false)
 		{
 			sRunCheckStartCondition();
+		}
+
+		// Check if remote is pulled. TODO remove before race
+		SRun_CheckRemote();
+
+		// Receive and process the data from the CDT application.
+		sRunProcessRecCommands();
+
+		// Get actual data.
+		sRunPrevLine = sRunActLine;
+		sRunActLine = lineGetSingle() * 1000;
+
+		// Follow line servo angle.
+		if (speedRunStarted == true)
+		{
+			// Detect line and control the servo and the speed of the car.
+			sRunCntrLineFollow();
 		}
 
 		// Main state machine that drive though the speed run track.
@@ -163,6 +189,7 @@ void Task_SpeedRun (void* p)
 		else if (recStopCar == true)
 		{
 			// Stop signal is received, stop the car.
+			actualParamsSRun.Speed = 0;
 			motorSetDutyCycle(0);
 		}
 
@@ -170,13 +197,11 @@ void Task_SpeedRun (void* p)
 		sRunCheckButtonHardRst();
 		sRunCheckButtonSoftRst();
 
-		if (speedRunStarted == true)
-		{
-			// Detect line and control the servo and the speed of the car.
-			sRunCntrLineFollow();
-		}
-
 		// TODO Check for frontal collision.
+
+		// Actuate.
+		motorSetDutyCycle(actualParamsSRun.Speed);
+		servoSetAngle(sRunServoAngle);
 
 		// Trace out the speed run informations.
 		sRunTraceInformations();
@@ -277,11 +302,6 @@ static void sRunProcessRecCommands (void)
 {
 	rxData = traceGetRxData();
 
-	if (rxData.SRunHardReset)
-	{
-		recHardReset = true;
-	}
-
 	recTryOvertake	 = rxData.SRunTryOvertake;
 	recHardReset 	 = rxData.SRunHardReset;
 	recSoftReset 	 = rxData.SRunSoftReset;
@@ -317,7 +337,7 @@ static void sRunTraceInformations  (void)
 	txActState = actLapSegment;
 	txActP	   = actualParamsSRun.P;
 	txActKp	   = actualParamsSRun.Kp;
-	txActKd    = actualParamsSRun.Kp;
+	txActKd    = actualParamsSRun.Kd;
 	txActSpeed = actualParamsSRun.Speed;
 
 	traceBluetooth(BT_LOG_SRUN_MAIN_SM, 	&txMainSm);
@@ -330,6 +350,32 @@ static void sRunTraceInformations  (void)
 	traceBluetooth(BT_LOG_SRUN_GET_KP,	 	&txGetKp);
 	traceBluetooth(BT_LOG_SRUN_GET_KD, 		&txGetKd);
 	traceBluetooth(BT_LOG_SRUN_GET_SPEED, 	&txGetSpeed);
+
+
+	txServoAngle = sRunServoAngle;
+	txSteerWheelAngle = sRunServoAngle;
+	txLineNumber = lineGetRawFront().cnt;
+
+	/*if (lineGetRoadSignal() != Nothing)
+	{
+		txLineSecLinePos = lineGetRawFront().lines[0];
+	}
+
+	// TODO debug
+	if (txServoAngle < PI/2)
+	{
+		txSteerWheelAngle =  PI/2.0f - (PI/2.0f - txServoAngle) / 2.0f;
+	}
+	else
+	{
+		txSteerWheelAngle = PI/2.0f + (txServoAngle - PI/2.0f) / 2.0f;
+	}*/
+
+	traceBluetooth(BT_LOG_STEER_WHEEL_ANGLE, &txSteerWheelAngle);
+	traceBluetooth(BT_LOG_SERVO_ANGLE, &txServoAngle);
+	traceBluetooth(BT_LOG_LINE_LINE_NBR, &txLineNumber);
+	traceBluetooth(BT_LOG_LINE_MAIN_LINE_POS, &txLineMainLinePos);
+	traceBluetooth(BT_LOG_LINE_SEC_LINE_POS, &txLineSecLinePos);
 }
 
 //**********************************************************************************************************************
@@ -457,7 +503,7 @@ static void sRunCheckButtonHardRst (void)
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
 
 		// Reset the state machine.
-		smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+		smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
 		actLapSegment = 0;
 
 		// Signal to the maze task that we are out of the maze.
@@ -508,5 +554,29 @@ static void sRunCheckStartCondition (void)
 	if (bits > 0)
 	{
 		speedRunStarted = true;
+	}
+}
+
+//**********************************************************************************************************************
+//!	This function checks if the remote signal is present.
+//!
+//! The function turns the green led on (LD2) if the remote signal is present and resets the #recStopCar flag so the
+//! car can run.
+//!
+//! @return -
+//**********************************************************************************************************************
+static void SRun_CheckRemote	(void)
+{
+	if (remoteGetState())
+	{
+		// Trigger is pulled.
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+		recStopCar &= false;
+	}
+	else
+	{
+		// Trigger is released.
+		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+		recStopCar |= true;
 	}
 }
