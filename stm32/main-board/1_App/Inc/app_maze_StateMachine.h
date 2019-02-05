@@ -33,8 +33,8 @@ typedef enum
 //**********************************************************************************************************************
 typedef struct
 {
-	cPD_CONTROLLER_PARAMS discover;		//!< Contains the control parameters of the Discover state.
-	cPD_CONTROLLER_PARAMS inclination;	//!< Contains the control parameters of the Inclination state.
+	cPD_CNTRL_PARAMS discover;		//!< Contains the control parameters of the Discover state.
+	cPD_CNTRL_PARAMS inclination;	//!< Contains the control parameters of the Inclination state.
 } cMAZE_PD_CONTROL_PARAM_LIST;
 
 //**********************************************************************************************************************

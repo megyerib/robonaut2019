@@ -60,12 +60,22 @@ typedef enum
 //**********************************************************************************************************************
 typedef struct
 {
-	cPD_CONTROLLER_PARAMS lapParade;				//!< Warm up lap, follow the safety car. Chance to overtake.
-	cPD_CONTROLLER_PARAMS overtaking;				//!< Overtake the safety car.
-	cPD_CONTROLLER_PARAMS lap1[SRUN_LAP_SEGMENTS];	//!< First lap, safest run.
-	cPD_CONTROLLER_PARAMS lap2[SRUN_LAP_SEGMENTS];  //!< Second lap, moderate run.
-	cPD_CONTROLLER_PARAMS lap3[SRUN_LAP_SEGMENTS];  //!< Third lap, fastest run.
+	cPD_CNTRL_PARAMS lapParade;				//!< Warm up lap, follow the safety car. Chance to overtake.
+	cPD_CNTRL_PARAMS overtaking;				//!< Overtake the safety car.
+	cPD_CNTRL_PARAMS lap1[SRUN_LAP_SEGMENTS];	//!< First lap, safest run.
+	cPD_CNTRL_PARAMS lap2[SRUN_LAP_SEGMENTS];  //!< Second lap, moderate run.
+	cPD_CNTRL_PARAMS lap3[SRUN_LAP_SEGMENTS];  //!< Third lap, fastest run.
 } cSRUN_PD_CONTROL_PARAM_LIST;
+
+typedef enum
+{
+	eSEG_STRAIGHT = 0,
+	eSEG_CORNER,
+	eSEG_SPEED_UP,
+	eSEG_SLOW_DOWN,
+	eSEG_SLOW_OR_SPEED,
+	eSEG_LOST_TRACK
+} eSEGMENT_TYPE;
 
 // Variables -----------------------------------------------------------------------------------------------------------
 // Function prototypes -------------------------------------------------------------------------------------------------
@@ -89,7 +99,7 @@ void sRunMainStateMachine (void);
 //!
 //! @return -
 //**********************************************************************************************************************
-void sRunDriveStateMachine (void);
+bool sRunDriveStateMachine (void);
 
 //**********************************************************************************************************************
 //! State machine for the overtaking maneuver.
@@ -113,3 +123,19 @@ void sRunParadeLapAlgorithm	(void);
 //! @return -
 //**********************************************************************************************************************
 void sRunCntrLineFollow (void);
+
+void SRunSM_Set_TryToOvertake (const bool value);
+bool SRunSM_Get_TryToOvertake (void);
+
+void SRunSM_Set_smMainStateS (const eSTATE_MAIN value);
+bool SRunSM_Get_smMainState (void);
+
+void SRunSM_Set_actLapSegment (const uint8_t value);
+uint8_t SRun_Get_ActLapSegment (void);
+
+void SRunSM_Set_actualParams (const cPD_CNTRL_PARAMS value);
+cPD_CNTRL_PARAMS SRunSM_Get_actualParams (void);
+
+void SRunSM_Set_paramList (const cSRUN_PD_CONTROL_PARAM_LIST value);
+cSRUN_PD_CONTROL_PARAM_LIST SRunSM_Get_paramListSRun (void);
+

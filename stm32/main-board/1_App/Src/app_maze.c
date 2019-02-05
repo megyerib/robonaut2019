@@ -35,10 +35,10 @@ extern eSTATE_MAIN smMainState;
 extern cSEGMENT map[20];
 extern bool segments[12];
 extern uint32_t inclinSegment;
-extern cPD_CONTROLLER_PARAMS actualParams;
+extern cPD_CNTRL_PARAMS actualParams;
 extern cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
-extern bool turnOffLineFollow;
+ bool turnOffLineFollow;
 
 //! Structure that contain the received serial data.
 static cTRACE_RX_DATA rxData;

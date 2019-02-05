@@ -33,21 +33,21 @@ cSEGMENT map[MAZE_MAP_MAX_SEGEMENTS];
 //! A list of the discoverable segments. A bit is set when the segment was found and the car has driven it through.
 bool segments[MAZE_FINDABLE_SEGEMNST];
 //! The number of the segment where the exit point is to be found.
-uint32_t inclinSegment;
-uint8_t inclinSegmentOrient;	// 0 = negative, 1 = positive
-bool inclinDirection;			// left = false, rigth = true
-uint32_t inclinTime;
-bool inclinStarted;
-bool inclinTimeUp;
-uint32_t inlcinStopTime = 400;
-
+//uint32_t inclinSegment;
+//uint8_t inclinSegmentOrient;	// 0 = negative, 1 = positive
+//bool inclinDirection;			// left = false, rigth = true
+//uint32_t inclinTime;
+//bool inclinStarted;
+//bool inclinTimeUp;
+//uint32_t inclinStopTime = 400;
+//
 uint32_t actualSegment;
 uint32_t nextNewSegmentIndex;
 uint32_t alreadyFoundSegment;
-bool turnOffLineFollow;
+//bool turnOffLineFollow;
 
 //! The controller parameters of the actual state in which the car is currently.
-cPD_CONTROLLER_PARAMS actualParams;
+cPD_CNTRL_PARAMS actualParams;
 //! List of the controller parameters for all of the main states.
 cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
@@ -108,17 +108,17 @@ void MazeStateMachinesInit (void)
 	// Reset trackers.
 	memset(segments, 0, MAZE_FINDABLE_SEGEMNST);
 
-	inclinSegment = 0;
-	actualSegment = 0;
-	nextNewSegmentIndex = 1;
-	alreadyFoundSegment = 0;
-
-	turnOffLineFollow = false;
+	//inclinSegment = 0;
+	//actualSegment = 0;
+	//nextNewSegmentIndex = 1;
+	//alreadyFoundSegment = 0;
+    //
+	//turnOffLineFollow = false;
 
 	mazeLinePos = 0.0f;
 	mazeLinePosPrev = 0.0f;
 
-	inclinTimeUp =  false;
+	//inclinTimeUp =  false;
 }
 
 //! Function: MazeMainStateMachine
@@ -176,7 +176,7 @@ void MazeMainStateMachine (void)
 		}
 		case eSTATE_MAIN_OUT:
 		{
-			if (inlcinStopTime == 0)
+		/*	if (inclinStopTime == 0)
 			{
 				// Stop/Park behind the safety-car.
 				actualParams.Speed = 0;
@@ -186,9 +186,9 @@ void MazeMainStateMachine (void)
 			}
 			else
 			{
-				inlcinStopTime--;
+				inclinStopTime--;
 			}
-			break;
+			break;*/
 		}
 		default:
 		{
@@ -297,17 +297,17 @@ static void mazeStateMachineDiscovery (void)
 			smMainState = eSTATE_MAIN_INCLINATION;
 		}
 	}
-	else if (currCross == ExitForward)
+	else if (/*currCross ==*/false )
 	{
-		inclinSegment = actualSegment;
+		/*inclinSegment = actualSegment;
 
-		inclinSegmentOrient = 1;
+		inclinSegmentOrient = 1;*/
 	}
-	else if ((currCross == ExitBackward))
+	else if (/*currCross == ExitBackward*/ false)
 	{
-		inclinSegment = actualSegment;
+		/*inclinSegment = actualSegment;
 
-		inclinSegmentOrient = 0;
+		inclinSegmentOrient = 0;*/
 	}
 	else
 	{
@@ -341,7 +341,7 @@ static void mazeStateMachineInclination (void)
 		if (true)//(crossing == ExitForward)		// TODO
 		{
 			// Trigger maneuver.
-			if (lineNbr > 0 && inclinStarted == false)
+			/*if (lineNbr > 0 && inclinStarted == false)
 			{
 				turnOffLineFollow = true;
 				inclinStarted = true;
@@ -387,7 +387,7 @@ static void mazeStateMachineInclination (void)
 					mazeLinePosPrev = 0;
 					smMainState = eSTATE_MAIN_OUT;
 				}
-			}
+			}*/
 		}
 	}
 }
@@ -734,7 +734,7 @@ static bool mazeAllSegmentsDiscovered (void)
 
 static void mazePlanExitRoute (void)
 {
-	uint8_t i;
+/*	uint8_t i;
 	uint8_t j;
 	uint8_t k;
 	uint8_t l;
@@ -750,7 +750,7 @@ static void mazePlanExitRoute (void)
 
 
 	actualSegment = 1;
-	inclinSegment = 7;
+	//inclinSegment = 7;
 
 	neighbourMatrixA[1][3] = 1;
 	neighbourMatrixA[2][3] = 1;

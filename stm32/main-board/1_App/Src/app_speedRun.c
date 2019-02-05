@@ -92,7 +92,7 @@ static uint32_t	txGetSpeed;
 extern bool tryToOvertake;
 extern eSTATE_MAIN smMainStateSRun;
 extern uint8_t actLapSegment;
-extern cPD_CONTROLLER_PARAMS actualParamsSRun;
+extern cPD_CNTRL_PARAMS actualParamsSRun;
 extern cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
@@ -155,13 +155,12 @@ void Task_SpeedRun (void* p)
 		// Main state machine that drive though the speed run track.
 		if (speedRunStarted == true  && recStopCar == false)
 		{
-			//sRunMainStateMachine();
+			sRunMainStateMachine();
 			// TODO drive state machine needs to follow in which segment we are.
 		}
 		else if (recStopCar == true)
 		{
 			// Stop signal is received, stop the car.
-
 			motorSetDutyCycle(0);
 		}
 
@@ -172,7 +171,7 @@ void Task_SpeedRun (void* p)
 		if (speedRunStarted == true)
 		{
 			// Detect line and control the servo and the speed of the car.
-			//sRunCntrLineFollow();
+			sRunCntrLineFollow();
 		}
 
 		// TODO Check for frontal collision.
