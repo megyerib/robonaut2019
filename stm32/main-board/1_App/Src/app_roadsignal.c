@@ -218,6 +218,11 @@ CROSSING_TYPE getCrossingType()
 	return ret;
 }
 
+RACE_ROAD_SIGNAL getRaceRoadSignal()
+{
+
+}
+
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 static int remoteHandle()
