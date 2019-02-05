@@ -14,8 +14,13 @@
 #include "bsp_servo.h"
 #include "motor.h"
 #include "line.h"
+#include "speed.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define SRUN_SEG_MIN_LEN			(20U)	//!< mm
+#define SRUN_SPEED_SUB_SEG_LEN_MAX 	(100U)  //!< mm
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
@@ -26,8 +31,10 @@ uint8_t actLapSegment;
 //! Actual state of the overtake state machine.
 static eSTATE_OVERTAKE overtakeState;
 
+static bool actLapIsFinished;
+
 //! Control parameters of the actual state.
-cPD_CONTROLLER_PARAMS actualParamsSRun;
+cPD_CNTRL_PARAMS actualParamsSRun;
 //! Contain all of the control parameters.
 cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
 
@@ -41,41 +48,65 @@ static bool startGateFound;
 static uint32_t timeCounter;
 
 //! Line position in the actual task run.
-static float line_pos;
+static float line_pos_SRun;
 //! Line position in the previous task run.
-static float line_prevPos;
+static float line_prevPos_SRun;
 //! Measured distance value in front of the car in the actual task run.
-static uint32_t dist_front;
+static uint32_t dist_front_SRun;
 //! Measured distance value in front of the car in the previous task run.
-static uint32_t dist_frontPrev;
+static uint32_t dist_frontPrev_SRun;
+
+static uint8_t segmentTypeCounter;
+static uint32_t lineStart;
+static uint32_t lineLenght;
+static uint32_t lineTimeCounter;
+static uint32_t lineTimePoint;
+static uint8_t prevSegmentType;
+static bool lineNewLine;
+
+float sRunActLine;
+float sRunPrevLine;
+float sRunServoAngle;
+
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void sRunCntrKeepDistance (void);
+static eSEGMENT_TYPE sRunGetSegmentType (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_READY;
+	smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
 	actLapSegment = 0;
 	overtakeState = eSTATE_OVERTAKE_LEAVE_LINE;
+	actLapIsFinished = false;
 
-	actualParamsSRun.P		= 0;
-	actualParamsSRun.Kp		= 0;
-	actualParamsSRun.Kd		= 0;
-	actualParamsSRun.Speed	= 0;
+	actualParamsSRun.P		= 0.05;
+	actualParamsSRun.Kp		= 0.02;
+	actualParamsSRun.Kd		= 3.5;
+	actualParamsSRun.Speed	= 18;
+
+	paramListSRun.lapParade.P = 0.05;
+	paramListSRun.lapParade.Kp = 0.025;
+	paramListSRun.lapParade.Kd = 3.5;
+	paramListSRun.lapParade.Speed = 18;
 
 	tryToOvertake 	= false;
 	behindSafetyCar = true;
 	startGateFound  = false;
 	timeCounter 	= 0;
 
-	line_prevPos   = 0;
-	line_pos 	   = 0;
-	dist_front 	   = 0;
-	dist_frontPrev = 0;
+	line_prevPos_SRun   = 0;
+	line_pos_SRun 	    = 0;
+	dist_front_SRun 	= 0;
+	dist_frontPrev_SRun = 0;
+
+	segmentTypeCounter = 0;
+	lineTimeCounter = 0;
+	prevSegmentType = eSEG_LOST_TRACK;
 }
 
 //! Function: sRunMainStateMachine
@@ -83,13 +114,13 @@ void sRunMainStateMachine (void)
 {
 	switch (smMainStateSRun)
 	{
-		case eSTATE_MAIN_READY:
+		case eSTATE_MAIN_WAIT_BEHIND:
 		{
 			// Check the distance change of the safety car.
-			dist_frontPrev = dist_front;
-			dist_front = sharpGetMeasurement().Distance;
+			dist_frontPrev_SRun = dist_front_SRun;
+			dist_front_SRun = sharpGetMeasurement().Distance;
 
-			if (dist_front >= SRUN_FOLLOW_DISTANCE)
+			if (dist_front_SRun >= SRUN_FOLLOW_DISTANCE)
 			{
 				// Trigger: safety car starts.
 				smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
@@ -109,9 +140,9 @@ void sRunMainStateMachine (void)
 		case eSTATE_MAIN_LAP_1:
 		{
 			// Drive state machine.
-			sRunDriveStateMachine();
+			actLapIsFinished = sRunDriveStateMachine();
 
-			if (startGateFound == true)
+			if (startGateFound == true || actLapIsFinished)
 			{
 				smMainStateSRun = eSTATE_MAIN_LAP_2;
 			}
@@ -120,9 +151,9 @@ void sRunMainStateMachine (void)
 		case eSTATE_MAIN_LAP_2:
 		{
 			// Drive state machine.
-			sRunDriveStateMachine();
+			actLapIsFinished = sRunDriveStateMachine();
 
-			if (startGateFound == true)
+			if (startGateFound == true || actLapIsFinished)
 			{
 				smMainStateSRun = eSTATE_MAIN_LAP_3;
 			}
@@ -131,9 +162,9 @@ void sRunMainStateMachine (void)
 		case eSTATE_MAIN_LAP_3:
 		{
 			// Drive state machine.
-			sRunDriveStateMachine();
+			actLapIsFinished = sRunDriveStateMachine();
 
-			if (startGateFound == true)
+			if (startGateFound == true || actLapIsFinished)
 			{
 				smMainStateSRun = eSTATE_MAIN_STOP;
 			}
@@ -154,8 +185,11 @@ void sRunMainStateMachine (void)
 }
 
 //! Function: sRunDriveStateMachine
-void sRunDriveStateMachine (void)	// TODO implementation
+bool sRunDriveStateMachine (void)	// TODO implementation
 {
+	bool lapFinished = false;
+	eSEGMENT_TYPE segmentType;
+
 	// Load in control parameters.
 	switch (actLapSegment)
 	{
@@ -192,25 +226,26 @@ void sRunDriveStateMachine (void)	// TODO implementation
 	// Actuate the car
 	sRunCntrLineFollow();
 
+	// Determine which segment type the car is on.
+	segmentType = sRunGetSegmentType();
+
 	// Search for the end of the segment: 3 continuous lines (slow down segment).
 	switch (actLapSegment)
 	{
 		case 0:
 		{
 			// Find slowing segment (3 continuous lines).
-			if (false)
+			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-
 				actLapSegment = 1;
 			}
 			break;
 		}
 		case 1:
 		{
-			// Find main track (1 line).
-			if (false)
+			// Find main track (1 line). Corner.
+			if (segmentType == eSEG_CORNER)
 			{
-
 				actLapSegment = 2;
 			}
 			break;
@@ -218,9 +253,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 2:
 		{
 			// Find acceleration segment (3 discrete line segments).
-			if (false)
+			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-
 				actLapSegment = 3;
 			}
 			break;
@@ -228,9 +262,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 3:
 		{
 			// Find main track (1 line).
-			if (false)
+			if (segmentType == eSEG_STRAIGHT)
 			{
-
 				actLapSegment = 4;
 			}
 			break;
@@ -238,9 +271,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 4:
 		{
 			// Find slowing segment (3 continuous lines).
-			if (false)
+			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-
 				actLapSegment = 5;
 			}
 			break;
@@ -248,9 +280,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 5:
 		{
 			// Find main track (1 line).
-			if (false)
+			if (segmentType == eSEG_CORNER)
 			{
-
 				actLapSegment = 6;
 			}
 			break;
@@ -258,9 +289,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 6:
 		{
 			// Find acceleration segment (3 discrete line segments).
-			if (false)
+			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-
 				actLapSegment = 7;
 			}
 			break;
@@ -268,9 +298,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 7:
 		{
 			// Find main track (1 line).
-			if (false)
+			if (segmentType == eSEG_STRAIGHT)
 			{
-
 				actLapSegment = 8;
 			}
 			break;
@@ -278,9 +307,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 8:
 		{
 			// Find slowing segment (3 continuous lines).
-			if (false)
+			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-
 				actLapSegment = 9;
 			}
 			break;
@@ -288,9 +316,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 9:
 		{
 			// Find main track (1 line).
-			if (false)
+			if (segmentType == eSEG_CORNER)
 			{
-
 				actLapSegment = 10;
 			}
 			break;
@@ -298,9 +325,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 10:
 		{
 			// Find acceleration segment (3 discrete line segments).
-			if (false)
+			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-
 				actLapSegment = 11;
 			}
 			break;
@@ -308,9 +334,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 11:
 		{
 			// Find main track (1 line).
-			if (false)
+			if (segmentType == eSEG_STRAIGHT)
 			{
-
 				actLapSegment = 12;
 			}
 			break;
@@ -318,7 +343,7 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 12:
 		{
 			// Find slowing segment (3 continuous lines).
-			if (false)
+			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
 
 				actLapSegment = 13;
@@ -328,9 +353,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 13:
 		{
 			// Find main track (1 line).
-			if (false)
+			if (segmentType == eSEG_CORNER)
 			{
-
 				actLapSegment = 14;
 			}
 			break;
@@ -338,21 +362,19 @@ void sRunDriveStateMachine (void)	// TODO implementation
 		case 14:
 		{
 			// Find acceleration segment (3 discrete line segments).
-			if (false)
+			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-
 				actLapSegment = 15;
 			}
 			break;
 		}
 		case 15:
 		{
-			// Find start gate.
-			if (false)
+			// At the end of the segment.
+			if (segmentType == eSEG_STRAIGHT)
 			{
-
-				// The lap is complete, new one is starting.
-				actLapSegment = 0;
+				// The lap is complete, stop
+				lapFinished = true;
 			}
 			break;
 		}
@@ -362,6 +384,8 @@ void sRunDriveStateMachine (void)	// TODO implementation
 			break;
 		}
 	}
+
+	return lapFinished;
 }
 
 //! Function: sRunOvertakeStateMachine
@@ -509,7 +533,6 @@ void sRunParadeLapAlgorithm (void)
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
 		sRunCntrKeepDistance();
-		sRunCntrLineFollow();
 
 		// In the right place check if we can try overtaking.
 
@@ -556,23 +579,16 @@ void sRunParadeLapAlgorithm (void)
 void sRunCntrLineFollow (void)
 {
 	float line_diff;
-	float servo_angle;
 	float P_modifier;
 	float D_modifier;
 
 	// Detect line.
-	line_prevPos = line_pos;
-	line_pos = lineGetSingle() / 1000; // m -> mm
-	line_diff = line_pos - line_prevPos;
+	line_diff = sRunActLine - sRunPrevLine;
 
 	// Control the servo.
-	P_modifier = line_pos  * actualParamsSRun.Kp;
+	P_modifier = sRunActLine  * actualParamsSRun.Kp;
 	D_modifier = line_diff * actualParamsSRun.Kd;
-	servo_angle = -0.75f * (P_modifier + D_modifier);
-
-	// Actuate.
-	//motorSetDutyCycle(actualParamsSRun.Speed);	TODO
-	//servoSetAngle(servo_angle);
+	sRunServoAngle = -0.75f * (P_modifier + D_modifier);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
@@ -586,9 +602,189 @@ static void sRunCntrKeepDistance (void)
 {
 	float dist_front;
 	float dist_diff;
+	float speed;
 
 	dist_front = sharpGetMeasurement().Distance;
-	dist_diff = SRUN_FOLLOW_DISTANCE - dist_front;
+	dist_diff = dist_front - SRUN_FOLLOW_DISTANCE;
 
-	actualParamsSRun.Speed = actualParamsSRun.P * dist_diff;
+	speed = actualParamsSRun.P * dist_diff;
+
+	if (speed < 0)
+	{
+		speed = 0;
+	}
+	else if (speed > 18)
+	{
+		speed = 17;
+	}
+
+	actualParamsSRun.Speed = speed;
+}
+
+//**********************************************************************************************************************
+//!
+//!
+//! @return -
+//**********************************************************************************************************************
+static eSEGMENT_TYPE sRunGetSegmentType (void)
+{
+	eSEGMENT_TYPE actualSegmentType;
+	uint8_t lineNbr;
+
+	// Actual line sensor data.
+	lineNbr = lineGetRawFront().cnt;
+	// Actual distance from encoder since start.
+	lineLenght = (uint32_t)(speedGetDistance() * 1000) - lineStart;	// mm
+	// Increment time.
+	lineTimeCounter++;
+
+	// Keep the previous segment type between the changing procedure.
+	actualSegmentType = prevSegmentType;
+
+	switch (segmentTypeCounter)
+	{
+		case 0:	// Changing segment.
+		{
+			// New line type.
+			if (lineNbr == 1)
+			{
+				// One main line check.
+				segmentTypeCounter = 1;
+			}
+			else if (lineNbr == 3)
+			{
+				// Slow down and speed up segment check.
+				segmentTypeCounter = 2;
+			}
+			else if (lineNbr == 0)
+			{
+				// Lost track check.
+				segmentTypeCounter = 3;
+			}
+
+			// Reset the timer.
+			lineTimeCounter = 0;
+
+			// Start is 0m.
+			lineStart = (uint32_t)(speedGetDistance() * 1000);	// mm
+			break;
+		}
+		case 1:	// Straight segment
+		{
+			// On line since a given distance or a given time.
+			if (lineLenght > SRUN_SEG_MIN_LEN || lineTimeCounter > 10)
+			{
+				// It is not a noise, it is a main single line.
+				if (prevSegmentType != eSEG_SPEED_UP)
+				{
+					actualSegmentType = eSEG_CORNER;
+				}
+				else
+				{
+					actualSegmentType = eSEG_STRAIGHT;
+				}
+
+				prevSegmentType = actualSegmentType;
+			}
+
+			// Single line is lost or a noise.
+			if (lineNbr != 1)
+			{
+				if (lineNewLine == false)
+				{
+					if (lineTimeCounter - lineTimePoint > 10)
+					{
+						// Single line is lost.
+						segmentTypeCounter = 0;
+
+						// Reset flag.
+						lineNewLine = true;
+					}
+				}
+				else
+				{
+					lineTimePoint = lineTimeCounter;
+					lineNewLine = false;
+				}
+			}
+			break;
+		}
+		case 2:	// Speed up or slow down segment.
+		{
+			// On line since a given distance or a given time.
+			if (lineLenght > SRUN_SEG_MIN_LEN || lineTimeCounter > 10)
+			{
+				/*if (lineLenght > SRUN_SPEED_SUB_SEG_LEN_MAX)
+				{
+					actualSegmentType = eSEG_SLOW_DOWN;
+				}
+				else if
+				{
+					actualSegmentType = eSEG_SPEED_UP;
+				}*/
+				actualSegmentType = eSEG_SLOW_OR_SPEED;
+				prevSegmentType = actualSegmentType;
+			}
+
+			// Line is found or a noise.
+			if (lineNbr != 3)
+			{
+				if (lineNewLine == false)
+				{
+					if (lineTimeCounter - lineTimePoint > 10)
+					{
+						// Line is found
+						segmentTypeCounter = 0;
+
+						// Reset flag.
+						lineNewLine = true;
+					}
+				}
+				else
+				{
+					lineTimePoint = lineTimeCounter;
+					lineNewLine = false;
+				}
+			}
+			break;
+		}
+		case 3:
+		{
+			// On line since a given distance or a given time.
+			if (lineLenght > SRUN_SEG_MIN_LEN || lineTimeCounter > 10)
+			{
+				// It is not a noise, it is a main single line.
+				actualSegmentType = eSEG_LOST_TRACK;
+				prevSegmentType = actualSegmentType;
+			}
+
+			// Line is found or a noise.
+			if (lineNbr != 0)
+			{
+				if (lineNewLine == false)
+				{
+					if (lineTimeCounter - lineTimePoint > 10)
+					{
+						// Line is found
+						segmentTypeCounter = 0;
+
+						// Reset flag.
+						lineNewLine = true;
+					}
+				}
+				else
+				{
+					lineTimePoint = lineTimeCounter;
+					lineNewLine = false;
+				}
+			}
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
+
+	return actualSegmentType;
 }

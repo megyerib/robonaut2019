@@ -51,12 +51,13 @@ void Init()
 static void appInit()
 {
 	//______________________Race:
-	/*TaskInit_CarDiagnosticsTool();
+	TaskInit_CarDiagnosticsTool();
 	TaskInit_Navigation();
+	TaskInit_Sharp();
 
 	TaskInit_Maze();
-	TaskInit_SpeedRun();*/
-	TaskInit_roadSignal();
+	TaskInit_SpeedRun();
+	//TaskInit_roadSignal();
 
 	//_______________________Calibration:
 	//TaskInit_InertialCalibration();
@@ -65,7 +66,7 @@ static void appInit()
 
 	//_______________________Debug:
 	//TaskInit_steeringDemo();
-	//TaskInit_Sharp();
+
 	//TaskInit_Servo();
 }
 

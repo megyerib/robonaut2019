@@ -69,6 +69,20 @@ static int sectionStart;
 
 static int prevTrackLen;
 
+uint32_t inclinSegment;
+uint8_t  inclinSegmentOrient;		// 0 = negative, 1 = positive
+bool	 inclinDirection;			// left = false, rigth = true
+uint32_t inclinTime;
+bool 	 inclinStarted;
+bool 	 inclinTimeUp;
+uint32_t inclinStopTime = 400;
+
+bool turnOffLineFollow = false;
+uint32_t motor = 15;
+
+static float startPoistion;
+static float actualPosition;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static int   remoteHandle();
@@ -90,6 +104,11 @@ static CROSSING_TYPE examineExit(int length, LINE_TYPE ltype);
 
 void TaskInit_roadSignal(void)
 {
+	inclinSegment = 0;
+	turnOffLineFollow = false;
+
+	inclinTimeUp =  false;
+
     xTaskCreate(Task_roadSignal,     // Task function
                 "TASK_ROAD_SIGNAL",  // Task name (string)
                 DEFAULT_STACK_SIZE,  // Stack size
@@ -135,13 +154,90 @@ void Task_roadSignal(void* p)
 			line = getPrevLine();
 		}
 
+		if (/*crossing == ExitForwardLeft*/true)
+		{
+			uint8_t lineNbr = lineGetRawFrontFloat().cnt;
+
+			// Trigger maneuver.
+			if (lineNbr > 0 && inclinStarted == false)
+			{
+				turnOffLineFollow = true;
+				inclinStarted = true;
+				//inclinTime = 200;		// TODO define * 5ms
+
+				startPoistion = speedGetDistance();
+
+				// Steer in the direction
+				servoSetAngle(PI/180 * 20);
+			}
+
+			if (inclinStarted == true && inclinTimeUp == false)
+			{
+				if (startPoistion - actualPosition > 0.05)
+				{
+					inclinTimeUp =  true;
+					servoSetAngle(0);
+				}
+				else
+				{
+					actualPosition = speedGetDistance();
+				}
+			}
+
+			// Check the distance sensor for collision and go until the new line is found. If collision warning,
+			// then stop.
+
+			if (inclinTimeUp == true)
+			{
+				// New lines found -> OUT state.
+			/*	if (lineNbr > 0)
+				{
+					//lineNbr = lineGetRawFrontFloat().cnt;
+
+					if (lineGetRawFrontFloat().lines[0] < 0)
+					{
+						turnOffLineFollow = false;
+						line = lineGetSingle();
+
+						if (inclinStopTime == 0)
+						{
+							// Stop/Park behind the safety-car.
+							motor = 0;
+						}
+						else
+						{
+							inclinStopTime--;
+						}
+					}*/
+
+					if (actualPosition - startPoistion > 0.3)
+					{
+						turnOffLineFollow = false;
+						if (inclinStopTime == 0)
+						{
+							// Stop/Park behind the safety-car.
+							motor = 0;
+						}
+						else
+						{
+							inclinStopTime--;
+						}
+					}
+					else
+					{
+						actualPosition = speedGetDistance();
+					}
+			}
+
+		}
+
 		// LINE FOLLOW _____________________________________
 
 		lineFollow(
 			line,
 			K_P_VAL,
 			K_D_VAL,
-			remoteHandle() ? MOTOR_D : 0
+			remoteHandle() ? motor : 0
 		);
 
 		// END DELAY _______________________________________
@@ -266,8 +362,11 @@ static void lineFollow(float line_pos, float K_P, float K_D, int motor_d)
 
 	// ACTUATE _________________________________________
 
-	//motorSetDutyCycle(motor_d);
-	//servoSetAngle(angle);
+	motorSetDutyCycle(motor_d);
+	if (turnOffLineFollow == false)
+	{
+		servoSetAngle(angle);
+	}
 }
 
 float getPrevLine()

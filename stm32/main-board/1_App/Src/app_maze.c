@@ -35,10 +35,10 @@ extern eSTATE_MAIN smMainState;
 extern cSEGMENT map[20];
 extern bool segments[12];
 extern uint32_t inclinSegment;
-extern cPD_CONTROLLER_PARAMS actualParams;
+extern cPD_CNTRL_PARAMS actualParams;
 extern cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
-extern bool turnOffLineFollow;
+ bool turnOffLineFollow;
 
 //! Structure that contain the received serial data.
 static cTRACE_RX_DATA rxData;
@@ -143,31 +143,35 @@ void Task_Maze (void* p)
 {
 	(void)p;
 	//float r_speed = 2;
+	mazeFinished = true;
 
 	while (1)
 	{
 		// Process the received parameters.
 		MazeProcessRecCommands();
 
-		// Check for the remote controller signal.
-		MazeCheckRemote();
-
-		// Get actual data.
-		mazeLinePosPrev = mazeLinePos;
-		mazeLinePos = lineGetSingle();
-
-		// Run the state machine until the job is done or stop signal received.
-		if (mazeFinished == false && recStopCar == true)
+		if (mazeFinished == false)
 		{
-			//MazeCntrSpeed (r_speed);
-			MazeMainStateMachine();
-		}
-		else if (recStopCar == true)
-		{
-			// Stop signal is received, stop the car.
-			actualParams.Speed = 0;
-			motorSetDutyCycle(0);
-			mazeLinePos = getPrevLine();
+			// Check for the remote controller signal.
+			MazeCheckRemote();
+
+			// Get actual data.
+			mazeLinePosPrev = mazeLinePos;
+			mazeLinePos = lineGetSingle();
+
+			// Run the state machine until the job is done or stop signal received.
+			if (mazeFinished == false && recStopCar == true)
+			{
+				//MazeCntrSpeed (r_speed);
+				MazeMainStateMachine();
+			}
+			else if (recStopCar == true)
+			{
+				// Stop signal is received, stop the car.
+				actualParams.Speed = 0;
+				motorSetDutyCycle(0);
+				mazeLinePos = getPrevLine();
+			}
 		}
 
 		// Indicate if the maze is finished and signal the app_speedRun to start. If hard reset is present, then skip
@@ -176,15 +180,18 @@ void Task_Maze (void* p)
 		{
 			// Reset signal received. Skip the maze and signal to the speed run state machine.
 			mazeFinished = true;
-			xEventGroupSetBits(event_MazeOut, 0);
+			xEventGroupSetBits(event_MazeOut, 1);
 
 			smMainState = eSTATE_MAIN_OUT;
 		}
 
-		// Detect line and control the servo and the speed of the car.
-		MazeCntrLineFollow();
-		motorSetDutyCycle(actualParams.Speed);
-		//MazeCntrSpeed(); //TODO
+		if (mazeFinished == false)
+		{
+			// Detect line and control the servo and the speed of the car.
+			MazeCntrLineFollow();
+			motorSetDutyCycle(actualParams.Speed);
+			//MazeCntrSpeed(); //TODO
+		}
 
 		// TODO Check for frontal collision.
 
@@ -261,7 +268,7 @@ static void	MazeCntrSpeed (float r_speed)
 	actualParams.Speed = (uint32_t) uk;
 
 	// Actuate.
-	motorSetDutyCycle(actualParams.Speed);
+	//motorSetDutyCycle(actualParams.Speed);
 
 }
 
