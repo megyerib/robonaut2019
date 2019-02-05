@@ -143,6 +143,7 @@ void Task_Maze (void* p)
 {
 	(void)p;
 	//float r_speed = 2;
+	mazeFinished = true;
 
 	while (1)
 	{
@@ -176,7 +177,7 @@ void Task_Maze (void* p)
 		{
 			// Reset signal received. Skip the maze and signal to the speed run state machine.
 			mazeFinished = true;
-			xEventGroupSetBits(event_MazeOut, 0);
+			xEventGroupSetBits(event_MazeOut, 1);
 
 			smMainState = eSTATE_MAIN_OUT;
 		}

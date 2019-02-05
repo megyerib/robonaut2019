@@ -277,6 +277,11 @@ static void sRunProcessRecCommands (void)
 {
 	rxData = traceGetRxData();
 
+	if (rxData.SRunHardReset)
+	{
+		recHardReset = true;
+	}
+
 	recTryOvertake	 = rxData.SRunTryOvertake;
 	recHardReset 	 = rxData.SRunHardReset;
 	recSoftReset 	 = rxData.SRunSoftReset;
@@ -447,7 +452,7 @@ static void sRunUpdateParams (void)
 static void sRunCheckButtonHardRst (void)
 {
 	btnHardRstSpeedRun = HAL_GPIO_ReadPin(btnHardRst_Port, btnHardRst_Pin);
-	if (btnHardRstSpeedRun == GPIO_PIN_RESET || recHardReset == true)
+	if (/*btnHardRstSpeedRun == GPIO_PIN_RESET || TODO*/ recHardReset == true)
 	{
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
 
@@ -471,7 +476,7 @@ static void sRunCheckButtonHardRst (void)
 static void sRunCheckButtonSoftRst (void)
 {
 	btnSoftRstSpeedRun = HAL_GPIO_ReadPin(btnSoftRst_Port, btnSoftRst_Pin);
-	if (btnSoftRstSpeedRun == GPIO_PIN_RESET || recSoftReset == true)
+	if (/*btnSoftRstSpeedRun == GPIO_PIN_RESET || TODO */ recSoftReset == true)
 	{
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
 
@@ -497,8 +502,10 @@ static void sRunCheckButtonSoftRst (void)
 //**********************************************************************************************************************
 static void sRunCheckStartCondition (void)
 {
+	EventBits_t bits = xEventGroupGetBits(event_MazeOut);
+
 	// Wait for the event.
-	if (xEventGroupGetBits(event_MazeOut) > 0)
+	if (bits > 0)
 	{
 		speedRunStarted = true;
 	}

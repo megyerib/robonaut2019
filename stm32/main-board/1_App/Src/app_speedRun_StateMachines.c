@@ -114,7 +114,7 @@ void sRunMainStateMachine (void)
 			if (dist_front_SRun >= SRUN_FOLLOW_DISTANCE)
 			{
 				// Trigger: safety car starts.
-				smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+				//smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
 			}
 			break;
 		}

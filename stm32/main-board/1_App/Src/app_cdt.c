@@ -16,7 +16,7 @@
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define	APP_TRACE_BT_ON			1
-#define APP_TRACE_USB_ON		1
+#define APP_TRACE_USB_ON		0
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -217,7 +217,7 @@ void Task_CarDiagnosticsTool(void* p)
 		{
 			// Bluetooth trace to Car Diagnostics Tool.
 
-			//traceFlushData();
+			traceFlushData();
 
 			if (btMsgReceived == true)
 			{
@@ -234,7 +234,7 @@ void Task_CarDiagnosticsTool(void* p)
 		{
 			// USB trace.
 
-			//traceFlushData();
+			traceFlushData();
 
 			if (usbRec == true)
 			{
