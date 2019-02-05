@@ -52,7 +52,7 @@ void Task_Sharp (void* p)
 	{
 		sharpTriggerAdc();
 		sharp = sharpGetMeasurement();
-		if(sharp.Distance > 40)
+		/*if(sharp.Distance > 40)
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 			xEventGroupClearBits(event_sharp, 1);
@@ -61,7 +61,7 @@ void Task_Sharp (void* p)
 		{
 			HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 			xEventGroupSetBits(event_sharp, 1);
-		}
+		}*/
 
 		traceBluetooth(BT_LOG_DIST_SHARP_1, &sharp.Distance);
 
