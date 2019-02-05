@@ -14,6 +14,7 @@
 #include "bsp_servo.h"
 #include "motor.h"
 #include "line.h"
+#include "speed.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -270,7 +271,7 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 		case 5:
 		{
 			// Find main track (1 line).
-			if (segmentType = eSEG_CORNER)
+			if (segmentType == eSEG_CORNER)
 			{
 				actLapSegment = 6;
 			}
@@ -642,7 +643,7 @@ static eSEGMENT_TYPE sRunGetSegmentType (void)
 				// Slow down and speed up segment check.
 				segmentTypeCounter = 2;
 			}
-			else if (lineNbr = 0)
+			else if (lineNbr == 0)
 			{
 				// Lost track check.
 				segmentTypeCounter = 3;
@@ -771,4 +772,6 @@ static eSEGMENT_TYPE sRunGetSegmentType (void)
 			break;
 		}
 	}
+
+	return actualSegmentType;
 }
