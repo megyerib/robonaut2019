@@ -18,93 +18,85 @@
 #include "bsp_servo.h"
 #include "bsp_sharp.h"
 #include "remote.h"
+#include "app_controllers.h"
+#include "speed.h"
+#include "app_speedRun_StateMachines.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define SRUN_SPEED_TI				(50.0f)
+#define SRUN_SPEED_KC				(100.0f)
+
+#define SRUN_SHARP_DIST_MAX			(150)		//!<
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-//! Event flag (first bit) that indicates if we have left the maze.
-extern EventGroupHandle_t event_MazeOut;
-//! Flag that indicates if we are on the speed run track.
-static bool	speedRunStarted;
+extern EventGroupHandle_t event_MazeOut;	//!< Event flag (first bit) that indicates if we have left the maze.
+static bool	speedRunStarted;				//!< Flag that indicates if we are on the speed run track.
 
 //! This button is used in case the car can not complete the Maze. The car will start waiting behind the safety car
 //! to start the speed run.
 static GPIO_PinState btnHardRstSpeedRun;
-//! GPIO port of the hard reset button.
-static GPIO_TypeDef* btnHardRst_Port;
-//! GPIO pin of the hard reset button.
-static uint16_t btnHardRst_Pin;
+static GPIO_TypeDef* btnHardRst_Port;	//!< GPIO port of the hard reset button.
+static uint16_t btnHardRst_Pin;			//!< GPIO pin of the hard reset button.
 
 //! This button is used in that unfortunate case, if the car get lost in the speed run and must be replaced to the line.
 //! IN CASE OF: car is lost, car has crashed, bad overtaking
 static GPIO_PinState btnSoftRstSpeedRun;
-//! GPIO port of the soft reset button.
-static GPIO_TypeDef* btnSoftRst_Port;
-//! GPIO pin of the soft reset button.
-static uint16_t btnSoftRst_Pin;
+static GPIO_TypeDef* btnSoftRst_Port;	//!< GPIO port of the soft reset button.
+static uint16_t btnSoftRst_Pin;			//!< GPIO pin of the soft reset button.
 
-//! Contains the received serial data.
-static cTRACE_RX_DATA rxData;
-//! Flag that indicates if the car must stop.
-static bool	recStopCar;
-//! Flag that indicates if the overtake action is allowed.
-static bool recTryOvertake;
-//! Flag that indicates if the main state machine must be reset. Car starts from behind the safety car.
-static bool recHardReset;
-//! Flag that indicates if the actual state has to be reset or a it has to be reset to a new state.
-static bool recSoftReset;
-//! State into which the state machine must be reset.
-static uint32_t recSoftResetTo;
-//! Request for the control parameter of this state.
-static uint32_t recGetState;
-//! Update the control parameters of the selected state.
-static uint32_t recSetState;
-//! New P control parameter for the selected state.
-static float recSetP;
-//! New Kp control parameter for the selected state.
-static float recSetKp;
-//! New Kd control parameter for the selected state.
-static float recSetKd;
-//! New Speed control parameter for the selected state.
-static uint32_t recSetSpeed;
 
-//! Actual state of the main state machine.
-static uint32_t txMainSm;
-//! Actual state of the drive state machine.
-static uint32_t txActState;
-//! Actual P control parameter.
-static float txActP;
-//! Actual Kp control parameter.
-static float txActKp;
-//! Actual Kd control parameter.
-static float txActKd;
-//! Actual Speed control parameter.
-static uint32_t txActSpeed;
-//! Requested P control parameter.
-static float txGetP;
-//! Requested Kp control parameter.
-static float txGetKp;
-//! Requested Kd control parameter.
-static float txGetKd;
-//! Requested Speed control parameter.
-static uint32_t	txGetSpeed;
+static cTRACE_RX_DATA rxData;		//!< Contains the received serial data.
+static bool	recStopCar;				//!< Flag that indicates if the car must stop.
+static bool recTryOvertake;			//!< Flag that indicates if the overtake action is allowed.
+static bool recHardReset;			//!< Flag that indicates if the main state machine must be reset. Car starts from behind the safety car.
+static bool recSoftReset;			//!< Flag that indicates if the actual state has to be reset or a it has to be reset to a new state.
+static uint32_t recSoftResetTo;		//!< State into which the state machine must be reset.
+static uint32_t recGetState;		//!< Request for the control parameter of this state.
+static uint32_t recSetState;		//!< Update the control parameters of the selected state.
+static float recSetP;				//!< New P control parameter for the selected state.
+static float recSetKp;				//!< New Kp control parameter for the selected state.
+static float recSetKd;				//!< New Kd control parameter for the selected state.
+static uint32_t recSetSpeed;		//!< New Speed control parameter for the selected state.
+
+
+static uint32_t txMainSm;		//!< Actual state of the main state machine.
+static uint32_t txActState;		//!< Actual state of the drive state machine.
+static float txActP;			//!< Actual P control parameter.
+static float txActKp;			//!< Actual Kp control parameter.
+static float txActKd;			//!< Actual Kd control parameter.
+static uint32_t txActSpeed;		//!< Actual Speed control parameter.
+static float txGetP;			//!< Requested P control parameter.
+static float txGetKp;			//!< Requested Kp control parameter.
+static float txGetKd;			//!< Requested Kd control parameter.
+static uint32_t	txGetSpeed;		//!< Requested Speed control parameter.
 
 extern bool tryToOvertake;
 extern eSTATE_MAIN smMainStateSRun;
 extern uint8_t actLapSegment;
-extern cPD_CNTRL_PARAMS actualParamsSRun;
+extern cPD_CNTRL_PARAMS sRunActualParams;
 extern cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
 
 extern float sRunActLine;
 extern float sRunPrevLine;
 extern float sRunServoAngle;
+extern float sRunActSpeed;
+extern float sRunActSpeedDist;
+static float sRunPrevSpeed;
+static float sRunSpeedFk;
+static uint32_t sRunActSpeedDuty;
+extern uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
+extern uint32_t sRunPrevFrontDist;
 
 static float txSteerWheelAngle;
 static float txServoAngle;
 static uint8_t txLineNumber;
 static float txLineMainLinePos;
 static float txLineSecLinePos;
+
+extern uint32_t sRunActDuty;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -118,7 +110,7 @@ static void sRunUpdateParams	     (void);
 static void sRunCheckButtonHardRst   (void);
 static void sRunCheckButtonSoftRst   (void);
 static void sRunCheckStartCondition  (void);
-static void SRun_CheckRemote			 (void);
+static void SRun_CheckRemote		 (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -141,6 +133,9 @@ void TaskInit_SpeedRun (void)
 
 	// Init state machines
 	sRunInitStateMachines();
+
+	// Variable for the speed controller.
+	sRunSpeedFk = 0;
 
 	// Task can be created now.
 	xTaskCreate(Task_SpeedRun,
@@ -169,28 +164,54 @@ void Task_SpeedRun (void* p)
 		// Receive and process the data from the CDT application.
 		sRunProcessRecCommands();
 
-		// Get actual data.
+		// Save previous sensor data.
 		sRunPrevLine = sRunActLine;
-		sRunActLine = lineGetSingle() * 1000;
+		sRunPrevSpeed = sRunActSpeed;
+		sRunPrevFrontDist = sRunActFrontDist;
 
-		// Follow line servo angle.
-		if (speedRunStarted == true)
-		{
-			// Detect line and control the servo and the speed of the car.
-			sRunCntrLineFollow();
-		}
+		// Get actual sensor data.
+		sRunActLine = lineGetSingle() * 1000;
+		sRunActSpeed = speedGet();
+		sRunActFrontDist = sharpGetMeasurement().Distance;
+
+		// Saturate to valid distance range.
+		/*if (sRunActFrontDist > SRUN_SHARP_DIST_MAX)
+			sRunActFrontDist = SRUN_SHARP_DIST_MAX;*/
 
 		// Main state machine that drive though the speed run track.
 		if (speedRunStarted == true  && recStopCar == false)
 		{
 			sRunMainStateMachine();
-			// TODO drive state machine needs to follow in which segment we are.
 		}
-		else if (recStopCar == true)
+
+		// Controllers.
+		if (speedRunStarted == true)
+		{
+			if (smMainStateSRun == eSTATE_MAIN_WAIT_BEHIND)
+			{
+				sRunActSpeedDuty = 0;
+			}
+			else if (smMainStateSRun == eSTATE_MAIN_PARADE_LAP)
+			{
+				// Control the speed.
+				sRunActSpeedDuty = cntrSpeed(sRunActSpeedDist, sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunSpeedFk, SRUN_SPEED_KC);;
+			}
+			else
+			{
+				// Control the speed.
+				sRunActSpeedDuty = cntrSpeed(((float)sRunActualParams.Speed/10.0f), sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunSpeedFk, SRUN_SPEED_KC);
+			}
+
+			// Control the servo.
+			sRunServoAngle = cntrlLineFollow(sRunActLine, sRunPrevLine, sRunActualParams.P, sRunActualParams.Kp, sRunActualParams.Kd);
+		}
+
+		// Stop if the car has to stop (remote signal is not present).
+		if (recStopCar == true)
 		{
 			// Stop signal is received, stop the car.
-			actualParamsSRun.Speed = 0;
-			motorSetDutyCycle(0);
+			sRunActSpeedDuty = 0;
+			motorSetDutyCycle(0);	// Just to be serious.
 		}
 
 		// Check the buttons.
@@ -200,7 +221,7 @@ void Task_SpeedRun (void* p)
 		// TODO Check for frontal collision.
 
 		// Actuate.
-		motorSetDutyCycle(actualParamsSRun.Speed);
+		motorSetDutyCycle(sRunActSpeedDuty);
 		servoSetAngle(sRunServoAngle);
 
 		// Trace out the speed run informations.
@@ -335,10 +356,10 @@ static void sRunTraceInformations  (void)
 {
 	txMainSm   = smMainStateSRun;
 	txActState = actLapSegment;
-	txActP	   = actualParamsSRun.P;
-	txActKp	   = actualParamsSRun.Kp;
-	txActKd    = actualParamsSRun.Kd;
-	txActSpeed = actualParamsSRun.Speed;
+	txActP	   = sRunActualParams.P;
+	txActKp	   = sRunActualParams.Kp;
+	txActKd    = sRunActualParams.Kd;
+	txActSpeed = sRunActualParams.Speed;
 
 	traceBluetooth(BT_LOG_SRUN_MAIN_SM, 	&txMainSm);
 	traceBluetooth(BT_LOG_SRUN_ACT_STATE, 	&txActState);
@@ -565,7 +586,7 @@ static void sRunCheckStartCondition (void)
 //!
 //! @return -
 //**********************************************************************************************************************
-static void SRun_CheckRemote	(void)
+static void SRun_CheckRemote (void)
 {
 	if (remoteGetState())
 	{

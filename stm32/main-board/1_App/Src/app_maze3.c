@@ -11,8 +11,8 @@
 #include "app_common.h"
 #include "start.h"
 #include "dijkstra.h"
-#include "app_roadsignal.h"
 #include "navigation.h"
+#include "app_roadsignal.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
