@@ -33,7 +33,7 @@
 
 #define K_P_VAL         (0.02f)
 #define K_D_VAL         (3.5f)
-#define MOTOR_D         (18u)
+#define MOTOR_D         (18)
 
 #define PREV_LINES      (4u)
 
@@ -80,7 +80,6 @@ bool 	 inclinTimeUp;
 uint32_t inclinStopTime = 400;
 
 bool turnOffLineFollow = false;
-uint32_t motor = 15;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -141,7 +140,7 @@ void Task_roadSignal(void* p)
 			line,
 			K_P_VAL,
 			K_D_VAL,
-			remoteHandle() ? motor : 0
+			remoteHandle() ? MOTOR_D : 0
 		);
 
 		// END DELAY _______________________________________

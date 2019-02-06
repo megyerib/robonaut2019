@@ -10,11 +10,12 @@
 #include "app_race_roadsignal.h"
 #include "line.h"
 #include "bsp_bluetooth.h"
+#include "speed.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define LINE_SAMPLES (5u)
-#define LINE_VALID   (4u)
+#define LINE_VALID   (5u)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -27,7 +28,8 @@ LINE_NUM;
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static LINE_NUM state = Single;
+static RACE_RS rsState = None;
+static float prevTrackStart = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -40,32 +42,33 @@ RACE_RS getRaceRs()
 {
 	LINE_NUM lineNum = getLineNumFiltered();
 	RACE_RS ret = None;
+	float diff = speedGetDistance() - prevTrackStart;
 
-	switch (state)
+	if (lineNum == Triple)
 	{
-		case Single:
+		if (rsState == None)
 		{
-			if (lineNum == Triple)
-			{
-				state = Triple;
-				bspBtSend((uint8_t*)"3\r\n", 3);
-			}
-
-			break;
+			rsState = Fast;
+			traceRaceRoadSignal(rsState);
+			prevTrackStart = speedGetDistance();
 		}
-		case Triple:
+		else if (rsState == Slow)
 		{
-			if (lineNum == Single)
+			if (diff > 4.0f)
 			{
-				state = Single;
-				bspBtSend((uint8_t*)"1\r\n", 3);
+				rsState = Fast;
+				traceRaceRoadSignal(rsState);
+				prevTrackStart = speedGetDistance();
 			}
-
-			break;
 		}
-		default:
+		else if (rsState == Fast)
 		{
-			break;
+			if (diff > 2.0f)
+			{
+				rsState = Slow;
+				traceRaceRoadSignal(rsState);
+				prevTrackStart = speedGetDistance();
+			}
 		}
 	}
 
@@ -79,6 +82,7 @@ static LINE_NUM getLineNumFiltered()
 	//static LINE_NUM prevState;
 	static int lineSampleNum[LINE_SAMPLES];
 	static int lineSampleIndex;
+	static LINE_NUM prevLineNum;
 
 	int voteWinner = 0;
 	LINE_NUM ret;
@@ -117,10 +121,12 @@ static LINE_NUM getLineNumFiltered()
 		}
 		default:
 		{
-			ret = None;
+			ret = prevLineNum;
 			break;
 		}
 	}
+
+	prevLineNum = ret;
 
 	return ret;
 }
@@ -129,14 +135,14 @@ static void traceRaceRoadSignal(RACE_RS rstype)
 {
 	switch (rstype)
 	{
-		case Accelerate:
+		case Fast:
 		{
-			bspBtSend((uint8_t*) "Accelerate\r\n", 12);
+			bspBtSend((uint8_t*) "Fast\r\n", 6);
 			break;
 		}
-		case Brake:
+		case Slow:
 		{
-			bspBtSend((uint8_t*) "Brake\r\n", 7);
+			bspBtSend((uint8_t*) "Slow\r\n", 6);
 			break;
 		}
 		default:

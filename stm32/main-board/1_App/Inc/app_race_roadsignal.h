@@ -15,8 +15,8 @@
 typedef enum
 {
 	None,
-	Accelerate,
-	Brake
+	Slow,
+	Fast
 }
 RACE_RS;
 
