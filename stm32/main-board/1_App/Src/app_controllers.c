@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //!
 //!  \file      app_controllers.c
-//!  \brief
-//!  \details
+//!  \brief		This module contains all of the available controllers.
+//!  \details	See in app_controllers.h.
 //!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +22,7 @@
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
 
-//! Function: sRunCntrLineFollow
+//! Function: cntrlLineFollow
 float cntrlLineFollow (const float actLine, const float prevLine, const float P, const float kP, const float kD)
 {
 	float line_diff;
@@ -37,6 +37,7 @@ float cntrlLineFollow (const float actLine, const float prevLine, const float P,
 	return servoAngle;
 }
 
+//! Function: cntrSpeed
 uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actSpeed, const float Ti, float* fk, const float kc)
 {
 	float e_speed;
@@ -63,5 +64,30 @@ uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actS
 	*fk = beta * (*fk) + ( 1 - beta * uk);
 
 	return (uint32_t)(uk);
+}
+
+//! Function: cntrDistance
+float cntrDistance (const float actDist, const float followDist, const float p, const float minSpeed, const float maxSpeed)
+{
+	float distDiff;
+	float speed;
+
+	// Calculate the error.
+	distDiff = actDist - followDist;
+
+	// Calculate process variable (new speed).
+	speed = p * distDiff;
+
+	// Saturate the result.
+	if (minSpeed < 0)
+	{
+		speed = minSpeed;
+	}
+	else if (speed > maxSpeed)
+	{
+		speed = maxSpeed;
+	}
+
+	return speed;
 }
 // Local (static) function definitions ---------------------------------------------------------------------------------

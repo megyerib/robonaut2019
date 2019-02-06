@@ -15,11 +15,15 @@
 #include "motor.h"
 #include "line.h"
 #include "speed.h"
+#include "app_controllers.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define SRUN_SEG_MIN_LEN			(20U)	//!< mm
 #define SRUN_SPEED_SUB_SEG_LEN_MAX 	(100U)  //!< mm
+
+#define SRUN_DIST_KEEP_SPEED_MIN	(0.5f)
+#define SRUN_DIST_KEEP_SPEED_MAX	(1.0f)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -47,14 +51,10 @@ static bool startGateFound;
 //! Counter for the individual timing functionalities.
 static uint32_t timeCounter;
 
-//! Line position in the actual task run.
-static float line_pos_SRun;
-//! Line position in the previous task run.
-static float line_prevPos_SRun;
 //! Measured distance value in front of the car in the actual task run.
-static uint32_t dist_front_SRun;
+static uint32_t sRunActFrontDist;
 //! Measured distance value in front of the car in the previous task run.
-static uint32_t dist_frontPrev_SRun;
+static uint32_t sRunPrevFrontDist;
 
 static uint8_t segmentTypeCounter;
 static uint32_t lineStart;
@@ -71,7 +71,6 @@ float sRunServoAngle;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void sRunCntrKeepDistance (void);
 static eSEGMENT_TYPE sRunGetSegmentType (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -85,7 +84,7 @@ void sRunInitStateMachines (void)
 	actLapIsFinished = false;
 
 	sRunActualParams.P		= 0.05;
-	sRunActualParams.Kp		= 0.02;
+	sRunActualParams.Kp		= 0.025;
 	sRunActualParams.Kd		= 3.5;
 	sRunActualParams.Speed	= 18;
 
@@ -99,10 +98,8 @@ void sRunInitStateMachines (void)
 	startGateFound  = false;
 	timeCounter 	= 0;
 
-	line_prevPos_SRun   = 0;
-	line_pos_SRun 	    = 0;
-	dist_front_SRun 	= 0;
-	dist_frontPrev_SRun = 0;
+	sRunActFrontDist  = 0;
+	sRunPrevFrontDist = 0;
 
 	segmentTypeCounter = 0;
 	lineTimeCounter = 0;
@@ -117,10 +114,10 @@ void sRunMainStateMachine (void)
 		case eSTATE_MAIN_WAIT_BEHIND:
 		{
 			// Check the distance change of the safety car.
-			dist_frontPrev_SRun = dist_front_SRun;
-			dist_front_SRun = sharpGetMeasurement().Distance;
+			sRunPrevFrontDist = sRunActFrontDist;
+			sRunActFrontDist = sharpGetMeasurement().Distance;
 
-			if (dist_front_SRun >= SRUN_FOLLOW_DISTANCE)
+			if (sRunActFrontDist >= SRUN_FOLLOW_DISTANCE)
 			{
 				// Trigger: safety car starts.
 				smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
@@ -529,7 +526,7 @@ void sRunParadeLapAlgorithm (void)
 		sRunActualParams.Speed	= paramListSRun.lapParade.Speed;
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
-		sRunCntrKeepDistance();
+		cntrDistance(sRunActFrontDist, sRunPrevFrontDist, sRunActualParams.P,SRUN_DIST_KEEP_SPEED_MIN, SRUN_DIST_KEEP_SPEED_MAX);
 
 		// In the right place check if we can try overtaking.
 
@@ -569,37 +566,7 @@ void sRunParadeLapAlgorithm (void)
 	}
 }
 
-
-
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-//**********************************************************************************************************************
-//! Distance P controller.
-//!
-//! @return -
-//**********************************************************************************************************************
-static void sRunCntrKeepDistance (void)
-{
-	float dist_front;
-	float dist_diff;
-	float speed;
-
-	dist_front = sharpGetMeasurement().Distance;
-	dist_diff = dist_front - SRUN_FOLLOW_DISTANCE;
-
-	speed = sRunActualParams.P * dist_diff;
-
-	if (speed < 0)
-	{
-		speed = 0;
-	}
-	else if (speed > 18)
-	{
-		speed = 17;
-	}
-
-	sRunActualParams.Speed = speed;
-}
 
 //**********************************************************************************************************************
 //!
