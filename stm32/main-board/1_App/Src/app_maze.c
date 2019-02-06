@@ -22,8 +22,13 @@
 #include "line.h"
 #include "bsp_servo.h"
 #include "speed.h"
+#include "app_controllers.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define MAZE_SPEED_TI		(50.0f)
+#define MAZE_SPEED_KC		(100.0f)
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
@@ -35,7 +40,7 @@ extern eSTATE_MAIN smMainState;
 extern cSEGMENT map[20];
 extern bool segments[12];
 extern uint32_t inclinSegment;
-extern cPD_CNTRL_PARAMS actualParams;
+extern cPD_CNTRL_PARAMS mazeActualParams;
 extern cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
  bool turnOffLineFollow;
@@ -86,15 +91,13 @@ static uint8_t txLineNumber;
 static float txLineMainLinePos;
 static float txLineSecLinePos;
 
-//! Position of the main line in the previous task period.
-extern float mazeLinePosPrev;
-//! Position of the main line in the current task period.
-extern float mazeLinePos;
-
-static float speed_current;
-static float speed_prev;
-//static uint32_t D_prev;
-//static uint32_t D_curr;
+extern float mazeActLine;
+extern float mazePrevLine;
+extern float mazeServoAngle;
+static float mazeActSpeed;
+static float mazePrevSpeed;
+static float mazeFk;
+static uint32_t mazeActSpeedDuty;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -102,8 +105,6 @@ static void 	MazeProcessRecCommands (void);
 static void 	MazeCheckRemote		   (void);
 static void 	MazeTraceInformations  (void);
 static uint32_t MazeSegmentsConverter  (void);
-static void		MazeCntrLineFollow	   (void);
-static void		MazeCntrSpeed 		   (float r_speed);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -125,8 +126,8 @@ void TaskInit_Maze (void)
 	paramList.inclination.Speed  = 15;
 
 	// Initial parameters for the line follower controller.
-	mazeLinePos = 0;
-	mazeLinePosPrev = 0;
+	mazeActLine = 0;
+	mazePrevLine = 0;
 
 	smMainState = eSTATE_MAIN_READY;
 
@@ -155,22 +156,36 @@ void Task_Maze (void* p)
 			// Check for the remote controller signal.
 			MazeCheckRemote();
 
-			// Get actual data.
-			mazeLinePosPrev = mazeLinePos;
-			mazeLinePos = lineGetSingle();
+			// Save previous sensor data.
+			mazePrevLine = mazeActLine;
+			mazePrevSpeed = mazeActSpeed;
+
+			// Get actual sensor data.
+			mazeActSpeed = speedGet();
+			mazeActLine = lineGetSingle() * 1000;
 
 			// Run the state machine until the job is done or stop signal received.
 			if (mazeFinished == false && recStopCar == true)
 			{
-				//MazeCntrSpeed (r_speed);
 				MazeMainStateMachine();
 			}
-			else if (recStopCar == true)
+
+			// Controllers.
+			if (mazeFinished == false)
+			{
+				// Control the servo.
+				mazeServoAngle = cntrlLineFollow(mazeActLine, mazePrevLine, 0, mazeActualParams.Kp, mazeActualParams.Kd);
+
+				// Control the speed.
+				mazeActSpeedDuty = cntrSpeed(mazeActualParams.Speed, mazePrevSpeed, mazeActSpeed, MAZE_SPEED_TI, &mazeFk, MAZE_SPEED_KC);
+			}
+
+			// Stop if the car has to stop (remote signal is not present).
+			if (recStopCar == true)
 			{
 				// Stop signal is received, stop the car.
-				actualParams.Speed = 0;
-				motorSetDutyCycle(0);
-				mazeLinePos = getPrevLine();
+				mazeActSpeedDuty = 0;
+				motorSetDutyCycle(0);	// Just to be serious.
 			}
 		}
 
@@ -185,15 +200,11 @@ void Task_Maze (void* p)
 			smMainState = eSTATE_MAIN_OUT;
 		}
 
-		if (mazeFinished == false)
-		{
-			// Detect line and control the servo and the speed of the car.
-			MazeCntrLineFollow();
-			motorSetDutyCycle(actualParams.Speed);
-			//MazeCntrSpeed(); //TODO
-		}
-
 		// TODO Check for frontal collision.
+
+		// Actuate.
+		motorSetDutyCycle(mazeActSpeedDuty);
+		servoSetAngle(mazeServoAngle);
 
 		// Trace out the necessary infos.
 		MazeTraceInformations();
@@ -203,74 +214,6 @@ void Task_Maze (void* p)
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-//**********************************************************************************************************************
-//! TODO
-//!
-//! @return -
-//**********************************************************************************************************************
-static void	MazeCntrLineFollow (void)
-{
-	float line_diff;
-	float servo_angle;
-	float P_modifier;
-	float D_modifier;
-
-	// Detect line.
-
-	mazeLinePos *= 1000;
-	line_diff = mazeLinePos - mazeLinePosPrev;
-
-	// Control the servo.
-	P_modifier = mazeLinePos  * actualParams.Kp;
-	D_modifier = line_diff * actualParams.Kd;
-	servo_angle = -0.75f * (P_modifier + D_modifier);
-
-	// Actuate.
-	if (turnOffLineFollow == false)
-	{
-		servoSetAngle(servo_angle);
-	}
-
-	// Trace
-	txServoAngle = servo_angle;
-	txLineMainLinePos = mazeLinePos;
-}
-
-static void	MazeCntrSpeed (float r_speed)
-{
-	float e_speed;
-
-	float Ts = 5.0;			//sampling time in ms
-	float Ti = 50.0;			//integrating time ms
-	float beta = exp(-Ts/Ti);
-	float fk = 0;
-
-	float Umin = 10.0;
-	float Umax = 85.0;
-	float uk;
-	float kc = 100.0;
-
-	speed_prev = speed_current;				// v previous
-	speed_current = speedGet();				// V actual
-	e_speed = r_speed - speed_current;		// v diff = v wanted - v actual
-	uk = kc * e_speed + fk;
-	if(uk < Umin)
-	{
-		uk = Umin;
-	}
-	if(uk > Umax)
-	{
-		uk = Umax;
-	}
-	fk = beta*fk + ( 1 - beta*uk);
-
-	actualParams.Speed = (uint32_t) uk;
-
-	// Actuate.
-	//motorSetDutyCycle(actualParams.Speed);
-
-}
 
 //**********************************************************************************************************************
 //!	This function translates the commands of the CDT application and answers them.
@@ -356,7 +299,7 @@ static void MazeCheckRemote	(void)
 	if (remoteGetState())
 	{
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		recStopCar |= false;
+		recStopCar &= false;
 	}
 	else
 	{
@@ -377,9 +320,9 @@ static void MazeTraceInformations  (void)
 	txMainSM        = smMainState;
 	txSegments      = MazeSegmentsConverter();
 	txActState      = smMainState;
-	txActKp         = actualParams.Kp;
-	txActKd         = actualParams.Kd;
-	txActSpeed      = actualParams.Speed;
+	txActKp         = mazeActualParams.Kp;
+	txActKd         = mazeActualParams.Kd;
+	txActSpeed      = mazeActualParams.Speed;
 	txInclinSegment = inclinSegment;
 
 	traceBluetooth(BT_LOG_MAZE_MAIN_SM,        &txMainSM);

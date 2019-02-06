@@ -18,8 +18,15 @@
 #include "bsp_servo.h"
 #include "bsp_sharp.h"
 #include "remote.h"
+#include "app_controllers.h"
+#include "speed.h"
+#include "app_speedRun_StateMachines.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
+
+#define SRUN_SPEED_TI		(50.0f)
+#define SRUN_SPEED_KC		(100.0f)
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
@@ -93,12 +100,16 @@ static uint32_t	txGetSpeed;
 extern bool tryToOvertake;
 extern eSTATE_MAIN smMainStateSRun;
 extern uint8_t actLapSegment;
-extern cPD_CNTRL_PARAMS actualParamsSRun;
+extern cPD_CNTRL_PARAMS sRunActualParams;
 extern cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
 
 extern float sRunActLine;
 extern float sRunPrevLine;
 extern float sRunServoAngle;
+static float sRunActSpeed;
+static float sRunPrevSpeed;
+static float sRunFk;
+static uint32_t sRunActSpeedDuty;
 
 static float txSteerWheelAngle;
 static float txServoAngle;
@@ -142,6 +153,8 @@ void TaskInit_SpeedRun (void)
 	// Init state machines
 	sRunInitStateMachines();
 
+	sRunFk = 0;
+
 	// Task can be created now.
 	xTaskCreate(Task_SpeedRun,
 				"TASK_SPEED_RUN",
@@ -169,28 +182,36 @@ void Task_SpeedRun (void* p)
 		// Receive and process the data from the CDT application.
 		sRunProcessRecCommands();
 
-		// Get actual data.
+		// Save previous sensor data.
 		sRunPrevLine = sRunActLine;
-		sRunActLine = lineGetSingle() * 1000;
+		sRunPrevSpeed = sRunActSpeed;
 
-		// Follow line servo angle.
-		if (speedRunStarted == true)
-		{
-			// Detect line and control the servo and the speed of the car.
-			sRunCntrLineFollow();
-		}
+		// Get actual sensor data.
+		sRunActLine = lineGetSingle() * 1000;
+		sRunActSpeed = speedGet();
 
 		// Main state machine that drive though the speed run track.
 		if (speedRunStarted == true  && recStopCar == false)
 		{
 			sRunMainStateMachine();
-			// TODO drive state machine needs to follow in which segment we are.
 		}
-		else if (recStopCar == true)
+
+		// Controllers.
+		if (speedRunStarted == true)
+		{
+			// Control the servo.
+			sRunServoAngle = cntrlLineFollow(sRunActLine, sRunPrevLine, sRunActualParams.P, sRunActualParams.Kp, sRunActualParams.Kd);
+
+			// Control the speed.
+			sRunActSpeedDuty = cntrSpeed(sRunActualParams.Speed, sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunFk, SRUN_SPEED_KC);
+		}
+
+		// Stop if the car has to stop (remote signal is not present).
+		if (recStopCar == true)
 		{
 			// Stop signal is received, stop the car.
-			actualParamsSRun.Speed = 0;
-			motorSetDutyCycle(0);
+			sRunActSpeedDuty = 0;
+			motorSetDutyCycle(0);	// Just to be serious.
 		}
 
 		// Check the buttons.
@@ -200,7 +221,7 @@ void Task_SpeedRun (void* p)
 		// TODO Check for frontal collision.
 
 		// Actuate.
-		motorSetDutyCycle(actualParamsSRun.Speed);
+		motorSetDutyCycle(sRunActSpeedDuty);
 		servoSetAngle(sRunServoAngle);
 
 		// Trace out the speed run informations.
@@ -335,10 +356,10 @@ static void sRunTraceInformations  (void)
 {
 	txMainSm   = smMainStateSRun;
 	txActState = actLapSegment;
-	txActP	   = actualParamsSRun.P;
-	txActKp	   = actualParamsSRun.Kp;
-	txActKd    = actualParamsSRun.Kd;
-	txActSpeed = actualParamsSRun.Speed;
+	txActP	   = sRunActualParams.P;
+	txActKp	   = sRunActualParams.Kp;
+	txActKd    = sRunActualParams.Kd;
+	txActSpeed = sRunActualParams.Speed;
 
 	traceBluetooth(BT_LOG_SRUN_MAIN_SM, 	&txMainSm);
 	traceBluetooth(BT_LOG_SRUN_ACT_STATE, 	&txActState);
@@ -565,7 +586,7 @@ static void sRunCheckStartCondition (void)
 //!
 //! @return -
 //**********************************************************************************************************************
-static void SRun_CheckRemote	(void)
+static void SRun_CheckRemote (void)
 {
 	if (remoteGetState())
 	{

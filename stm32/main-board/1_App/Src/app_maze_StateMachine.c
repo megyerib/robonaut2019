@@ -47,7 +47,7 @@ uint32_t alreadyFoundSegment;
 //bool turnOffLineFollow;
 
 //! The controller parameters of the actual state in which the car is currently.
-cPD_CNTRL_PARAMS actualParams;
+cPD_CNTRL_PARAMS mazeActualParams;
 //! List of the controller parameters for all of the main states.
 cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
@@ -63,8 +63,9 @@ extern QueueHandle_t qNaviN_f;
 extern QueueHandle_t qNaviE_f;
 extern QueueHandle_t qNaviPSI_f;
 
-float mazeLinePos;
-float mazeLinePosPrev;
+float mazeActLine;
+float mazePrevLine;
+float mazeServoAngle;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -72,7 +73,7 @@ static void mazeStateMachineDiscovery   (void);
 static void mazeStateMachineInclination (void);
 
 static bool mazeCrossingAlreadyFound 	(const cNAVI_STATE crossingNaviState);
-static void mazeUpdateMap 				(const RoadSignal crossingType);
+static void mazeUpdateMap 				(const CROSSING_TYPE crossingType);
 static void mazeCheckDiscoveredSegments (void);
 static void mazeMergeSegments 			(void);
 
@@ -115,8 +116,11 @@ void MazeStateMachinesInit (void)
     //
 	//turnOffLineFollow = false;
 
-	mazeLinePos = 0.0f;
-	mazeLinePosPrev = 0.0f;
+	mazeActLine = 0.0f;
+	mazePrevLine = 0.0f;
+
+	(void)exitRoute;		// TODO
+	(void)naviStateCar;		// TODO
 
 	//inclinTimeUp =  false;
 }
@@ -129,7 +133,7 @@ void MazeMainStateMachine (void)
 		case eSTATE_MAIN_READY:
 		{
 			// Standing in the start position and radio trigger.
-			actualParams.Speed = 0;
+			mazeActualParams.Speed = 0;
 
 			// TODO on race use this! : if (startGetState() == s0)
 			if (true)
@@ -146,9 +150,9 @@ void MazeMainStateMachine (void)
 		case eSTATE_MAIN_DISCOVER:
 		{
 			// Load in the control parameters.
-			actualParams.Kp = paramList.discover.Kp;
-			actualParams.Kd = paramList.discover.Kd;
-			actualParams.Speed = paramList.discover.Speed;
+			mazeActualParams.Kp = paramList.discover.Kp;
+			mazeActualParams.Kd = paramList.discover.Kd;
+			mazeActualParams.Speed = paramList.discover.Speed;
 
 			// Map making, navigation, path tracking.
 			//TODO implement
@@ -166,9 +170,9 @@ void MazeMainStateMachine (void)
 		case eSTATE_MAIN_INCLINATION:
 		{
 			// Load in control parameters.
-			actualParams.Kp = paramList.inclination.Kp;
-			actualParams.Kd = paramList.inclination.Kd;
-			actualParams.Speed = paramList.inclination.Speed;
+			mazeActualParams.Kp = paramList.inclination.Kp;
+			mazeActualParams.Kd = paramList.inclination.Kd;
+			mazeActualParams.Speed = paramList.inclination.Speed;
 
 			mazeStateMachineInclination();
 
@@ -225,19 +229,19 @@ static void mazeStateMachineDiscovery (void)
 			if (map[actualSegment].positive[0] != 0)
 			{
 				// Turn left.
-				mazeLinePos = getLeftLine();
+				mazeActLine = getLeftLine();
 				actualSegment = map[actualSegment].positive[0];
 			}
 			else if (map[actualSegment].positive[1] != 0)
 			{
 				// Turn middle.
-				mazeLinePos = getPrevLine();
+				mazeActLine = getPrevLine();
 				actualSegment = map[actualSegment].positive[1];
 			}
 			else if (map[actualSegment].positive[2] != 0)
 			{
 				// Turn right.
-				mazeLinePos = getRightLine();
+				mazeActLine = getRightLine();
 				actualSegment = map[actualSegment].positive[2];
 			}
 		}
@@ -247,19 +251,19 @@ static void mazeStateMachineDiscovery (void)
 			if (map[actualSegment].positive[0] != alreadyFoundSegment && map[actualSegment].positive[0] != 0)
 			{
 				// Turn left.
-				mazeLinePos = getLeftLine();
+				mazeActLine = getLeftLine();
 				actualSegment = map[actualSegment].positive[0];
 			}
 			else if (map[actualSegment].positive[1] != alreadyFoundSegment && map[actualSegment].positive[1] != 0)
 			{
 				// Turn middle.
-				mazeLinePos = getPrevLine();
+				mazeActLine = getPrevLine();
 				actualSegment = map[actualSegment].positive[1];
 			}
 			else if (map[actualSegment].positive[2] != alreadyFoundSegment && map[actualSegment].positive[2] != 0)
 			{
 				// Turn right.
-				mazeLinePos = getRightLine();
+				mazeActLine = getRightLine();
 				actualSegment = map[actualSegment].positive[2];
 			}
 			else
@@ -269,17 +273,17 @@ static void mazeStateMachineDiscovery (void)
 
 				if (random >= 5)
 				{
-					mazeLinePos = getPrevLine();
+					mazeActLine = getPrevLine();
 				}
 				else
 				{
 					if (map[actualSegment].positive[0] != 0)
 					{
-						mazeLinePos = getLeftLine();
+						mazeActLine = getLeftLine();
 					}
 					else if (map[actualSegment].positive[2] != 0)
 					{
-						mazeLinePos = getRightLine();
+						mazeActLine = getRightLine();
 					}
 				}
 			}
@@ -312,7 +316,7 @@ static void mazeStateMachineDiscovery (void)
 	else
 	{
 		// Follow the main line.
-		mazeLinePos = getPrevLine();
+		mazeActLine = getPrevLine();
 	}
 
 }
@@ -321,6 +325,9 @@ static void mazeStateMachineInclination (void)
 {
 	CROSSING_TYPE crossing;
 	uint8_t lineNbr;
+
+	(void)crossing;	// TODO
+	(void)lineNbr;	// TODO
 
 	crossing = getCrossingType();
 	lineNbr = lineGetRawFrontFloat().cnt;
@@ -417,7 +424,7 @@ static bool mazeCrossingAlreadyFound (const cNAVI_STATE crossingNaviState)
 	return newFound;
 }
 
-static void mazeUpdateMap (const RoadSignal crossingType)
+static void mazeUpdateMap (const CROSSING_TYPE crossingType)
 {
 	// Save navigation status.
 	map[actualSegment].end = naviStateCrossing;
@@ -929,7 +936,7 @@ static void mazePlanExitRoute (void)
 	}
 
 
-	/*uint8_t plan[12];
+	uint8_t plan[12];
 	uint8_t wantedSeg;
 	uint8_t preExitSeg[3];
 	uint8_t secondSeg[3];
