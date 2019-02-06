@@ -16,7 +16,7 @@
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define	APP_TRACE_BT_ON			1
-#define APP_TRACE_USB_ON		0
+#define APP_TRACE_USB_ON		1
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -179,7 +179,7 @@ void TaskInit_CarDiagnosticsTool(void)
 	init.SRunSoftReset		= 0;
 	init.SRunSoftResetTo	= 0;
 	init.SRunGetState		= 0;
-	init.SRunSetState		= 0;
+	init.SRunSetState		= 99;
 	init.SRunSetP			= 0;
 	init.SRunSetKp			= 0;
 	init.SRunSetKd			= 0;

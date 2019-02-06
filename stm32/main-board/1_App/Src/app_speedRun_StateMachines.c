@@ -16,6 +16,7 @@
 #include "line.h"
 #include "speed.h"
 #include "app_controllers.h"
+#include "app_race_roadsignal.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -57,6 +58,11 @@ static uint32_t lineTimePoint;
 static uint8_t prevSegmentType;
 static bool lineNewLine;
 
+static uint8_t lineSpeedUpCounter;
+static uint8_t lineSpeedUpStart;
+static uint8_t lineSpeedUpLen;
+static bool lineEnab;
+
 float sRunActLine;
 float sRunPrevLine;
 float sRunServoAngle;
@@ -70,6 +76,7 @@ static float sRunDistFk;
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static eSEGMENT_TYPE sRunGetSegmentType (void);
+static void sRunLoadInParamsToRun (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -104,6 +111,12 @@ void sRunInitStateMachines (void)
 	segmentTypeCounter = 0;
 	lineTimeCounter = 0;
 	prevSegmentType = eSEG_LOST_TRACK;
+
+	lineSpeedUpCounter = 0;
+
+	lineEnab = true;
+
+	setRaceRs(InitFast);
 }
 
 //! Function: sRunMainStateMachine
@@ -137,6 +150,8 @@ void sRunMainStateMachine (void)
 		}
 		case eSTATE_MAIN_LAP_1:
 		{
+			sRunLoadInParamsToRun();
+
 			// Drive state machine.
 			actLapIsFinished = sRunDriveStateMachine();
 
@@ -148,6 +163,8 @@ void sRunMainStateMachine (void)
 		}
 		case eSTATE_MAIN_LAP_2:
 		{
+			sRunLoadInParamsToRun();
+
 			// Drive state machine.
 			actLapIsFinished = sRunDriveStateMachine();
 
@@ -159,6 +176,8 @@ void sRunMainStateMachine (void)
 		}
 		case eSTATE_MAIN_LAP_3:
 		{
+			sRunLoadInParamsToRun();
+
 			// Drive state machine.
 			actLapIsFinished = sRunDriveStateMachine();
 
@@ -186,33 +205,83 @@ void sRunMainStateMachine (void)
 bool sRunDriveStateMachine (void)	// TODO implementation
 {
 	bool lapFinished = false;
-	eSEGMENT_TYPE segmentType;
+	RACE_RS roadSign;
 
-	// Load in control parameters.
+	roadSign = getRaceRs();
+
 	switch (actLapSegment)
 	{
-		case eSTATE_MAIN_LAP_1:
+		case 0:
 		{
-			sRunActualParams.P 		= paramListSRun.lap1[actLapSegment].P;
-			sRunActualParams.Kp 	= paramListSRun.lap1[actLapSegment].Kp;
-			sRunActualParams.Kd 	= paramListSRun.lap1[actLapSegment].Kd;
-			sRunActualParams.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
+			if (roadSign != Fast)
+			{
+				actLapSegment = 1;
+			}
 			break;
 		}
-		case eSTATE_MAIN_LAP_2:
+		case 1:
 		{
-			sRunActualParams.P 		= paramListSRun.lap2[actLapSegment].P;
-			sRunActualParams.Kp 	= paramListSRun.lap2[actLapSegment].Kp;
-			sRunActualParams.Kd 	= paramListSRun.lap2[actLapSegment].Kd;
-			sRunActualParams.Speed 	= paramListSRun.lap2[actLapSegment].Speed;
+			if (roadSign == Fast)
+			{
+				actLapSegment = 2;
+			}
 			break;
 		}
-		case eSTATE_MAIN_LAP_3:
+		case 2:
 		{
-			sRunActualParams.P 		= paramListSRun.lap3[actLapSegment].P;
-			sRunActualParams.Kp 	= paramListSRun.lap3[actLapSegment].Kp;
-			sRunActualParams.Kd 	= paramListSRun.lap3[actLapSegment].Kd;
-			sRunActualParams.Speed 	= paramListSRun.lap3[actLapSegment].Speed;
+			if (roadSign != Fast)
+			{
+				actLapSegment = 3;
+			}
+			break;
+		}
+		case 3:
+		{
+			if (roadSign == Fast)
+			{
+				actLapSegment = 4;
+			}
+			break;
+		}
+		case 4:
+		{
+			if (roadSign != Fast)
+			{
+				actLapSegment = 5;
+			}
+			break;
+		}
+		case 5:
+		{
+			if (roadSign == Fast)
+			{
+				actLapSegment = 6;
+			}
+			break;
+		}
+		case 6:
+		{
+			if (roadSign != Fast)
+			{
+				actLapSegment = 7;
+			}
+			break;
+		}
+		case 7:
+		{
+			if (roadSign == Fast)
+			{
+				actLapSegment = 8;
+			}
+			break;
+		}
+		case 8:
+		{
+			if (roadSign != Fast)
+			{
+				actLapSegment = 0;
+				lapFinished = true;
+			}
 			break;
 		}
 		default:
@@ -221,8 +290,21 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 		}
 	}
 
-	// Determine which segment type the car is on.
-	segmentType = sRunGetSegmentType();
+	return lapFinished;
+
+	/*bool lapFinished = false;
+	eSEGMENT_TYPE segmentType;
+
+	// Determine which segment type the car is on
+	if (lineEnab == true)
+	{
+		segmentType = sRunGetSegmentType();
+	}
+	else
+	{
+		segmentType = eSEG_SLOW_OR_SPEED;
+	}
+
 
 	// Search for the end of the segment: 3 continuous lines (slow down segment).
 	switch (actLapSegment)
@@ -250,14 +332,28 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 			// Find acceleration segment (3 discrete line segments).
 			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-				actLapSegment = 3;
+				if (lineSpeedUpCounter == 0)
+				{
+					lineEnab = false;
+					lineSpeedUpStart = speedGetDistance();
+				}
+
+				lineSpeedUpCounter++;
+				lineLenght = speedGetDistance();
+
+				if (lineLenght - lineSpeedUpStart > 0.8)
+				{
+					lineEnab = true;
+					lineSpeedUpCounter = 0;
+					actLapSegment = 3;
+				}
 			}
 			break;
 		}
 		case 3:
 		{
 			// Find main track (1 line).
-			if (segmentType == eSEG_STRAIGHT)
+			if (segmentType == eSEG_CORNER //eSEG_STRAIGHT)
 			{
 				actLapSegment = 4;
 			}
@@ -286,14 +382,28 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 			// Find acceleration segment (3 discrete line segments).
 			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-				actLapSegment = 7;
+				if (lineSpeedUpCounter == 0)
+				{
+					lineEnab = false;
+					lineSpeedUpStart = speedGetDistance();
+				}
+
+				lineSpeedUpCounter++;
+				lineLenght = speedGetDistance();
+
+				if (lineLenght - lineSpeedUpStart > 0.8)
+				{
+					lineEnab = true;
+					lineSpeedUpCounter = 0;
+					actLapSegment = 7;
+				}
 			}
 			break;
 		}
 		case 7:
 		{
 			// Find main track (1 line).
-			if (segmentType == eSEG_STRAIGHT)
+			if (segmentType == eSEG_CORNER //eSEG_STRAIGHT)
 			{
 				actLapSegment = 8;
 			}
@@ -322,14 +432,28 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 			// Find acceleration segment (3 discrete line segments).
 			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-				actLapSegment = 11;
+				if (lineSpeedUpCounter == 0)
+				{
+					lineEnab = false;
+					lineSpeedUpStart = speedGetDistance();
+				}
+
+				lineSpeedUpCounter++;
+				lineLenght = speedGetDistance();
+
+				if (lineLenght - lineSpeedUpStart > 0.8)
+				{
+					lineEnab = true;
+					lineSpeedUpCounter = 0;
+					actLapSegment = 11;
+				}
 			}
 			break;
 		}
 		case 11:
 		{
 			// Find main track (1 line).
-			if (segmentType == eSEG_STRAIGHT)
+			if (segmentType == eSEG_CORNER //eSEG_STRAIGHT)
 			{
 				actLapSegment = 12;
 			}
@@ -359,14 +483,28 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 			// Find acceleration segment (3 discrete line segments).
 			if (segmentType == eSEG_SLOW_OR_SPEED)
 			{
-				actLapSegment = 15;
+				if (lineSpeedUpCounter == 0)
+				{
+					lineEnab = false;
+					lineSpeedUpStart = speedGetDistance();
+				}
+
+				lineSpeedUpCounter++;
+				lineLenght = speedGetDistance();
+
+				if (lineLenght - lineSpeedUpStart > 0.8)
+				{
+					lineEnab = true;
+					lineSpeedUpCounter = 0;
+					actLapSegment = 15;
+				}
 			}
 			break;
 		}
 		case 15:
 		{
 			// At the end of the segment.
-			if (segmentType == eSEG_STRAIGHT)
+			if (segmentType == eSEG_CORNER //eSEG_STRAIGHT)
 			{
 				// The lap is complete, stop
 				lapFinished = true;
@@ -380,7 +518,7 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 		}
 	}
 
-	return lapFinished;
+	return lapFinished;*/
 }
 
 //! Function: sRunOvertakeStateMachine
@@ -529,8 +667,6 @@ void sRunParadeLapAlgorithm (void)
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
 		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT, sRunPrevFrontDist, sRunActFrontDist, 0.03f, 0.0f, 3.0f);
 
-		// In the right place check if we can try overtaking.
-
 		// Try to overtake if it is enabled.
 		if (tryToOvertake == true && actLapSegment == SRUN_OVERTAKE_SEGMENT)
 		{
@@ -544,7 +680,7 @@ void sRunParadeLapAlgorithm (void)
 			// Follow the safety car until the last corner.
 
 			// Start gate means a new lap.
-			if (startGateFound == true)
+			if (sRunDriveStateMachine() == true)
 			{
 				smMainStateSRun = eSTATE_MAIN_LAP_1;
 			}
@@ -620,7 +756,7 @@ static eSEGMENT_TYPE sRunGetSegmentType (void)
 		case 1:	// Straight segment
 		{
 			// On line since a given distance or a given time.
-			if (lineLenght > SRUN_SEG_MIN_LEN || lineTimeCounter > 10)
+			if (lineLenght > SRUN_SEG_MIN_LEN /*|| lineTimeCounter > 10*/)
 			{
 				// It is not a noise, it is a main single line.
 				if (prevSegmentType != eSEG_SPEED_UP)
@@ -666,7 +802,7 @@ static eSEGMENT_TYPE sRunGetSegmentType (void)
 				{
 					actualSegmentType = eSEG_SLOW_DOWN;
 				}
-				else if
+				else if (lineLenght > )
 				{
 					actualSegmentType = eSEG_SPEED_UP;
 				}*/
@@ -735,4 +871,41 @@ static eSEGMENT_TYPE sRunGetSegmentType (void)
 	}
 
 	return actualSegmentType;
+}
+
+
+static void sRunLoadInParamsToRun (void)
+{
+	// Load in control parameters.
+	switch (smMainStateSRun)
+	{
+		case eSTATE_MAIN_LAP_1:
+		{
+			sRunActualParams.P 		= paramListSRun.lap1[actLapSegment].P;
+			sRunActualParams.Kp 	= paramListSRun.lap1[actLapSegment].Kp;
+			sRunActualParams.Kd 	= paramListSRun.lap1[actLapSegment].Kd;
+			sRunActualParams.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
+			break;
+		}
+		case eSTATE_MAIN_LAP_2:
+		{
+			sRunActualParams.P 		= paramListSRun.lap2[actLapSegment].P;
+			sRunActualParams.Kp 	= paramListSRun.lap2[actLapSegment].Kp;
+			sRunActualParams.Kd 	= paramListSRun.lap2[actLapSegment].Kd;
+			sRunActualParams.Speed 	= paramListSRun.lap2[actLapSegment].Speed;
+			break;
+		}
+		case eSTATE_MAIN_LAP_3:
+		{
+			sRunActualParams.P 		= paramListSRun.lap3[actLapSegment].P;
+			sRunActualParams.Kp 	= paramListSRun.lap3[actLapSegment].Kp;
+			sRunActualParams.Kd 	= paramListSRun.lap3[actLapSegment].Kd;
+			sRunActualParams.Speed 	= paramListSRun.lap3[actLapSegment].Speed;
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
 }
