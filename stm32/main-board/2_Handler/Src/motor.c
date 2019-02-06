@@ -60,6 +60,7 @@ void motorSetDutyCycle(int8_t d)
     {
 		d_buf[i] = '-';
 		i++;
+		d *= -1;
     }
 
 	// sprintf screws everything

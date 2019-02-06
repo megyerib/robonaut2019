@@ -14,11 +14,13 @@
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define SPEED_TS				(5.0f)	//! Ts sampling time in ms (task period).
-#define SPEED_CONTROL_VAR_MIN	(0.0f)	//!< u(t) control variable minimal value.
+#define SPEED_CONTROL_VAR_MIN	(-0.3f)//!< u(t) control variable minimal value.
 #define SPEED_CONTROL_VAR_MAX	(0.85f) //!< u(t) control variable maximal value.
+#define DELTA_UK_MAX            (0.05f)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
+float uk_prev = 0;
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -50,6 +52,15 @@ uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actS
 	// Calculate control variable.
 	uk = kc * e_speed + (*fk);
 
+	/*if (uk > uk_prev + DELTA_UK_MAX)
+	{
+		uk = uk_prev + DELTA_UK_MAX;
+	}
+	else if (uk < uk_prev - DELTA_UK_MAX)
+	{
+		uk = uk_prev - DELTA_UK_MAX;
+	}*/
+
 	// Saturation.
 	if(uk < SPEED_CONTROL_VAR_MIN)
 	{
@@ -59,6 +70,8 @@ uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actS
 	{
 		uk = SPEED_CONTROL_VAR_MAX;
 	}
+
+	uk_prev = uk;
 
 	// Update fk FOXBORO parameter.
 	*fk = beta * (*fk) + ( 1 - beta * uk);
