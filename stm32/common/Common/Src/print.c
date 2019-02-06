@@ -25,6 +25,7 @@ void print_uint32_t(uint32_t num, char* dst, int* len)
 	if (num == 0)
 	{
 		dst[0] = '0';
+		*len = 1;
 	}
 	else
 	{

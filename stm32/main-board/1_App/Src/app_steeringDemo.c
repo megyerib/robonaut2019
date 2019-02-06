@@ -128,10 +128,11 @@ void Task_steeringDemo(void* p)
 
 		// ACTUATE _________________________________________
 
+		servoSetAngle(angle); // Servo enabled anyway
+
 		if (actuateEnabled)
 		{
 			motorSetDutyCycle(motor_d);
-			servoSetAngle(angle);
 		}
 
 		// TRACE ___________________________________________
