@@ -19,11 +19,14 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define SRUN_SEG_MIN_LEN			(20U)	//!< mm
-#define SRUN_SPEED_SUB_SEG_LEN_MAX 	(100U)  //!< mm
+#define SRUN_SEG_MIN_LEN			(20U)		//!< mm
+#define SRUN_SPEED_SUB_SEG_LEN_MAX 	(100U)  	//!< mm
 
-#define SRUN_DIST_KEEP_SPEED_MIN	(0.5f)	//!< m/s
-#define SRUN_DIST_KEEP_SPEED_MAX	(1.0f)  //!< m/s
+#define SRUN_DIST_KEEP_SPEED_MIN	(0.0f)		//!< m/s
+#define SRUN_DIST_KEEP_SPEED_MAX	(1.5f)  	//!< m/s
+#define SRUN_DIST_SETPOINT			(75u)		//!< cm
+#define SRUN_DIST_TI				(150.0f)		//!< ms
+#define SRUN_DIST_KC				(0.15f)		//!<
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -43,8 +46,8 @@ static uint32_t timeCounter;	//!< Counter for the individual timing functionalit
 static eSTATE_OVERTAKE overtakeState;	//!< Actual state of the overtake state machine.
 static bool actLapIsFinished;
 
-static uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
-static uint32_t sRunPrevFrontDist;		//! Measured distance value in front of the car in the previous task run.
+uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
+uint32_t sRunPrevFrontDist;		//! Measured distance value in front of the car in the previous task run.
 
 static uint8_t segmentTypeCounter;
 static uint32_t lineStart;
@@ -57,7 +60,10 @@ static bool lineNewLine;
 float sRunActLine;
 float sRunPrevLine;
 float sRunServoAngle;
+float sRunActSpeed;
+float sRunActSpeedDist;
 
+static float sRunDistFk;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -88,6 +94,8 @@ void sRunInitStateMachines (void)
 	startGateFound  = false;
 	timeCounter 	= 0;
 
+	sRunDistFk = 0;
+
 	sRunActFrontDist  = 0;
 	sRunPrevFrontDist = 0;
 
@@ -106,8 +114,9 @@ void sRunMainStateMachine (void)
 			// Check the distance change of the safety car.
 			sRunPrevFrontDist = sRunActFrontDist;
 			sRunActFrontDist = sharpGetMeasurement().Distance;
+			sRunActSpeed = 0;
 
-			if (sRunActFrontDist >= SRUN_FOLLOW_DISTANCE)
+			if (sRunActFrontDist >= SRUN_DIST_SETPOINT)
 			{
 				// Trigger: safety car starts.
 				smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
@@ -516,7 +525,13 @@ void sRunParadeLapAlgorithm (void)
 		sRunActualParams.Speed	= paramListSRun.lapParade.Speed;
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
-		cntrDistance(sRunActFrontDist, sRunPrevFrontDist, sRunActualParams.P,SRUN_DIST_KEEP_SPEED_MIN, SRUN_DIST_KEEP_SPEED_MAX);
+		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT,
+										sRunActFrontDist,
+										SRUN_DIST_TI,
+										&sRunDistFk,
+										SRUN_DIST_KC,
+										SRUN_DIST_KEEP_SPEED_MIN,
+										SRUN_DIST_KEEP_SPEED_MAX);
 
 		// In the right place check if we can try overtaking.
 

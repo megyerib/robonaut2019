@@ -184,8 +184,11 @@ void Task_Maze (void* p)
 		// TODO Check for frontal collision.
 
 		// Actuate.
-		motorSetDutyCycle(mazeActSpeedDuty);
-		servoSetAngle(mazeServoAngle);
+		if (mazeFinished == false)
+		{
+			motorSetDutyCycle(mazeActSpeedDuty);
+			servoSetAngle(mazeServoAngle);
+		}
 
 		// Trace out the necessary infos.
 		MazeTraceInformations();

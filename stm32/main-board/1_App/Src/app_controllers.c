@@ -9,7 +9,7 @@
 // Includes ------------------------------------------------------------------------------------------------------------
 
 #include "app_common.h"
-#include <math.h>	// TODO added
+#include <math.h>
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -41,14 +41,14 @@ float cntrlLineFollow (const float actLine, const float prevLine, const float P,
 uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actSpeed, const float Ti, float* fk, const float kc)
 {
 	float e_speed;
-	float beta = expf(-SPEED_TS / Ti);	// TODO expf, SPEED_TS
+	float beta = expf(-SPEED_TS / Ti);
 	float uk;
 
 	// v diff = v wanted - v actual
 	e_speed = r_speed - actSpeed;
 
 	// Calculate control variable.
-	uk = kc * e_speed + *fk;
+	uk = kc * e_speed + (*fk);
 
 	// Saturation.
 	if(uk < SPEED_CONTROL_VAR_MIN)
@@ -63,32 +63,42 @@ uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actS
 	// Update fk FOXBORO parameter.
 	*fk = beta * (*fk) + ( 1 - beta * uk);
 
-	return (uint32_t)(uk);
+	return (uint32_t)(uk*100);
 }
 
 //! Function: cntrDistance
-float cntrDistance (const float actDist, const float followDist, const float p, const float minSpeed, const float maxSpeed)
+float cntrDistance (const float followDist,
+					const float actDist,
+					const float Ti,
+					float* fk,
+					const float kc,
+					const float speedMin,
+					const float speedMax)
 {
-	float distDiff;
-	float speed;
+	float e_dist;
+	float beta = expf(-SPEED_TS / Ti);
+	float uk;
 
-	// Calculate the error.
-	distDiff = actDist - followDist;
+	// d diff = d wanted - d actual
+	e_dist = actDist - followDist;
 
-	// Calculate process variable (new speed).
-	speed = p * distDiff;
+	// Calculate control variable.
+	uk = kc * e_dist + (*fk);
 
-	// Saturate the result.
-	if (minSpeed < 0)
+	// Saturation.
+	if(uk < speedMin)
 	{
-		speed = minSpeed;
+		uk = speedMin;
 	}
-	else if (speed > maxSpeed)
+	if(uk > speedMax)
 	{
-		speed = maxSpeed;
+		uk = speedMax;
 	}
 
-	return speed;
+	// Update fk FOXBORO parameter.
+	*fk = beta * (*fk) + ( 1 - beta * uk);
+
+	return uk;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

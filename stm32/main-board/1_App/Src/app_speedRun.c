@@ -24,8 +24,10 @@
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define SRUN_SPEED_TI		(50.0f)
-#define SRUN_SPEED_KC		(100.0f)
+#define SRUN_SPEED_TI				(50.0f)
+#define SRUN_SPEED_KC				(100.0f)
+
+#define SRUN_SHARP_DIST_MAX			(150)		//!<
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -80,10 +82,13 @@ extern cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
 extern float sRunActLine;
 extern float sRunPrevLine;
 extern float sRunServoAngle;
-static float sRunActSpeed;
+extern float sRunActSpeed;
+extern float sRunActSpeedDist;
 static float sRunPrevSpeed;
-static float sRunFk;
+static float sRunSpeedFk;
 static uint32_t sRunActSpeedDuty;
+extern uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
+extern uint32_t sRunPrevFrontDist;
 
 static float txSteerWheelAngle;
 static float txServoAngle;
@@ -128,7 +133,7 @@ void TaskInit_SpeedRun (void)
 	sRunInitStateMachines();
 
 	// Variable for the speed controller.
-	sRunFk = 0;
+	sRunSpeedFk = 0;
 
 	// Task can be created now.
 	xTaskCreate(Task_SpeedRun,
@@ -160,10 +165,16 @@ void Task_SpeedRun (void* p)
 		// Save previous sensor data.
 		sRunPrevLine = sRunActLine;
 		sRunPrevSpeed = sRunActSpeed;
+		sRunPrevFrontDist = sRunActFrontDist;
 
 		// Get actual sensor data.
 		sRunActLine = lineGetSingle() * 1000;
 		sRunActSpeed = speedGet();
+		sRunActFrontDist = sharpGetMeasurement().Distance;
+
+		// Saturate to valid distance range.
+		if (sRunActFrontDist > SRUN_SHARP_DIST_MAX)
+			sRunActFrontDist = SRUN_SHARP_DIST_MAX;
 
 		// Main state machine that drive though the speed run track.
 		if (speedRunStarted == true  && recStopCar == false)
@@ -174,11 +185,23 @@ void Task_SpeedRun (void* p)
 		// Controllers.
 		if (speedRunStarted == true)
 		{
+			if (smMainStateSRun == eSTATE_MAIN_WAIT_BEHIND)
+			{
+				sRunActSpeedDuty = 0;
+			}
+			else if (smMainStateSRun == eSTATE_MAIN_PARADE_LAP)
+			{
+				// Control the speed.
+				sRunActSpeedDuty = cntrSpeed(sRunActSpeedDist, sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunSpeedFk, SRUN_SPEED_KC);
+			}
+			else
+			{
+				// Control the speed.
+				sRunActSpeedDuty = cntrSpeed(((float)sRunActualParams.Speed/10.0f), sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunSpeedFk, SRUN_SPEED_KC);
+			}
+
 			// Control the servo.
 			sRunServoAngle = cntrlLineFollow(sRunActLine, sRunPrevLine, sRunActualParams.P, sRunActualParams.Kp, sRunActualParams.Kd);
-
-			// Control the speed.
-			sRunActSpeedDuty = cntrSpeed(sRunActualParams.Speed, sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunFk, SRUN_SPEED_KC);
 		}
 
 		// Stop if the car has to stop (remote signal is not present).
