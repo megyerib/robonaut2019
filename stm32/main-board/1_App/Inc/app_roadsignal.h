@@ -28,13 +28,13 @@ typedef enum
 }
 CROSSING_TYPE;
 
-typedef enum
+/*typedef enum
 {
 	NoSignal,
 	Accelerate,
 	Brake
 }
-RACE_ROAD_SIGNAL;
+RACE_ROAD_SIGNAL;*/
 
 // Variables -----------------------------------------------------------------------------------------------------------
 
@@ -43,10 +43,11 @@ RACE_ROAD_SIGNAL;
 void TaskInit_roadSignal(void);
 void Task_roadSignal(void* p);
 CROSSING_TYPE getCrossingType();
-RACE_ROAD_SIGNAL getRaceRoadSignal();
+//RACE_ROAD_SIGNAL getRaceRoadSignal();
 
 float getPrevLine();
 float getLeftLine();
 float getRightLine();
+float get3Lines();
 
 // END -----------------------------------------------------------------------------------------------------------------

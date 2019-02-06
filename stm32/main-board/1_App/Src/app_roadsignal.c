@@ -24,6 +24,8 @@
 #include "start.h"
 #include "inert.h"
 
+#include "app_race_roadsignal.h"
+
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define LINE_BUF_SIZE   (3u)
@@ -80,9 +82,6 @@ uint32_t inclinStopTime = 400;
 bool turnOffLineFollow = false;
 uint32_t motor = 15;
 
-static float startPoistion;
-static float actualPosition;
-
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static int   remoteHandle();
@@ -99,16 +98,14 @@ static void traceDistance();
 static void traceInt(int i);
 
 static CROSSING_TYPE examineExit(int length, LINE_TYPE ltype);
+static int isSingle(LINE_TYPE line);
+
+static int isDouble(LINE_TYPE line);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void TaskInit_roadSignal(void)
 {
-	inclinSegment = 0;
-	turnOffLineFollow = false;
-
-	inclinTimeUp =  false;
-
     xTaskCreate(Task_roadSignal,     // Task function
                 "TASK_ROAD_SIGNAL",  // Task name (string)
                 DEFAULT_STACK_SIZE,  // Stack size
@@ -120,116 +117,23 @@ void TaskInit_roadSignal(void)
 void Task_roadSignal(void* p)
 {
 	float line;
-	CROSSING_TYPE crossing;
-
-	while (startGetState() != s0)
-	{
-		vTaskDelay(5);
-	}
+	LINE_TYPE lineType = Single, prevLineType = Single;
+	//CROSSING_TYPE crossing;
 
 	while (1)
 	{
-		crossing = getCrossingType();
+		line = get3Lines();
 
-		if (crossing != NoCrossing)
+		getRaceRs();
+
+		/*lineType = getLineType(lineGetRawFrontFloat());
+
+		if (lineType != prevLineType)
 		{
-			if (crossing == CrossingAtoLB || crossing == CrossingAtoRB)
-			{
-				inertTriggerMeasurement();
-
-				ANGVELd angvel = inertGetAngVel();
-
-				if (random((float)angvel.omega_z))
-				{
-					line = getLeftLine();
-				}
-				else
-				{
-					line = getRightLine();
-				}
-			}
-		}
-		else
-		{
-			line = getPrevLine();
+			traceLineType(lineType);
 		}
 
-		if (/*crossing == ExitForwardLeft*/true)
-		{
-			uint8_t lineNbr = lineGetRawFrontFloat().cnt;
-
-			// Trigger maneuver.
-			if (lineNbr > 0 && inclinStarted == false)
-			{
-				turnOffLineFollow = true;
-				inclinStarted = true;
-				//inclinTime = 200;		// TODO define * 5ms
-
-				startPoistion = speedGetDistance();
-
-				// Steer in the direction
-				servoSetAngle(PI/180 * 20);
-			}
-
-			if (inclinStarted == true && inclinTimeUp == false)
-			{
-				if (startPoistion - actualPosition > 0.05)
-				{
-					inclinTimeUp =  true;
-					servoSetAngle(0);
-				}
-				else
-				{
-					actualPosition = speedGetDistance();
-				}
-			}
-
-			// Check the distance sensor for collision and go until the new line is found. If collision warning,
-			// then stop.
-
-			if (inclinTimeUp == true)
-			{
-				// New lines found -> OUT state.
-			/*	if (lineNbr > 0)
-				{
-					//lineNbr = lineGetRawFrontFloat().cnt;
-
-					if (lineGetRawFrontFloat().lines[0] < 0)
-					{
-						turnOffLineFollow = false;
-						line = lineGetSingle();
-
-						if (inclinStopTime == 0)
-						{
-							// Stop/Park behind the safety-car.
-							motor = 0;
-						}
-						else
-						{
-							inclinStopTime--;
-						}
-					}*/
-
-					if (actualPosition - startPoistion > 0.3)
-					{
-						turnOffLineFollow = false;
-						if (inclinStopTime == 0)
-						{
-							// Stop/Park behind the safety-car.
-							motor = 0;
-						}
-						else
-						{
-							inclinStopTime--;
-						}
-					}
-					else
-					{
-						actualPosition = speedGetDistance();
-					}
-			}
-
-		}
+		prevLineType = prevLine;*/
 
 		// LINE FOLLOW _____________________________________
 
@@ -312,11 +216,6 @@ CROSSING_TYPE getCrossingType()
 	}
 
 	return ret;
-}
-
-RACE_ROAD_SIGNAL getRaceRoadSignal()
-{
-
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
@@ -437,6 +336,36 @@ float getRightLine()
 	else
 	{
 		newLine = prevLine;
+	}
+
+	prevLine = newLine;
+
+	return newLine;
+}
+
+float get3Lines()
+{
+	float newLine;
+
+	LSO_FLOAT sensorOut = lineGetRawFrontFloat();
+
+	switch (sensorOut.cnt)
+	{
+		case 1:
+		{
+			newLine = sensorOut.lines[0];
+			break;
+		}
+		case 3:
+		{
+			newLine = sensorOut.lines[1];
+			break;
+		}
+		default:
+		{
+			newLine = prevLine;
+			break;
+		}
 	}
 
 	prevLine = newLine;
@@ -609,6 +538,7 @@ static void traceLineType(LINE_TYPE ltp)
 		}
 		case Triple:
 		{
+			bspBtSend((uint8_t*)"Triple\r\n", 8);
 			break;
 		}
 	}
@@ -764,6 +694,16 @@ static CROSSING_TYPE examineExit(int length, LINE_TYPE ltype)
 	}
 
 	return ret;
+}
+
+static int isSingle(LINE_TYPE line)
+{
+	return (line == Single || line == SingleLeft || line == SingleRight);
+}
+
+static int isDouble(LINE_TYPE line)
+{
+	return (line == DoubleFar || line == DoubleNearLeft || line == DoubleNearRight);
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
