@@ -15,46 +15,39 @@
 #include "motor.h"
 #include "line.h"
 #include "speed.h"
+#include "app_controllers.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
-#define SRUN_SEG_MIN_LEN			(20U)	//!< mm
-#define SRUN_SPEED_SUB_SEG_LEN_MAX 	(100U)  //!< mm
+#define SRUN_SEG_MIN_LEN			(20U)		//!< mm
+#define SRUN_SPEED_SUB_SEG_LEN_MAX 	(100U)  	//!< mm
+
+#define SRUN_DIST_KEEP_SPEED_MIN	(0.0f)		//!< m/s
+#define SRUN_DIST_KEEP_SPEED_MAX	(1.5f)  	//!< m/s
+#define SRUN_DIST_SETPOINT			(60u)		//!< cm
+#define SRUN_DIST_TI				(150.0f)		//!< ms
+#define SRUN_DIST_KC				(0.15f)		//!<
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-//! State of the speed run main state machine.
-eSTATE_MAIN smMainStateSRun;
-//! The lap is divided into a given number of segments, and this many states has a lap state machine.
-uint8_t actLapSegment;
-//! Actual state of the overtake state machine.
-static eSTATE_OVERTAKE overtakeState;
 
+eSTATE_MAIN smMainStateSRun;	//!< State of the speed run main state machine.
+uint8_t actLapSegment;			//!< The lap is divided into a given number of segments, and this many states has a lap state machine.
+
+cPD_CNTRL_PARAMS sRunActualParams;			//!< Control parameters of the actual state.
+cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;	//!< Contain all of the control parameters.
+
+bool tryToOvertake;				//!< During the Parade lap the car is allowed to try to overtake the safety car.
+static bool behindSafetyCar;	//!< Flag that indicates that the car is behind the safety car.
+static bool startGateFound;		//!< Flag that indicates if the car went through the start gate, which means a new lap is started.
+static uint32_t timeCounter;	//!< Counter for the individual timing functionalities.
+
+static eSTATE_OVERTAKE overtakeState;	//!< Actual state of the overtake state machine.
 static bool actLapIsFinished;
 
-//! Control parameters of the actual state.
-cPD_CNTRL_PARAMS actualParamsSRun;
-//! Contain all of the control parameters.
-cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
-
-//! During the Parade lap the car is allowed to try to overtake the safety car.
-bool tryToOvertake;
-//! Flag that indicates that the car is behind the safety car.
-static bool behindSafetyCar;
-//! Flag that indicates if the car went through the start gate, which means a new lap is started.
-static bool startGateFound;
-//! Counter for the individual timing functionalities.
-static uint32_t timeCounter;
-
-//! Line position in the actual task run.
-static float line_pos_SRun;
-//! Line position in the previous task run.
-static float line_prevPos_SRun;
-//! Measured distance value in front of the car in the actual task run.
-static uint32_t dist_front_SRun;
-//! Measured distance value in front of the car in the previous task run.
-static uint32_t dist_frontPrev_SRun;
+uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
+uint32_t sRunPrevFrontDist;		//! Measured distance value in front of the car in the previous task run.
 
 static uint8_t segmentTypeCounter;
 static uint32_t lineStart;
@@ -67,11 +60,15 @@ static bool lineNewLine;
 float sRunActLine;
 float sRunPrevLine;
 float sRunServoAngle;
+float sRunActSpeed;
+float sRunActSpeedDist;
 
+uint32_t sRunActDuty;
+
+static float sRunDistFk;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void sRunCntrKeepDistance (void);
 static eSEGMENT_TYPE sRunGetSegmentType (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
@@ -84,10 +81,10 @@ void sRunInitStateMachines (void)
 	overtakeState = eSTATE_OVERTAKE_LEAVE_LINE;
 	actLapIsFinished = false;
 
-	actualParamsSRun.P		= 0.05;
-	actualParamsSRun.Kp		= 0.02;
-	actualParamsSRun.Kd		= 3.5;
-	actualParamsSRun.Speed	= 18;
+	sRunActualParams.P		= 0.05;
+	sRunActualParams.Kp		= 0.025;
+	sRunActualParams.Kd		= 3.5;
+	sRunActualParams.Speed	= 18;
 
 	paramListSRun.lapParade.P = 0.05;
 	paramListSRun.lapParade.Kp = 0.025;
@@ -99,10 +96,10 @@ void sRunInitStateMachines (void)
 	startGateFound  = false;
 	timeCounter 	= 0;
 
-	line_prevPos_SRun   = 0;
-	line_pos_SRun 	    = 0;
-	dist_front_SRun 	= 0;
-	dist_frontPrev_SRun = 0;
+	sRunDistFk = 0;
+
+	sRunActFrontDist  = 0;
+	sRunPrevFrontDist = 0;
 
 	segmentTypeCounter = 0;
 	lineTimeCounter = 0;
@@ -117,10 +114,11 @@ void sRunMainStateMachine (void)
 		case eSTATE_MAIN_WAIT_BEHIND:
 		{
 			// Check the distance change of the safety car.
-			dist_frontPrev_SRun = dist_front_SRun;
-			dist_front_SRun = sharpGetMeasurement().Distance;
+			sRunPrevFrontDist = sRunActFrontDist;
+			sRunActFrontDist = sharpGetMeasurement().Distance;
+			sRunActSpeed = 0;
 
-			if (dist_front_SRun >= SRUN_FOLLOW_DISTANCE)
+			if (sRunActFrontDist >= SRUN_DIST_SETPOINT)
 			{
 				// Trigger: safety car starts.
 				smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
@@ -195,26 +193,26 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 	{
 		case eSTATE_MAIN_LAP_1:
 		{
-			actualParamsSRun.P 		= paramListSRun.lap1[actLapSegment].P;
-			actualParamsSRun.Kp 	= paramListSRun.lap1[actLapSegment].Kp;
-			actualParamsSRun.Kd 	= paramListSRun.lap1[actLapSegment].Kd;
-			actualParamsSRun.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
+			sRunActualParams.P 		= paramListSRun.lap1[actLapSegment].P;
+			sRunActualParams.Kp 	= paramListSRun.lap1[actLapSegment].Kp;
+			sRunActualParams.Kd 	= paramListSRun.lap1[actLapSegment].Kd;
+			sRunActualParams.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
 			break;
 		}
 		case eSTATE_MAIN_LAP_2:
 		{
-			actualParamsSRun.P 		= paramListSRun.lap2[actLapSegment].P;
-			actualParamsSRun.Kp 	= paramListSRun.lap2[actLapSegment].Kp;
-			actualParamsSRun.Kd 	= paramListSRun.lap2[actLapSegment].Kd;
-			actualParamsSRun.Speed 	= paramListSRun.lap2[actLapSegment].Speed;
+			sRunActualParams.P 		= paramListSRun.lap2[actLapSegment].P;
+			sRunActualParams.Kp 	= paramListSRun.lap2[actLapSegment].Kp;
+			sRunActualParams.Kd 	= paramListSRun.lap2[actLapSegment].Kd;
+			sRunActualParams.Speed 	= paramListSRun.lap2[actLapSegment].Speed;
 			break;
 		}
 		case eSTATE_MAIN_LAP_3:
 		{
-			actualParamsSRun.P 		= paramListSRun.lap3[actLapSegment].P;
-			actualParamsSRun.Kp 	= paramListSRun.lap3[actLapSegment].Kp;
-			actualParamsSRun.Kd 	= paramListSRun.lap3[actLapSegment].Kd;
-			actualParamsSRun.Speed 	= paramListSRun.lap3[actLapSegment].Speed;
+			sRunActualParams.P 		= paramListSRun.lap3[actLapSegment].P;
+			sRunActualParams.Kp 	= paramListSRun.lap3[actLapSegment].Kp;
+			sRunActualParams.Kd 	= paramListSRun.lap3[actLapSegment].Kd;
+			sRunActualParams.Speed 	= paramListSRun.lap3[actLapSegment].Speed;
 			break;
 		}
 		default:
@@ -222,9 +220,6 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 			break;
 		}
 	}
-
-	// Actuate the car
-	sRunCntrLineFollow();
 
 	// Determine which segment type the car is on.
 	segmentType = sRunGetSegmentType();
@@ -526,13 +521,13 @@ void sRunParadeLapAlgorithm (void)
 	if (behindSafetyCar == true)
 	{
 		// Load in control parameters.
-		actualParamsSRun.P 		= paramListSRun.lapParade.P;
-		actualParamsSRun.Kp 	= paramListSRun.lapParade.Kp;
-		actualParamsSRun.Kd 	= paramListSRun.lapParade.Kd;
-		actualParamsSRun.Speed	= paramListSRun.lapParade.Speed;
+		sRunActualParams.P 		= paramListSRun.lapParade.P;
+		sRunActualParams.Kp 	= paramListSRun.lapParade.Kp;
+		sRunActualParams.Kd 	= paramListSRun.lapParade.Kd;
+		sRunActualParams.Speed	= paramListSRun.lapParade.Speed;
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
-		sRunCntrKeepDistance();
+		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT, sRunPrevFrontDist, sRunActFrontDist, 0.03f, 0.0f, 3.0f);
 
 		// In the right place check if we can try overtaking.
 
@@ -559,13 +554,10 @@ void sRunParadeLapAlgorithm (void)
 	{
 		// We overtook the safety car!!! :D
 		// Speed up. Load in control parameters.
-		actualParamsSRun.P = paramListSRun.lapParade.P;
-		actualParamsSRun.Kp = paramListSRun.lapParade.Kp;
-		actualParamsSRun.Kd = paramListSRun.lapParade.Kd;
-		actualParamsSRun.Speed = paramListSRun.lapParade.Speed;
-
-		// Follow the track.
-		sRunCntrLineFollow();
+		sRunActualParams.P = paramListSRun.lapParade.P;
+		sRunActualParams.Kp = paramListSRun.lapParade.Kp;
+		sRunActualParams.Kd = paramListSRun.lapParade.Kd;
+		sRunActualParams.Speed = paramListSRun.lapParade.Speed;
 
 		// Start gate means a new lap.
 		if (startGateFound == true)
@@ -575,51 +567,7 @@ void sRunParadeLapAlgorithm (void)
 	}
 }
 
-//! Function: sRunCntrLineFollow
-void sRunCntrLineFollow (void)
-{
-	float line_diff;
-	float P_modifier;
-	float D_modifier;
-
-	// Detect line.
-	line_diff = sRunActLine - sRunPrevLine;
-
-	// Control the servo.
-	P_modifier = sRunActLine  * actualParamsSRun.Kp;
-	D_modifier = line_diff * actualParamsSRun.Kd;
-	sRunServoAngle = -0.75f * (P_modifier + D_modifier);
-}
-
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-//**********************************************************************************************************************
-//! Distance P controller.
-//!
-//! @return -
-//**********************************************************************************************************************
-static void sRunCntrKeepDistance (void)
-{
-	float dist_front;
-	float dist_diff;
-	float speed;
-
-	dist_front = sharpGetMeasurement().Distance;
-	dist_diff = dist_front - SRUN_FOLLOW_DISTANCE;
-
-	speed = actualParamsSRun.P * dist_diff;
-
-	if (speed < 0)
-	{
-		speed = 0;
-	}
-	else if (speed > 18)
-	{
-		speed = 17;
-	}
-
-	actualParamsSRun.Speed = speed;
-}
 
 //**********************************************************************************************************************
 //!

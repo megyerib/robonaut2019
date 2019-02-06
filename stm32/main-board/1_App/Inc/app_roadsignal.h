@@ -14,7 +14,7 @@
 
 typedef enum
 {
-	NoCrossing,
+	NoCrossing = 0,
 	CrossingRtoA,   // Becsatlakozás jobb keresztezõdésbe: DoubleFar, DoubleNearLeft,  SingleRight
 	CrossingLtoA,   // Becsatlakozás bal keresztezõdésbe : DoubleFar, DoubleNearRight, SingleLeft
 	CrossingAtoLB,  // Bal keresztezõdés elõre           : Single,    DoubleNearRight
