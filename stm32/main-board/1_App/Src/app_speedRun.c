@@ -194,7 +194,7 @@ void Task_SpeedRun (void* p)
 			else if (smMainStateSRun == eSTATE_MAIN_PARADE_LAP)
 			{
 				// Control the speed.
-				sRunActSpeedDuty = sRunActDuty;
+				sRunActSpeedDuty = cntrSpeed(sRunActSpeedDist, sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunSpeedFk, SRUN_SPEED_KC);;
 			}
 			else
 			{

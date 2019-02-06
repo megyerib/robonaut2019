@@ -67,7 +67,7 @@ uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actS
 }
 
 //! Function: cntrDistance
-uint32_t cntrDistance (const uint32_t followDist,
+float cntrDistance (const uint32_t followDist,
 					   const float prevSpeed,
 					   const uint32_t actDist,
 					   const float kP,
@@ -86,7 +86,7 @@ uint32_t cntrDistance (const uint32_t followDist,
 
 	if (actDist > 220)
 	{
-		speed = 13.0f;
+		speed = 0.8f;
 	}
 
 	// Saturation.
@@ -99,7 +99,7 @@ uint32_t cntrDistance (const uint32_t followDist,
 		speed = speedMax;
 	}
 
-	return (uint32_t)speed;
+	return speed;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

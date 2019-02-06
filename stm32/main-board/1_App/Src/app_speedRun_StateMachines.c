@@ -527,7 +527,7 @@ void sRunParadeLapAlgorithm (void)
 		sRunActualParams.Speed	= paramListSRun.lapParade.Speed;
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
-		sRunActDuty = cntrDistance(SRUN_DIST_SETPOINT, sRunPrevFrontDist, sRunActFrontDist, 0.5f, 0, 25);
+		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT, sRunPrevFrontDist, sRunActFrontDist, 0.03f, 0.0f, 3.0f);
 
 		// In the right place check if we can try overtaking.
 
