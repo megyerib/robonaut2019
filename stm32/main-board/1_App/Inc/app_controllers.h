@@ -38,8 +38,8 @@ float cntrlLineFollow (const float actLine,
 //! @param prevSpeed	The speed of the robot that was measured in the previous task run.
 //! @param actSpeed		The actual speed of the robot.
 //! @param Ti			The integration tie of the controller.
-//! @param fk			TODO
-//! @param kc			TODO
+//! @param fk			FOXBORO feedback constant.
+//! @param kc			Gain.
 //!
 //! @return A duty cycle given in [%].
 //**********************************************************************************************************************
@@ -51,12 +51,14 @@ uint32_t cntrSpeed (const float r_speed,
 					const float kc);
 
 //**********************************************************************************************************************
-//! P controller that calculates a TODO
+//! PI controller that calculates a TODO
 //!
 //! @return -
 //**********************************************************************************************************************
-float cntrDistance (const float actDist,
-					const float followDist,
-					const float p,
-					const float minSpeed,
-					const float maxSpeed);
+float cntrDistance (const float followDist,
+					const float actDist,
+					const float Ti,
+					float* fk,
+					const float kc,
+					const float speedMin,
+					const float speedMax);
