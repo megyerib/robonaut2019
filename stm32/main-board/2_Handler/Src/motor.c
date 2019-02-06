@@ -52,15 +52,27 @@ void motorSetTorque(int16_t torqe)
 
 }
 
-void motorSetDutyCycle(uint8_t d)
+void motorSetDutyCycle(int8_t d)
 {
-    // sprintf screws everything
-	d_buf[0] = '0' + ((d / 10) % 10);
-    d_buf[1] = '0' + d % 10;
-    d_buf[2] = '\r';
-    d_buf[3] = '\n';
+    int i = 0;
 
-    bspUartTransmit_IT(Uart_Motor, (uint8_t*) d_buf, 4);
+	if (d < 0)
+    {
+		d_buf[i] = '-';
+		i++;
+    }
+
+	// sprintf screws everything
+	d_buf[i] = '0' + ((d / 10) % 10);
+	i++;
+    d_buf[i] = '0' + d % 10;
+    i++;
+    d_buf[i] = '\r';
+    i++;
+    d_buf[i] = '\n';
+    i++;
+
+    bspUartTransmit_IT(Uart_Motor, (uint8_t*) d_buf, i);
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

@@ -20,4 +20,4 @@
 
 void motorInit();
 void motorSetTorque(int16_t torqe);
-void motorSetDutyCycle(uint8_t d);
+void motorSetDutyCycle(int8_t d);
