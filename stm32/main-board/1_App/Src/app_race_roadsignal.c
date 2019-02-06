@@ -41,7 +41,7 @@ static void traceRaceRoadSignal(RACE_RS rstype);
 RACE_RS getRaceRs()
 {
 	LINE_NUM lineNum = getLineNumFiltered();
-	RACE_RS ret = None;
+	//RACE_RS ret = None;
 	float diff = speedGetDistance() - prevTrackStart;
 
 	if (lineNum == Triple)
@@ -49,7 +49,7 @@ RACE_RS getRaceRs()
 		if (rsState == None)
 		{
 			rsState = Fast;
-			traceRaceRoadSignal(rsState);
+			//traceRaceRoadSignal(rsState);
 			prevTrackStart = speedGetDistance();
 		}
 		else if (rsState == Slow)
@@ -57,7 +57,7 @@ RACE_RS getRaceRs()
 			if (diff > 4.0f)
 			{
 				rsState = Fast;
-				traceRaceRoadSignal(rsState);
+				//traceRaceRoadSignal(rsState);
 				prevTrackStart = speedGetDistance();
 			}
 		}
@@ -66,13 +66,13 @@ RACE_RS getRaceRs()
 			if (diff > 2.0f)
 			{
 				rsState = Slow;
-				traceRaceRoadSignal(rsState);
+				//traceRaceRoadSignal(rsState);
 				prevTrackStart = speedGetDistance();
 			}
 		}
 	}
 
-	return ret;
+	return rsState;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
