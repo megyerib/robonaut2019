@@ -55,10 +55,9 @@ uint32_t cntrSpeed (const float r_speed,
 //!
 //! @return -
 //**********************************************************************************************************************
-float cntrDistance (const float followDist,
-					const float actDist,
-					const float Ti,
-					float* fk,
-					const float kc,
-					const float speedMin,
-					const float speedMax);
+uint32_t cntrDistance (const uint32_t followDist,
+					   const float prevSpeed,
+					   const uint32_t actDist,
+					   const float kP,
+					   const uint32_t speedMin,
+					   const uint32_t speedMax);

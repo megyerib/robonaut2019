@@ -24,7 +24,7 @@
 
 #define SRUN_DIST_KEEP_SPEED_MIN	(0.0f)		//!< m/s
 #define SRUN_DIST_KEEP_SPEED_MAX	(1.5f)  	//!< m/s
-#define SRUN_DIST_SETPOINT			(75u)		//!< cm
+#define SRUN_DIST_SETPOINT			(60u)		//!< cm
 #define SRUN_DIST_TI				(150.0f)		//!< ms
 #define SRUN_DIST_KC				(0.15f)		//!<
 
@@ -62,6 +62,8 @@ float sRunPrevLine;
 float sRunServoAngle;
 float sRunActSpeed;
 float sRunActSpeedDist;
+
+uint32_t sRunActDuty;
 
 static float sRunDistFk;
 
@@ -525,13 +527,7 @@ void sRunParadeLapAlgorithm (void)
 		sRunActualParams.Speed	= paramListSRun.lapParade.Speed;
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
-		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT,
-										sRunActFrontDist,
-										SRUN_DIST_TI,
-										&sRunDistFk,
-										SRUN_DIST_KC,
-										SRUN_DIST_KEEP_SPEED_MIN,
-										SRUN_DIST_KEEP_SPEED_MAX);
+		sRunActDuty = cntrDistance(SRUN_DIST_SETPOINT, sRunPrevFrontDist, sRunActFrontDist, 0.5f, 0, 25);
 
 		// In the right place check if we can try overtaking.
 

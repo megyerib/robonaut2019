@@ -67,38 +67,39 @@ uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actS
 }
 
 //! Function: cntrDistance
-float cntrDistance (const float followDist,
-					const float actDist,
-					const float Ti,
-					float* fk,
-					const float kc,
-					const float speedMin,
-					const float speedMax)
+uint32_t cntrDistance (const uint32_t followDist,
+					   const float prevSpeed,
+					   const uint32_t actDist,
+					   const float kP,
+					   const uint32_t speedMin,
+					   const uint32_t speedMax)
 {
-	float e_dist;
-	float beta = expf(-SPEED_TS / Ti);
-	float uk;
+	float diff;
+	float speed;
+	float distAct = actDist;
 
 	// d diff = d wanted - d actual
-	e_dist = actDist - followDist;
+	diff = ((float)distAct) - ((float)followDist);
 
 	// Calculate control variable.
-	uk = kc * e_dist + (*fk);
+	speed = diff  * kP;
+
+	if (actDist > 220)
+	{
+		speed = 13.0f;
+	}
 
 	// Saturation.
-	if(uk < speedMin)
+	if(speed < speedMin)
 	{
-		uk = speedMin;
+		speed = speedMin;
 	}
-	if(uk > speedMax)
+	if(speed > speedMax)
 	{
-		uk = speedMax;
+		speed = speedMax;
 	}
 
-	// Update fk FOXBORO parameter.
-	*fk = beta * (*fk) + ( 1 - beta * uk);
-
-	return uk;
+	return (uint32_t)speed;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

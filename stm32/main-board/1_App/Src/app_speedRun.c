@@ -96,6 +96,8 @@ static uint8_t txLineNumber;
 static float txLineMainLinePos;
 static float txLineSecLinePos;
 
+extern uint32_t sRunActDuty;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static void sRunSetLap1Parameters	 (void);
@@ -173,8 +175,8 @@ void Task_SpeedRun (void* p)
 		sRunActFrontDist = sharpGetMeasurement().Distance;
 
 		// Saturate to valid distance range.
-		if (sRunActFrontDist > SRUN_SHARP_DIST_MAX)
-			sRunActFrontDist = SRUN_SHARP_DIST_MAX;
+		/*if (sRunActFrontDist > SRUN_SHARP_DIST_MAX)
+			sRunActFrontDist = SRUN_SHARP_DIST_MAX;*/
 
 		// Main state machine that drive though the speed run track.
 		if (speedRunStarted == true  && recStopCar == false)
@@ -192,7 +194,7 @@ void Task_SpeedRun (void* p)
 			else if (smMainStateSRun == eSTATE_MAIN_PARADE_LAP)
 			{
 				// Control the speed.
-				sRunActSpeedDuty = cntrSpeed(sRunActSpeedDist, sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunSpeedFk, SRUN_SPEED_KC);
+				sRunActSpeedDuty = sRunActDuty;
 			}
 			else
 			{
