@@ -28,7 +28,7 @@ LINE_NUM;
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-static RACE_RS rsState = None;
+static RACE_RS rsState = InitSlow;
 static float prevTrackStart = 0;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
@@ -46,9 +46,15 @@ RACE_RS getRaceRs()
 
 	if (lineNum == Triple)
 	{
-		if (rsState == None)
+		if (rsState == InitSlow)
 		{
 			rsState = Fast;
+			//traceRaceRoadSignal(rsState);
+			prevTrackStart = speedGetDistance();
+		}
+		if (rsState == InitFast)
+		{
+			rsState = Slow;
 			//traceRaceRoadSignal(rsState);
 			prevTrackStart = speedGetDistance();
 		}
@@ -73,6 +79,11 @@ RACE_RS getRaceRs()
 	}
 
 	return rsState;
+}
+
+void setRaceRs(RACE_RS state)
+{
+	rsState = state;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
