@@ -26,12 +26,11 @@
 //! Flag that indicates if the maze task is finished.
 bool mazeFinished;
 
-//! This variable indicates the actual state of the main state machine of the maze algorithm.
-eSTATE_MAIN smMainState;
-//! The graph map of the labyrinth.
-cSEGMENT map[MAZE_MAP_MAX_SEGEMENTS];
-//! A list of the discoverable segments. A bit is set when the segment was found and the car has driven it through.
-bool segments[MAZE_FINDABLE_SEGEMNST];
+eSTATE_MAIN smMainState;	//! This variable indicates the actual state of the main state machine of the maze algorithm.
+
+cSEGMENT map[MAZE_MAP_MAX_SEGEMENTS];	//! The graph map of the labyrinth.
+bool segments[MAZE_FINDABLE_SEGEMNST];	//! A list of the discoverable segments. A bit is set when the segment was found and the car has driven it through.
+
 //! The number of the segment where the exit point is to be found.
 //uint32_t inclinSegment;
 //uint8_t inclinSegmentOrient;	// 0 = negative, 1 = positive
@@ -46,10 +45,9 @@ uint32_t nextNewSegmentIndex;
 uint32_t alreadyFoundSegment;
 //bool turnOffLineFollow;
 
-//! The controller parameters of the actual state in which the car is currently.
-cPD_CNTRL_PARAMS mazeActualParams;
-//! List of the controller parameters for all of the main states.
-cMAZE_PD_CONTROL_PARAM_LIST paramList;
+
+cPD_CNTRL_PARAMS mazeActualParams;		//! The controller parameters of the actual state in which the car is currently.
+cMAZE_PD_CONTROL_PARAM_LIST paramList;	//! List of the controller parameters for all of the main states.
 
 static cNAVI_STATE naviStateCrossing;
 static cNAVI_STATE naviStateCar;
@@ -98,12 +96,12 @@ void MazeStateMachinesInit (void)
 		map[i].start.p.n = 0;
 		map[i].start.p.e = 0;
 		map[i].start.psi = 0;
-		map[i].negative[0]   = 0;
+		map[i].negative[0] = 0;
 		map[i].negative[1] = 0;
-		map[i].negative[2]  = 0;
-		map[i].positive[0]   = 0;
+		map[i].negative[2] = 0;
+		map[i].positive[0] = 0;
 		map[i].positive[1] = 0;
-		map[i].positive[2]  = 0;
+		map[i].positive[2] = 0;
 	}
 
 	// Reset trackers.

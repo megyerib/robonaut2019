@@ -30,72 +30,46 @@
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-//! Event flag (first bit) that indicates if we have left the maze.
-extern EventGroupHandle_t event_MazeOut;
-//! Flag that indicates if we are on the speed run track.
-static bool	speedRunStarted;
+extern EventGroupHandle_t event_MazeOut;	//!< Event flag (first bit) that indicates if we have left the maze.
+static bool	speedRunStarted;				//!< Flag that indicates if we are on the speed run track.
 
 //! This button is used in case the car can not complete the Maze. The car will start waiting behind the safety car
 //! to start the speed run.
 static GPIO_PinState btnHardRstSpeedRun;
-//! GPIO port of the hard reset button.
-static GPIO_TypeDef* btnHardRst_Port;
-//! GPIO pin of the hard reset button.
-static uint16_t btnHardRst_Pin;
+static GPIO_TypeDef* btnHardRst_Port;	//!< GPIO port of the hard reset button.
+static uint16_t btnHardRst_Pin;			//!< GPIO pin of the hard reset button.
 
 //! This button is used in that unfortunate case, if the car get lost in the speed run and must be replaced to the line.
 //! IN CASE OF: car is lost, car has crashed, bad overtaking
 static GPIO_PinState btnSoftRstSpeedRun;
-//! GPIO port of the soft reset button.
-static GPIO_TypeDef* btnSoftRst_Port;
-//! GPIO pin of the soft reset button.
-static uint16_t btnSoftRst_Pin;
+static GPIO_TypeDef* btnSoftRst_Port;	//!< GPIO port of the soft reset button.
+static uint16_t btnSoftRst_Pin;			//!< GPIO pin of the soft reset button.
 
-//! Contains the received serial data.
-static cTRACE_RX_DATA rxData;
-//! Flag that indicates if the car must stop.
-static bool	recStopCar;
-//! Flag that indicates if the overtake action is allowed.
-static bool recTryOvertake;
-//! Flag that indicates if the main state machine must be reset. Car starts from behind the safety car.
-static bool recHardReset;
-//! Flag that indicates if the actual state has to be reset or a it has to be reset to a new state.
-static bool recSoftReset;
-//! State into which the state machine must be reset.
-static uint32_t recSoftResetTo;
-//! Request for the control parameter of this state.
-static uint32_t recGetState;
-//! Update the control parameters of the selected state.
-static uint32_t recSetState;
-//! New P control parameter for the selected state.
-static float recSetP;
-//! New Kp control parameter for the selected state.
-static float recSetKp;
-//! New Kd control parameter for the selected state.
-static float recSetKd;
-//! New Speed control parameter for the selected state.
-static uint32_t recSetSpeed;
 
-//! Actual state of the main state machine.
-static uint32_t txMainSm;
-//! Actual state of the drive state machine.
-static uint32_t txActState;
-//! Actual P control parameter.
-static float txActP;
-//! Actual Kp control parameter.
-static float txActKp;
-//! Actual Kd control parameter.
-static float txActKd;
-//! Actual Speed control parameter.
-static uint32_t txActSpeed;
-//! Requested P control parameter.
-static float txGetP;
-//! Requested Kp control parameter.
-static float txGetKp;
-//! Requested Kd control parameter.
-static float txGetKd;
-//! Requested Speed control parameter.
-static uint32_t	txGetSpeed;
+static cTRACE_RX_DATA rxData;		//!< Contains the received serial data.
+static bool	recStopCar;				//!< Flag that indicates if the car must stop.
+static bool recTryOvertake;			//!< Flag that indicates if the overtake action is allowed.
+static bool recHardReset;			//!< Flag that indicates if the main state machine must be reset. Car starts from behind the safety car.
+static bool recSoftReset;			//!< Flag that indicates if the actual state has to be reset or a it has to be reset to a new state.
+static uint32_t recSoftResetTo;		//!< State into which the state machine must be reset.
+static uint32_t recGetState;		//!< Request for the control parameter of this state.
+static uint32_t recSetState;		//!< Update the control parameters of the selected state.
+static float recSetP;				//!< New P control parameter for the selected state.
+static float recSetKp;				//!< New Kp control parameter for the selected state.
+static float recSetKd;				//!< New Kd control parameter for the selected state.
+static uint32_t recSetSpeed;		//!< New Speed control parameter for the selected state.
+
+
+static uint32_t txMainSm;		//!< Actual state of the main state machine.
+static uint32_t txActState;		//!< Actual state of the drive state machine.
+static float txActP;			//!< Actual P control parameter.
+static float txActKp;			//!< Actual Kp control parameter.
+static float txActKd;			//!< Actual Kd control parameter.
+static uint32_t txActSpeed;		//!< Actual Speed control parameter.
+static float txGetP;			//!< Requested P control parameter.
+static float txGetKp;			//!< Requested Kp control parameter.
+static float txGetKd;			//!< Requested Kd control parameter.
+static uint32_t	txGetSpeed;		//!< Requested Speed control parameter.
 
 extern bool tryToOvertake;
 extern eSTATE_MAIN smMainStateSRun;
@@ -129,7 +103,7 @@ static void sRunUpdateParams	     (void);
 static void sRunCheckButtonHardRst   (void);
 static void sRunCheckButtonSoftRst   (void);
 static void sRunCheckStartCondition  (void);
-static void SRun_CheckRemote			 (void);
+static void SRun_CheckRemote		 (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -153,6 +127,7 @@ void TaskInit_SpeedRun (void)
 	// Init state machines
 	sRunInitStateMachines();
 
+	// Variable for the speed controller.
 	sRunFk = 0;
 
 	// Task can be created now.

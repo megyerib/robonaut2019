@@ -90,4 +90,5 @@ float cntrDistance (const float actDist, const float followDist, const float p, 
 
 	return speed;
 }
+
 // Local (static) function definitions ---------------------------------------------------------------------------------

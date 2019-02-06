@@ -22,39 +22,29 @@
 #define SRUN_SEG_MIN_LEN			(20U)	//!< mm
 #define SRUN_SPEED_SUB_SEG_LEN_MAX 	(100U)  //!< mm
 
-#define SRUN_DIST_KEEP_SPEED_MIN	(0.5f)
-#define SRUN_DIST_KEEP_SPEED_MAX	(1.0f)
+#define SRUN_DIST_KEEP_SPEED_MIN	(0.5f)	//!< m/s
+#define SRUN_DIST_KEEP_SPEED_MAX	(1.0f)  //!< m/s
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
-//! State of the speed run main state machine.
-eSTATE_MAIN smMainStateSRun;
-//! The lap is divided into a given number of segments, and this many states has a lap state machine.
-uint8_t actLapSegment;
-//! Actual state of the overtake state machine.
-static eSTATE_OVERTAKE overtakeState;
 
+eSTATE_MAIN smMainStateSRun;	//!< State of the speed run main state machine.
+uint8_t actLapSegment;			//!< The lap is divided into a given number of segments, and this many states has a lap state machine.
+
+cPD_CNTRL_PARAMS sRunActualParams;			//!< Control parameters of the actual state.
+cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;	//!< Contain all of the control parameters.
+
+bool tryToOvertake;				//!< During the Parade lap the car is allowed to try to overtake the safety car.
+static bool behindSafetyCar;	//!< Flag that indicates that the car is behind the safety car.
+static bool startGateFound;		//!< Flag that indicates if the car went through the start gate, which means a new lap is started.
+static uint32_t timeCounter;	//!< Counter for the individual timing functionalities.
+
+static eSTATE_OVERTAKE overtakeState;	//!< Actual state of the overtake state machine.
 static bool actLapIsFinished;
 
-//! Control parameters of the actual state.
-cPD_CNTRL_PARAMS sRunActualParams;
-//! Contain all of the control parameters.
-cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
-
-//! During the Parade lap the car is allowed to try to overtake the safety car.
-bool tryToOvertake;
-//! Flag that indicates that the car is behind the safety car.
-static bool behindSafetyCar;
-//! Flag that indicates if the car went through the start gate, which means a new lap is started.
-static bool startGateFound;
-//! Counter for the individual timing functionalities.
-static uint32_t timeCounter;
-
-//! Measured distance value in front of the car in the actual task run.
-static uint32_t sRunActFrontDist;
-//! Measured distance value in front of the car in the previous task run.
-static uint32_t sRunPrevFrontDist;
+static uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
+static uint32_t sRunPrevFrontDist;		//! Measured distance value in front of the car in the previous task run.
 
 static uint8_t segmentTypeCounter;
 static uint32_t lineStart;

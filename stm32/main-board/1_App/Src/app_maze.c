@@ -45,45 +45,26 @@ extern cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
  bool turnOffLineFollow;
 
-//! Structure that contain the received serial data.
-static cTRACE_RX_DATA rxData;
-//! Flag that indicates if the car must be stopped.
-static bool	recStopCar;
-//! Flag that indicates if the main state machine must be reset.
-static bool recMainSMReset;
-//! Holds the state into which the main state machine must be reset.
-static uint32_t recMainSMResetTo;
-//! Request for the control parameters of a valid state.
-static uint32_t recGetState;
-//! A state that's parameters has to be changed.
-static uint32_t recSetState;
-//! New Kp parameter for the selected state.
-static float recSetKp;
-//! New Kd parameter for the selected state.
-static float recSetKd;
-//! New Speed parameter for the selected state.
-static uint32_t recSetSpeed;
+static cTRACE_RX_DATA rxData;		//!< Structure that contain the received serial data.
+static bool	recStopCar;				//!< Flag that indicates if the car must be stopped.
+static bool recMainSMReset;			//!< Flag that indicates if the main state machine must be reset.
+static uint32_t recMainSMResetTo;	//!< Holds the state into which the main state machine must be reset.
+static uint32_t recGetState;		//!< Request for the control parameters of a valid state.
+static uint32_t recSetState;		//!< A state that's parameters has to be changed.
+static float recSetKp;				//!< New Kp parameter for the selected state.
+static float recSetKd;				//!< New Kd parameter for the selected state.
+static uint32_t recSetSpeed;		//!< New Speed parameter for the selected state.
 
-//! Holds the actual state of the main state machine.
-static uint32_t txMainSM;
-//! Holds the Kp parameter of the requested state.
-static float txGetKp;
-//! Holds the Kd parameter of the requested state.
-static float txGetKd;
-//! Holds the Speed parameter of the requested state.
-static uint32_t	txGetSpeed;
-//! Contains the information about the segments if they are discovered or not.
-static uint32_t txSegments;
-//! Holds the actual state of the car.
-static uint32_t txActState;
-//! Holds the Kp parameter of the actual state.
-static float txActKp;
-//! Holds the Kd parameter of the actual state.
-static float txActKd;
-//! Holds the Speed parameter of the actual state.
-static uint32_t txActSpeed;
-//! Hold the number of the segment on which the exit point is present.
-static uint32_t txInclinSegment;
+static uint32_t txMainSM;			//!< Holds the actual state of the main state machine.
+static float txGetKp;				//!< Holds the Kp parameter of the requested state.
+static float txGetKd;				//!< Holds the Kd parameter of the requested state.
+static uint32_t	txGetSpeed;			//!< Holds the Speed parameter of the requested state.
+static uint32_t txSegments;			//!< Contains the information about the segments if they are discovered or not.
+static uint32_t txActState;			//!< Holds the actual state of the car.
+static float txActKp;				//!< Holds the Kp parameter of the actual state.
+static float txActKd;				//!< Holds the Kd parameter of the actual state.
+static uint32_t txActSpeed;			//!< Holds the Speed parameter of the actual state.
+static uint32_t txInclinSegment;	//!< Hold the number of the segment on which the exit point is present.
 
 static float txSteerWheelAngle;
 static float txServoAngle;
