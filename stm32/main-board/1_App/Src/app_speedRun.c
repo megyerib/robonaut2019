@@ -240,17 +240,17 @@ void Task_SpeedRun (void* p)
 //**********************************************************************************************************************
 static void sRunSetLap1Parameters (void)
 {
-	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.025f;	paramListSRun.lap1[0].Kd = 3.5f;	paramListSRun.lap1[0].Speed = 15;	// Straight
-	paramListSRun.lap1[1].P = 0; 	paramListSRun.lap1[1].Kp = 0.025f;	paramListSRun.lap1[1].Kd = 3.5f;	paramListSRun.lap1[1].Speed = 15;	// Slow
-	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0.025f;	paramListSRun.lap1[2].Kd = 3.5f;	paramListSRun.lap1[2].Speed = 15;	// Corner
-	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.025f;	paramListSRun.lap1[3].Kd = 3.5f;	paramListSRun.lap1[3].Speed = 15;	// Speed
-	paramListSRun.lap1[4].P = 0; 	paramListSRun.lap1[4].Kp = 0.025f;	paramListSRun.lap1[4].Kd = 3.5f;	paramListSRun.lap1[4].Speed = 15;	// Straight
+	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.01f;	paramListSRun.lap1[0].Kd = 0.14f;	paramListSRun.lap1[0].Speed = 40;	// Fast
+	paramListSRun.lap1[1].P = 0; 	paramListSRun.lap1[1].Kp = 0.025f;	paramListSRun.lap1[1].Kd = 3.5f;	paramListSRun.lap1[1].Speed = 20;	// Slow
+	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0.01f;	paramListSRun.lap1[2].Kd = 0.14f;	paramListSRun.lap1[2].Speed = 40;	// Fast
+	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.025f;	paramListSRun.lap1[3].Kd = 3.5f;	paramListSRun.lap1[3].Speed = 20;	// Slow
+	paramListSRun.lap1[4].P = 0; 	paramListSRun.lap1[4].Kp = 0.01f;	paramListSRun.lap1[4].Kd = 0.14f;	paramListSRun.lap1[4].Speed = 40;	// Fast
 
-	paramListSRun.lap1[5].P = 0; 	paramListSRun.lap1[5].Kp = 0.025f;	paramListSRun.lap1[5].Kd = 3.5f;	paramListSRun.lap1[5].Speed = 15;	// Slow
-	paramListSRun.lap1[6].P = 0; 	paramListSRun.lap1[6].Kp = 0.025f;	paramListSRun.lap1[6].Kd = 3.5f;	paramListSRun.lap1[6].Speed = 15;	// Corner
-	paramListSRun.lap1[7].P = 0; 	paramListSRun.lap1[7].Kp = 0.025f;	paramListSRun.lap1[7].Kd = 3.5f;	paramListSRun.lap1[7].Speed = 15;	// Speed
-	paramListSRun.lap1[8].P = 0; 	paramListSRun.lap1[8].Kp = 0.025f;	paramListSRun.lap1[8].Kd = 3.5f;	paramListSRun.lap1[8].Speed = 15;	// Straight
-	paramListSRun.lap1[9].P = 0; 	paramListSRun.lap1[9].Kp = 0.025f;	paramListSRun.lap1[9].Kd = 3.5f;	paramListSRun.lap1[9].Speed = 15;	// Slow
+	paramListSRun.lap1[5].P = 0; 	paramListSRun.lap1[5].Kp = 0.025f;	paramListSRun.lap1[5].Kd = 3.5f;	paramListSRun.lap1[5].Speed = 20;	// Slow
+	paramListSRun.lap1[6].P = 0; 	paramListSRun.lap1[6].Kp = 0.01f;	paramListSRun.lap1[6].Kd = 0.14f;	paramListSRun.lap1[6].Speed = 40;	// Fast
+	paramListSRun.lap1[7].P = 0; 	paramListSRun.lap1[7].Kp = 0.025f;	paramListSRun.lap1[7].Kd = 3.5f;	paramListSRun.lap1[7].Speed = 20;	// Slow
+	paramListSRun.lap1[8].P = 0; 	paramListSRun.lap1[8].Kp = 0.01f;	paramListSRun.lap1[8].Kd = 0.14f;	paramListSRun.lap1[8].Speed = 40;	// Fast
+	paramListSRun.lap1[9].P = 0; 	paramListSRun.lap1[9].Kp = 0.025f;	paramListSRun.lap1[9].Kd = 3.5f;	paramListSRun.lap1[9].Speed = 20;	// Slow
 
 	paramListSRun.lap1[10].P = 0;	paramListSRun.lap1[10].Kp = 0.025f;	paramListSRun.lap1[10].Kd = 3.5f; 	paramListSRun.lap1[10].Speed = 15;	// Corner
 	paramListSRun.lap1[11].P = 0;	paramListSRun.lap1[11].Kp = 0.025f;	paramListSRun.lap1[11].Kd = 3.5f;	paramListSRun.lap1[11].Speed = 15;	// Speed
@@ -267,17 +267,17 @@ static void sRunSetLap1Parameters (void)
 //**********************************************************************************************************************
 static void sRunSetLap2Parameters (void)
 {
-	paramListSRun.lap2[0].P = 0;	paramListSRun.lap2[0].Kp = 0.025f;	paramListSRun.lap2[0].Kd = 3.5f;	paramListSRun.lap2[0].Speed = 15;	// Straight
-	paramListSRun.lap2[1].P = 0; 	paramListSRun.lap2[1].Kp = 0.025f;	paramListSRun.lap2[1].Kd = 3.5f;	paramListSRun.lap2[1].Speed = 15;	// Slow
-	paramListSRun.lap2[2].P = 0; 	paramListSRun.lap2[2].Kp = 0.025f;	paramListSRun.lap2[2].Kd = 3.5f;	paramListSRun.lap2[2].Speed = 15;	// Corner
-	paramListSRun.lap2[3].P = 0; 	paramListSRun.lap2[3].Kp = 0.025f;	paramListSRun.lap2[3].Kd = 3.5f;	paramListSRun.lap2[3].Speed = 15;	// Speed
-	paramListSRun.lap2[4].P = 0; 	paramListSRun.lap2[4].Kp = 0.025f;	paramListSRun.lap2[4].Kd = 3.5f;	paramListSRun.lap2[4].Speed = 15;	// Straight
+	paramListSRun.lap2[0].P = 0;	paramListSRun.lap2[0].Kp = 0.01f;	paramListSRun.lap2[0].Kd = 0.12f;	paramListSRun.lap2[0].Speed = 42;	// Straight
+	paramListSRun.lap2[1].P = 0; 	paramListSRun.lap2[1].Kp = 0.025f;	paramListSRun.lap2[1].Kd = 3.0f;	paramListSRun.lap2[1].Speed = 22;	// Slow
+	paramListSRun.lap2[2].P = 0; 	paramListSRun.lap2[2].Kp = 0.01f;	paramListSRun.lap2[2].Kd = 0.12f;	paramListSRun.lap2[2].Speed = 42;	// Corner
+	paramListSRun.lap2[3].P = 0; 	paramListSRun.lap2[3].Kp = 0.025f;	paramListSRun.lap2[3].Kd = 3.0f;	paramListSRun.lap2[3].Speed = 22;	// Speed
+	paramListSRun.lap2[4].P = 0; 	paramListSRun.lap2[4].Kp = 0.01f;	paramListSRun.lap2[4].Kd = 0.12f;	paramListSRun.lap2[4].Speed = 42;	// Straight
 
-	paramListSRun.lap2[5].P = 0; 	paramListSRun.lap2[5].Kp = 0.025f;	paramListSRun.lap2[5].Kd = 3.5f;	paramListSRun.lap2[5].Speed = 15;	// Slow
-	paramListSRun.lap2[6].P = 0; 	paramListSRun.lap2[6].Kp = 0.025f;	paramListSRun.lap2[6].Kd = 3.5f;	paramListSRun.lap2[6].Speed = 15;	// Corner
-	paramListSRun.lap2[7].P = 0; 	paramListSRun.lap2[7].Kp = 0.025f;	paramListSRun.lap2[7].Kd = 3.5f;	paramListSRun.lap2[7].Speed = 15;	// Speed
-	paramListSRun.lap2[8].P = 0; 	paramListSRun.lap2[8].Kp = 0.025f;	paramListSRun.lap2[8].Kd = 3.5f;	paramListSRun.lap2[8].Speed = 15;	// Straight
-	paramListSRun.lap2[9].P = 0; 	paramListSRun.lap2[9].Kp = 0.025f;	paramListSRun.lap2[9].Kd = 3.5f;	paramListSRun.lap2[9].Speed = 15;	// Slow
+	paramListSRun.lap2[5].P = 0; 	paramListSRun.lap2[5].Kp = 0.025f;	paramListSRun.lap2[5].Kd = 3.0f;	paramListSRun.lap2[5].Speed = 22;	// Slow
+	paramListSRun.lap2[6].P = 0; 	paramListSRun.lap2[6].Kp = 0.01f;	paramListSRun.lap2[6].Kd = 0.12f;	paramListSRun.lap2[6].Speed = 42;	// Corner
+	paramListSRun.lap2[7].P = 0; 	paramListSRun.lap2[7].Kp = 0.025f;	paramListSRun.lap2[7].Kd = 3.0f;	paramListSRun.lap2[7].Speed = 22;	// Speed
+	paramListSRun.lap2[8].P = 0; 	paramListSRun.lap2[8].Kp = 0.01f;	paramListSRun.lap2[8].Kd = 0.12f;	paramListSRun.lap2[8].Speed = 42;	// Straight
+	paramListSRun.lap2[9].P = 0; 	paramListSRun.lap2[9].Kp = 0.025f;	paramListSRun.lap2[9].Kd = 3.0f;	paramListSRun.lap2[9].Speed = 22;	// Slow
 
 	paramListSRun.lap2[10].P = 0;	paramListSRun.lap2[10].Kp = 0.025f;	paramListSRun.lap2[10].Kd = 3.5f;	paramListSRun.lap2[10].Speed = 15;	// Corner
 	paramListSRun.lap2[11].P = 0;	paramListSRun.lap2[11].Kp = 0.025f;	paramListSRun.lap2[11].Kd = 3.5f;	paramListSRun.lap2[11].Speed = 15;	// Speed
@@ -294,17 +294,17 @@ static void sRunSetLap2Parameters (void)
 //**********************************************************************************************************************
 static void sRunSetLap3Parameters (void)
 {
-	paramListSRun.lap3[0].P = 0;	paramListSRun.lap3[0].Kp = 0.025;	paramListSRun.lap3[0].Kd = 3.5;	paramListSRun.lap3[0].Speed = 15;
-	paramListSRun.lap3[1].P = 0; 	paramListSRun.lap3[1].Kp = 0.025;	paramListSRun.lap3[1].Kd = 3.5;	paramListSRun.lap3[1].Speed = 15;
-	paramListSRun.lap3[2].P = 0; 	paramListSRun.lap3[2].Kp = 0.025;	paramListSRun.lap3[2].Kd = 3.5;	paramListSRun.lap3[2].Speed = 15;
-	paramListSRun.lap3[3].P = 0; 	paramListSRun.lap3[3].Kp = 0.025;	paramListSRun.lap3[3].Kd = 3.5;	paramListSRun.lap3[3].Speed = 15;
-	paramListSRun.lap3[4].P = 0; 	paramListSRun.lap3[4].Kp = 0.025;	paramListSRun.lap3[4].Kd = 3.5;	paramListSRun.lap3[4].Speed = 15;
+	paramListSRun.lap3[0].P = 0;	paramListSRun.lap3[0].Kp = 0.01;	paramListSRun.lap3[0].Kd = 0.1;	paramListSRun.lap3[0].Speed = 45;
+	paramListSRun.lap3[1].P = 0; 	paramListSRun.lap3[1].Kp = 0.025;	paramListSRun.lap3[1].Kd = 2.5;	paramListSRun.lap3[1].Speed = 23;
+	paramListSRun.lap3[2].P = 0; 	paramListSRun.lap3[2].Kp = 0.01;	paramListSRun.lap3[2].Kd = 0.1;	paramListSRun.lap3[2].Speed = 45;
+	paramListSRun.lap3[3].P = 0; 	paramListSRun.lap3[3].Kp = 0.025;	paramListSRun.lap3[3].Kd = 2.5;	paramListSRun.lap3[3].Speed = 23;
+	paramListSRun.lap3[4].P = 0; 	paramListSRun.lap3[4].Kp = 0.01;	paramListSRun.lap3[4].Kd = 0.1;	paramListSRun.lap3[4].Speed = 45;
 
-	paramListSRun.lap3[5].P = 0; 	paramListSRun.lap3[5].Kp = 0.025;	paramListSRun.lap3[5].Kd = 3.5;	paramListSRun.lap3[5].Speed = 15;
-	paramListSRun.lap3[6].P = 0; 	paramListSRun.lap3[6].Kp = 0.025;	paramListSRun.lap3[6].Kd = 3.5;	paramListSRun.lap3[6].Speed = 15;
-	paramListSRun.lap3[7].P = 0; 	paramListSRun.lap3[7].Kp = 0.025;	paramListSRun.lap3[7].Kd = 3.5;	paramListSRun.lap3[7].Speed = 15;
-	paramListSRun.lap3[8].P = 0; 	paramListSRun.lap3[8].Kp = 0.025;	paramListSRun.lap3[8].Kd = 3.5;	paramListSRun.lap3[8].Speed = 15;
-	paramListSRun.lap3[9].P = 0; 	paramListSRun.lap3[9].Kp = 0.025;	paramListSRun.lap3[9].Kd = 3.5;	paramListSRun.lap3[9].Speed = 15;
+	paramListSRun.lap3[5].P = 0; 	paramListSRun.lap3[5].Kp = 0.025;	paramListSRun.lap3[5].Kd = 2.5;	paramListSRun.lap3[5].Speed = 23;
+	paramListSRun.lap3[6].P = 0; 	paramListSRun.lap3[6].Kp = 0.01;	paramListSRun.lap3[6].Kd = 0.1;	paramListSRun.lap3[6].Speed = 45;
+	paramListSRun.lap3[7].P = 0; 	paramListSRun.lap3[7].Kp = 0.025;	paramListSRun.lap3[7].Kd = 2.5;	paramListSRun.lap3[7].Speed = 23;
+	paramListSRun.lap3[8].P = 0; 	paramListSRun.lap3[8].Kp = 0.01;	paramListSRun.lap3[8].Kd = 0.1;	paramListSRun.lap3[8].Speed = 45;
+	paramListSRun.lap3[9].P = 0; 	paramListSRun.lap3[9].Kp = 0.025;	paramListSRun.lap3[9].Kd = 2.5;	paramListSRun.lap3[9].Speed = 23;
 
 	paramListSRun.lap3[10].P = 0;	paramListSRun.lap3[10].Kp = 0.025;	paramListSRun.lap3[10].Kd = 3.5;	paramListSRun.lap3[10].Speed = 15;
 	paramListSRun.lap3[11].P = 0;	paramListSRun.lap3[11].Kp = 0.025;	paramListSRun.lap3[11].Kd = 3.5;	paramListSRun.lap3[11].Speed = 15;
