@@ -43,7 +43,7 @@ float cntrlLineFollow (const float actLine,
 //!
 //! @return A duty cycle given in [%].
 //**********************************************************************************************************************
-uint32_t cntrSpeed (const float r_speed,
+float cntrSpeed (const float r_speed,
 					const float prevSpeed,
 					const float actSpeed,
 					const float Ti,

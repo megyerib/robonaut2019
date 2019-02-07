@@ -69,7 +69,7 @@ void motorSetDutyCycle(float d)
 		d = -MOTOR_D_MAX;
 	}
 
-	d_int = (int)(d * 1000);
+	d_int = (int)(d * 100000);
 
 	if (d_int < 0)
     {

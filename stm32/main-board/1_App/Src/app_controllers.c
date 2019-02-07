@@ -14,7 +14,7 @@
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define SPEED_TS				(5.0f)	//! Ts sampling time in ms (task period).
-#define SPEED_CONTROL_VAR_MIN	(-0.3f)//!< u(t) control variable minimal value.
+#define SPEED_CONTROL_VAR_MIN	(-0.85f)//!< u(t) control variable minimal value.
 #define SPEED_CONTROL_VAR_MAX	(0.85f) //!< u(t) control variable maximal value.
 #define DELTA_UK_MAX            (0.05f)
 
@@ -40,7 +40,7 @@ float cntrlLineFollow (const float actLine, const float prevLine, const float P,
 }
 
 //! Function: cntrSpeed
-uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actSpeed, const float Ti, float* fk, const float kc)
+float cntrSpeed (const float r_speed, const float prevSpeed, const float actSpeed, const float Ti, float* fk, const float kc)
 {
 	float e_speed;
 	float beta = expf(-SPEED_TS / Ti);
@@ -81,7 +81,7 @@ uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actS
 	// Update fk FOXBORO parameter.
 	*fk = beta * (*fk) + ( 1 - beta * uk);
 
-	return (uint32_t)(uk*100);
+	return uk*100; // Nem százalék
 }
 
 //! Function: cntrDistance
