@@ -19,7 +19,8 @@
 
 #define JUNCTION_MAX_NUM (16u)
 #define VERTEX_ORI_MASK (0x10);
-#define NO_MATCHING_JUNCTION (-1);
+#define VERTEX_ORI_MASK_INVERSE (0xFFFFFFEF);
+#define NO_MATCHING_JUNCTION (-1)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -44,6 +45,7 @@ typedef enum
 	//exit_choose,
 	exit_followLine,
 	exit_crossingFound,
+	exit_waitForExit,
 
 	error_random,
 
@@ -88,10 +90,10 @@ typedef struct
 	int startVertex; // Orientáció számít
 	int startExit;
 	int endVertex; // Orientáció számít
-	int EndExit;
+	int endExit;
 	int length;
 }
-GRAPH_EDGE;
+MAZE_EDGE;
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
@@ -107,12 +109,18 @@ extern QueueHandle_t qNaviPSI_f;
 static int curJunction;
 static int curJunctionOri;
 
-static GRAPH_EDGE curEdge;
-static GRAPH_EDGE edges[32];
+static MAZE_EDGE curEdge;
+
+static MAZE_EDGE edges[32];
+static int edgeNum = 0;
+
+static int exitFound = 0;
+static int exitNewlyFound = 0;
+static int exitVertex;
+static EXIT exitJunctionExit;
+static ORI exitOri;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
-
-static void lineFollow();
 
 static int newCrossing(cNAVI_STATE nav, ORI orientation);
 
@@ -125,17 +133,14 @@ static cNAVI_STATE getPosition();
 static int isJunctionDiscovered(int jnum);
 static EXIT getEntryType(CROSSING_TYPE ctype);
 static int whichJunctionIsThis(cNAVI_STATE pos);
+static void addEdgeAndInverse(MAZE_EDGE e);
+static int vertexToJunctionNum(int vnum);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-void TaskInit_Maze3 (void)
-{
-
-}
-
 float Task_Maze3 ()
 {
-	float lineToFollow = 0; // TODO ezzel fogunk visszatérni
+	float lineToFollow = getPrevLine();
 	int skip = 0;
 	int crossing = getCrossingType();
 
@@ -158,8 +163,6 @@ float Task_Maze3 ()
 		}
 		case first_followLine:
 		{
-			lineFollow();
-
 			if (isCrossing(crossing))
 			{
 				mazeState = first_crossingFound;
@@ -180,20 +183,14 @@ float Task_Maze3 ()
 
 			JUNCTION* j = &junctions[curJunction];
 
-			j->visited[exitSource]    = 0;
-			j->visited[exitLeft]  = 0;
-			j->visited[exitRight] = 0;
-
 			j->type = isCrossingLeft(crossing) ? dirLeft : dirRight;
 
-			mazeState = travel_planRoute; // TODO Biztos?
+			mazeState = travel_planRoute;
 
 			break;
 		}
 		case discovery_followLine:
 		{
-			lineFollow();
-
 			if (isCrossing(crossing))
 			{
 				mazeState = discovery_crossingFound;
@@ -209,38 +206,90 @@ float Task_Maze3 ()
 
 			break;
 		}
-		case discovery_crossingFound: // TODO
+		case discovery_crossingFound:
 		{
-			// Melyik keresztezõdésben vagyunk?
+			JUNCTION* j;
 			cNAVI_STATE curPos = getPosition();
+
+			// Melyik keresztezõdésben vagyunk?
+			curJunctionOri = isCrossingForward(crossing) ? oriForward : oriBackward;
 			curJunction = whichJunctionIsThis(curPos);
 
+			if (curJunction == NO_MATCHING_JUNCTION)
+			{
+				// Felvesszük a keresztezõdést
+				curJunction = newCrossing(curPos, curJunctionOri);
 
-			// Felvesszük a keresztezõdést
-			curJunctionOri = isCrossingForward(crossing) ? oriForward : oriBackward;
+				j = &junctions[curJunction];
 
-			JUNCTION* j = &junctions[curJunction];
-
-			j->visited[exitSource]    = 0;
-			j->visited[exitLeft]  = 0;
-			j->visited[exitRight] = 0;
-
-			j->type = isCrossingLeft(crossing) ? dirLeft : dirRight;
+				j->type = isCrossingLeft(crossing) ? dirLeft : dirRight;
+			}
+			else
+			{
+				j = &junctions[curJunction];
+				// TODO ha már minden fel van fedezve, elrontottunk valamit, ezért átváltunk random módba
+			}
 
 			// Kiegészítjük az élt, amirõl elindultunk
-			EXIT entryType = getEntryType(crossing);
+			curEdge.endExit = getEntryType(crossing);
 
-			// TODO ha már minden fel van fedezve, elrontottunk valamit, ezért átváltunk random módba
+			if (curJunctionOri == oriForward)
+			{
+				curEdge.endVertex = curJunction;
+			}
+			else
+			{
+				curEdge.endVertex = curJunction | VERTEX_ORI_MASK;
+			}
+
+			// Felfedeztük az él két végét -> visited = 1
+			junctions[vertexToJunctionNum(curEdge.startVertex)].visited[curEdge.startExit] = 1;
+			junctions[vertexToJunctionNum(curEdge.endVertex)].visited[curEdge.endExit] = 1;
+
+			// Felvesszük a két új élt
+			addEdgeAndInverse(curEdge);
+
+			// Kijárat?
+			if (exitNewlyFound)
+			{
+				if (exitOri == oriForward)
+				{
+					exitVertex = edgeNum - 2; // Az elõzõleg látott él
+					exitJunctionExit = edges[edgeNum - 2].startExit;
+				}
+				else
+				{
+					exitVertex = edgeNum - 1; // Az elõzõleg látott él inverze
+					exitJunctionExit = edges[edgeNum - 1].startExit;
+				}
+
+				exitNewlyFound = 0;
+			}
+
+			// Megyünk tovább
+			mazeState = travel_planRoute;
 
 			break;
 		}
-		case discovery_exitFound: // TODO
+		case discovery_exitFound:
 		{
 			// Felvesszük a kijáratot (mivel discovery, ezért nem találhattuk meg)
+			exitNewlyFound = 1;
+
+			if (crossing == ExitForwardLeft || crossing == ExitForwardRight)
+			{
+				exitOri = oriForward;
+			}
+			else
+			{
+				exitOri = oriBackward;
+			}
+
+			// Ha keresztezõdésbe érünk, felvesszük a kijáratot
 
 			break;
 		}
-		case travel_planRoute: // TODO
+		case travel_planRoute:
 		{
 			int curVertex = curJunction;
 
@@ -293,8 +342,6 @@ float Task_Maze3 ()
 		}
 		case travel_followLine:
 		{
-			lineFollow();
-
 			if (isCrossing(crossing))
 			{
 				mazeState = travel_crossingFound;
@@ -318,11 +365,13 @@ float Task_Maze3 ()
 		}
 		case exit_followLine:
 		{
-			lineFollow();
-
 			if (isCrossing(crossing))
 			{
 				mazeState = exit_crossingFound;
+			}
+			else
+			{
+				skip = 1;
 			}
 
 			break;
@@ -331,8 +380,22 @@ float Task_Maze3 ()
 		{
 			break;
 		}
-		case finish: // TODO
+		case exit_waitForExit:
 		{
+			if (isExit(crossing))
+			{
+				mazeState = finish;
+			}
+			else
+			{
+				skip = 1;
+			}
+
+			break;
+		}
+		case finish:
+		{
+			// TODO jelezzük valahogy a kilépést
 			break;
 		}
 		case error_random:
@@ -365,11 +428,6 @@ float Task_Maze3 ()
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
-
-static void lineFollow()
-{
-
-}
 
 static int isCrossing(CROSSING_TYPE c)
 {
@@ -481,6 +539,24 @@ static int whichJunctionIsThis(cNAVI_STATE pos)
 {
 	// TODO
 	return NO_MATCHING_JUNCTION;
+}
+
+static void addEdgeAndInverse(MAZE_EDGE e)
+{
+	edges[edgeNum] = e;
+	edgeNum++;
+
+	// Invert edge
+	edges[edgeNum].startVertex = e.endVertex   ^ VERTEX_ORI_MASK;
+	edges[edgeNum].endVertex   = e.startVertex ^ VERTEX_ORI_MASK;
+	edges[edgeNum].startExit   = e.endExit;
+	edges[edgeNum].endExit     = e.startExit;
+	edgeNum++;
+}
+
+static int vertexToJunctionNum(int vnum)
+{
+	return vnum & VERTEX_ORI_MASK_INVERSE;
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
