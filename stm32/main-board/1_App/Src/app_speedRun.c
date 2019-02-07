@@ -247,12 +247,12 @@ static void sRunSetLap1Parameters (void)
 	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.007f;	paramListSRun.lap1[0].Kd = 2.0f;	paramListSRun.lap1[0].Speed = 18;	// Fast
 	paramListSRun.lap1[1].P = 0; 	paramListSRun.lap1[1].Kp = 0.007f;	paramListSRun.lap1[1].Kd = 2.0f;	paramListSRun.lap1[1].Speed = 18;	// Slow
 	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0.001f;	paramListSRun.lap1[2].Kd = 0.12f;	paramListSRun.lap1[2].Speed = 65;	// Fast
-	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.007f;	paramListSRun.lap1[3].Kd = 2.0f;	paramListSRun.lap1[3].Speed = 0;	// Slow
-	paramListSRun.lap1[4].P = 0; 	paramListSRun.lap1[4].Kp = 0.007f;	paramListSRun.lap1[4].Kd = 0.12f;	paramListSRun.lap1[4].Speed = 0;	// Fast
+	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.007f;	paramListSRun.lap1[3].Kd = 2.0f;	paramListSRun.lap1[3].Speed = 15;	// Slow
+	paramListSRun.lap1[4].P = 0; 	paramListSRun.lap1[4].Kp = 0.001f;	paramListSRun.lap1[4].Kd = 0.12f;	paramListSRun.lap1[4].Speed = 65;	// Fast
 	paramListSRun.lap1[5].P = 0; 	paramListSRun.lap1[5].Kp = 0.007f;	paramListSRun.lap1[5].Kd = 2.0f;	paramListSRun.lap1[5].Speed = 18;	// Slow
-	paramListSRun.lap1[6].P = 0; 	paramListSRun.lap1[6].Kp = 0.001f;	paramListSRun.lap1[6].Kd = 0.12f;	paramListSRun.lap1[6].Speed = 50;	// Fast
+	paramListSRun.lap1[6].P = 0; 	paramListSRun.lap1[6].Kp = 0.001f;	paramListSRun.lap1[6].Kd = 0.12f;	paramListSRun.lap1[6].Speed = 65;	// Fast
 	paramListSRun.lap1[7].P = 0; 	paramListSRun.lap1[7].Kp = 0.007f;	paramListSRun.lap1[7].Kd = 2.0f;	paramListSRun.lap1[7].Speed = 18;	// Slow
-	paramListSRun.lap1[8].P = 0; 	paramListSRun.lap1[8].Kp = 0.001f;	paramListSRun.lap1[8].Kd = 0.12f;	paramListSRun.lap1[8].Speed = 50;	// Fast
+	paramListSRun.lap1[8].P = 0; 	paramListSRun.lap1[8].Kp = 0.001f;	paramListSRun.lap1[8].Kd = 0.12f;	paramListSRun.lap1[8].Speed = 65;	// Fast
 
 	paramListSRun.lap1[9].P = 0; 	paramListSRun.lap1[9].Kp = 0.025f;	paramListSRun.lap1[9].Kd = 3.5f;	paramListSRun.lap1[9].Speed = 0;	// Slow
 

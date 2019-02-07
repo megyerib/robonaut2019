@@ -49,7 +49,6 @@ static bool actLapIsFinished;
 static float overtakeStartPoint;
 static float overtakeEndPoint;
 static float overtakeSpeed;
-static uint32_t overtakeServoAngle;
 bool turnOffLineFollow;
 
 uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
@@ -90,8 +89,8 @@ static void sRunLoadInParamsToRun (void);
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_LAP_1;
-	actLapSegment = 0;
+	smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+	actLapSegment = 2;
 	overtakeState = eSTATE_OVERTAKE_START;
 	actLapIsFinished = false;
 
@@ -106,8 +105,8 @@ void sRunInitStateMachines (void)
 	paramListSRun.lapParade.Speed = 17;
 
 	paramListSRun.overtaking.P = 0;
-	paramListSRun.overtaking.Kp = 0.025;
-	paramListSRun.overtaking.Kd = 3.5;
+	paramListSRun.overtaking.Kp = 0.01;
+	paramListSRun.overtaking.Kd = 0.5;
 	paramListSRun.overtaking.Speed = 15;
 
 	tryToOvertake 	= true;
@@ -323,8 +322,9 @@ void sRunOvertakeStateMachine (void)
 		case eSTATE_OVERTAKE_START:
 		{
 			overtakeStartPoint = speedGetDistance();
+			overtakeSpeed = 0.6f;
 
-			overtakeState = eSTATE_OVERTAKE_LEAVE_LINE;
+			overtakeState = eSTATE_OVERTAKE_DELAY;
 			break;
 		}
 		case eSTATE_OVERTAKE_DELAY:
@@ -427,8 +427,7 @@ void sRunOvertakeStateMachine (void)
 			tryToOvertake = false;
 			behindSafetyCar = false;
 
-			// Resume the Parade lap.
-			smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+			smMainStateSRun = eSTATE_MAIN_LAP_1;
 		}
 		case eSTATE_OVERTAKE_FAILED:
 		{
