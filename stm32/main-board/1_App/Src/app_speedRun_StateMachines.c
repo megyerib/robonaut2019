@@ -89,8 +89,8 @@ static void sRunLoadInParamsToRun (void);
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
-	actLapSegment = 2;
+	smMainStateSRun = eSTATE_MAIN_LAP_1;
+	actLapSegment = 0;
 	overtakeState = eSTATE_OVERTAKE_START;
 	actLapIsFinished = false;
 
@@ -169,7 +169,7 @@ void sRunMainStateMachine (void)
 
 			if (startGateFound == true || actLapIsFinished)
 			{
-				smMainStateSRun = eSTATE_MAIN_LAP_2;
+				//smMainStateSRun = eSTATE_MAIN_LAP_2;
 			}
 			break;
 		}
