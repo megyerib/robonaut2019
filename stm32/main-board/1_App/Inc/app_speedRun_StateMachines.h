@@ -18,13 +18,19 @@
 
 #define SRUN_START_GATE_DISTANCE		15			//!< cm TODO measure
 
-#define SRUN_OVERTAKE_SEGMENT			8
-#define SRUN_OVERTAKE_TURN_TIME 		400 		//!< 400 * task period (5ms) = 2s
-#define SRUN_OVERTAKE_PASS_TIME			2000		//!< 2000* 5ms = 10s
-#define SRUN_OVERTAKE_FIND_TIME			800			//!< 800 * 5ms = 4s
-#define SRUN_OVERTAKE_SPEED_SLOW		15			//!< %
-#define SRUN_OVERTAKE_SPEED_FAST		35			//!< %
-#define SRUN_OVERTAKE_SERVO_ANGLE		20*PI/180	//!< rad
+#define SRUN_OVERTAKE_SEGMENT			4
+
+#define SRUN_OVERTAKE_TURN_TIME 		400 				//!< 400 * task period (5ms) = 2s
+#define SRUN_OVERTAKE_PASS_TIME			2000				//!< 2000* 5ms = 10s
+#define SRUN_OVERTAKE_FIND_TIME			800					//!< 800 * 5ms = 4s
+#define SRUN_OVERTAKE_SPEED_SLOW		(0.8f)				//!< m/s
+#define SRUN_OVERTAKE_SPEED_FAST		(3.0f)				//!< m/2
+#define SRUN_OVERTAKE_SERVO_ANGLE		(27.0f*PI/180.0f)	//!< deg
+#define SRUN_OVERTAKE_SERVO_RET_ANGLE	(-10.0f*PI/180.0f)	//!< deg
+#define SRUN_OVERTAKE_SERVO_STRAIGHT	(1.5f*PI/180.0f)
+#define SRUN_OVERTAKE_DIST_TURN			(0.6f)				//! m
+#define SRUN_OVERTAKE_DIST_FROM_LINE	(0.85f)				//! m
+#define SRUN_OVERTAKE_DIST_STRAIGHT		(5.0f)				//! m
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
@@ -47,7 +53,9 @@ typedef enum
 //**********************************************************************************************************************
 typedef enum
 {
-	eSTATE_OVERTAKE_LEAVE_LINE = 0,			//!< Turn left and leave the race track.
+	eSTATE_OVERTAKE_START = 0,
+	eSTATE_OVERTAKE_DELAY,
+	eSTATE_OVERTAKE_LEAVE_LINE,			//!< Turn left and leave the race track.
 	eSTATE_OVERTAKE_GET_PARALLEL,			//!< Direct back the car's direction to be parallel with the line.
 	eSTATE_OVERTAKE_PASS_SAFETY_CAR,		//!< Speed up to pass the safety car.
 	eSTATE_OVERTAKE_FIND_LINE,				//!< Turn right to find back to the race track.
