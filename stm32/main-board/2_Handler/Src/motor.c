@@ -32,6 +32,8 @@
 #define DIFF_IN_GEAR   13
 #define DIFF_OUT_GEAR  38
 
+#define MOTOR_D_MAX   (0.85f)
+
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -52,21 +54,40 @@ void motorSetTorque(int16_t torqe)
 
 }
 
-void motorSetDutyCycle(int8_t d)
+void motorSetDutyCycle(float d)
 {
-    int i = 0;
 
-	if (d < 0)
+	int d_int; // 5 digits max
+	int i = 0;
+
+	if (d >= MOTOR_D_MAX)
+	{
+		d = MOTOR_D_MAX;
+	}
+	else if (d <= -MOTOR_D_MAX)
+	{
+		d = -MOTOR_D_MAX;
+	}
+
+	d_int = (int)(d * 1000);
+
+	if (d_int < 0)
     {
 		d_buf[i] = '-';
 		i++;
-		d *= -1;
+		d_int *= -1;
     }
 
 	// sprintf screws everything
-	d_buf[i] = '0' + ((d / 10) % 10);
+	d_buf[i] = '0' + ((d_int / 10000) % 10);
 	i++;
-    d_buf[i] = '0' + d % 10;
+	d_buf[i] = '0' + ((d_int / 1000) % 10);
+	i++;
+	d_buf[i] = '0' + ((d_int / 100) % 10);
+	i++;
+	d_buf[i] = '0' + ((d_int / 10) % 10);
+	i++;
+    d_buf[i] = '0' + d_int % 10;
     i++;
     d_buf[i] = '\r';
     i++;

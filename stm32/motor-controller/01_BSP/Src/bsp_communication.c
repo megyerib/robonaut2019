@@ -76,8 +76,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 				if (valid)
 				{
 					BSP_emergency_stop_reset_timer();
-					ConvertedDutyCycle = Converted + 0.0;
-					ConvertedDutyCycle /= 100;
+					ConvertedDutyCycle = Converted / 1000.0;
 
 					BSP_SetDutyCycle(&ConvertedDutyCycle);
 

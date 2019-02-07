@@ -71,7 +71,7 @@ uint32_t cntrSpeed (const float r_speed, const float prevSpeed, const float actS
 		uk = SPEED_CONTROL_VAR_MAX;
 	}
 
-	if(r_speed < 0.1)
+	if(r_speed < 0.1 && r_speed > -0.1)
 	{
 		uk = 0.0;
 	}
