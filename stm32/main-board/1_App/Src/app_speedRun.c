@@ -240,16 +240,18 @@ void Task_SpeedRun (void* p)
 //**********************************************************************************************************************
 static void sRunSetLap1Parameters (void)
 {
-	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.01f;	paramListSRun.lap1[0].Kd = 0.14f;	paramListSRun.lap1[0].Speed = 40;	// Fast
-	paramListSRun.lap1[1].P = 0; 	paramListSRun.lap1[1].Kp = 0.025f;	paramListSRun.lap1[1].Kd = 3.5f;	paramListSRun.lap1[1].Speed = 20;	// Slow
-	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0.01f;	paramListSRun.lap1[2].Kd = 0.14f;	paramListSRun.lap1[2].Speed = 40;	// Fast
-	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.025f;	paramListSRun.lap1[3].Kd = 3.5f;	paramListSRun.lap1[3].Speed = 20;	// Slow
-	paramListSRun.lap1[4].P = 0; 	paramListSRun.lap1[4].Kp = 0.01f;	paramListSRun.lap1[4].Kd = 0.14f;	paramListSRun.lap1[4].Speed = 40;	// Fast
+	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.007f;	paramListSRun.lap1[0].Kd = 2.0f;	paramListSRun.lap1[0].Speed = 19;	// Fast
+	paramListSRun.lap1[1].P = 0; 	paramListSRun.lap1[1].Kp = 0.007f;	paramListSRun.lap1[1].Kd = 2.0f;	paramListSRun.lap1[1].Speed = 19;	// Slow
+	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0.007f;	paramListSRun.lap1[2].Kd = 2.0f;	paramListSRun.lap1[2].Speed = 19;	// Fast
+	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.007f;	paramListSRun.lap1[3].Kd = 2.0f;	paramListSRun.lap1[3].Speed = 19;	// Slow
+	paramListSRun.lap1[4].P = 0; 	paramListSRun.lap1[4].Kp = 0.007f;	paramListSRun.lap1[4].Kd = 2.0f;	paramListSRun.lap1[4].Speed = 19;	// Fast
+	paramListSRun.lap1[5].P = 0; 	paramListSRun.lap1[5].Kp = 0.007f;	paramListSRun.lap1[5].Kd = 2.0f;	paramListSRun.lap1[5].Speed = 19;	// Slow
+	paramListSRun.lap1[6].P = 0; 	paramListSRun.lap1[6].Kp = 0.007f;	paramListSRun.lap1[6].Kd = 2.0f;	paramListSRun.lap1[6].Speed = 19;	// Fast
+	paramListSRun.lap1[7].P = 0; 	paramListSRun.lap1[7].Kp = 0.007f;	paramListSRun.lap1[7].Kd = 2.0f;	paramListSRun.lap1[7].Speed = 19;	// Slow
+	paramListSRun.lap1[8].P = 0; 	paramListSRun.lap1[8].Kp = 0.007f;	paramListSRun.lap1[8].Kd = 2.0f;	paramListSRun.lap1[8].Speed = 19;	// Fast
 
-	paramListSRun.lap1[5].P = 0; 	paramListSRun.lap1[5].Kp = 0.025f;	paramListSRun.lap1[5].Kd = 3.5f;	paramListSRun.lap1[5].Speed = 20;	// Slow
-	paramListSRun.lap1[6].P = 0; 	paramListSRun.lap1[6].Kp = 0.01f;	paramListSRun.lap1[6].Kd = 0.14f;	paramListSRun.lap1[6].Speed = 40;	// Fast
-	paramListSRun.lap1[7].P = 0; 	paramListSRun.lap1[7].Kp = 0.025f;	paramListSRun.lap1[7].Kd = 3.5f;	paramListSRun.lap1[7].Speed = 20;	// Slow
-	paramListSRun.lap1[8].P = 0; 	paramListSRun.lap1[8].Kp = 0.01f;	paramListSRun.lap1[8].Kd = 0.14f;	paramListSRun.lap1[8].Speed = 40;	// Fast
+
+
 	paramListSRun.lap1[9].P = 0; 	paramListSRun.lap1[9].Kp = 0.025f;	paramListSRun.lap1[9].Kd = 3.5f;	paramListSRun.lap1[9].Speed = 20;	// Slow
 
 	paramListSRun.lap1[10].P = 0;	paramListSRun.lap1[10].Kp = 0.025f;	paramListSRun.lap1[10].Kd = 3.5f; 	paramListSRun.lap1[10].Speed = 15;	// Corner
@@ -344,7 +346,7 @@ static void sRunProcessRecCommands (void)
 	sRunCollectGetParams();
 
 	// Set parameters
-	sRunUpdateParams();
+	//sRunUpdateParams();
 }
 
 //**********************************************************************************************************************

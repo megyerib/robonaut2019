@@ -83,7 +83,7 @@ static void sRunLoadInParamsToRun (void);
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
+	smMainStateSRun = eSTATE_MAIN_LAP_1;
 	actLapSegment = 0;
 	overtakeState = eSTATE_OVERTAKE_LEAVE_LINE;
 	actLapIsFinished = false;
