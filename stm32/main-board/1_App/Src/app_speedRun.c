@@ -97,7 +97,7 @@ static float txLineMainLinePos;
 static float txLineSecLinePos;
 
 extern uint32_t sRunActDuty;
-extern bool turnOffLineFollow;
+extern bool sRunTurnOffLineFollow;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -127,7 +127,7 @@ void TaskInit_SpeedRun (void)
 	//btnSoftRst_Pin   = GPIO_PIN_x;
 
 	// Reset the module.
-	speedRunStarted = true;  	//TODO remove
+	speedRunStarted = false;
 	sRunSetLap1Parameters();
 	sRunSetLap2Parameters();
 	sRunSetLap3Parameters();
@@ -203,7 +203,7 @@ void Task_SpeedRun (void* p)
 				sRunActSpeedDuty = cntrSpeed(((float)sRunActualParams.Speed/10.0f), sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunSpeedFk, SRUN_SPEED_KC);
 			}
 
-			if (turnOffLineFollow == false)
+			if (sRunTurnOffLineFollow == false)
 			{
 				// Control the servo.
 				sRunServoAngle = cntrlLineFollow(sRunActLine, sRunPrevLine, sRunActualParams.P, sRunActualParams.Kp, sRunActualParams.Kd);
@@ -222,11 +222,14 @@ void Task_SpeedRun (void* p)
 		sRunCheckButtonHardRst();
 		sRunCheckButtonSoftRst();
 
-		// TODO Check for frontal collision.
-
 		// Actuate.
-		motorSetDutyCycle(sRunActSpeedDuty);
-		servoSetAngle(sRunServoAngle);
+		if (speedRunStarted == true)
+		{
+			// TODO Check for frontal collision.
+
+			motorSetDutyCycle(sRunActSpeedDuty);
+			servoSetAngle(sRunServoAngle);
+		}
 
 		// Trace out the speed run informations.
 		sRunTraceInformations();
@@ -244,7 +247,7 @@ void Task_SpeedRun (void* p)
 //**********************************************************************************************************************
 static void sRunSetLap1Parameters (void)
 {
-	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.007f;	paramListSRun.lap1[0].Kd = 2.0f;	paramListSRun.lap1[0].Speed = 18;	// Fast
+	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.007f;	paramListSRun.lap1[0].Kd = 2.0f;	paramListSRun.lap1[0].Speed = 65;	// Fast
 	paramListSRun.lap1[1].P = 0; 	paramListSRun.lap1[1].Kp = 0.007f;	paramListSRun.lap1[1].Kd = 2.0f;	paramListSRun.lap1[1].Speed = 18;	// Slow
 	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0.001f;	paramListSRun.lap1[2].Kd = 0.12f;	paramListSRun.lap1[2].Speed = 65;	// Fast
 	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.007f;	paramListSRun.lap1[3].Kd = 2.0f;	paramListSRun.lap1[3].Speed = 15;	// Slow
@@ -530,6 +533,7 @@ static void sRunCheckButtonHardRst (void)
 		// Reset the state machine.
 		smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
 		actLapSegment = 0;
+		speedRunStarted = true;
 
 		// Signal to the maze task that we are out of the maze.
 		xEventGroupSetBits(event_MazeOut, 0);

@@ -17,6 +17,7 @@
 #include "speed.h"
 #include "app_controllers.h"
 #include "app_race_roadsignal.h"
+#include "app_common.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
@@ -49,7 +50,7 @@ static bool actLapIsFinished;
 static float overtakeStartPoint;
 static float overtakeEndPoint;
 static float overtakeSpeed;
-bool turnOffLineFollow;
+bool sRunTurnOffLineFollow;
 
 uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
 uint32_t sRunPrevFrontDist;		//! Measured distance value in front of the car in the previous task run.
@@ -77,20 +78,21 @@ uint32_t sRunActDuty;
 
 static float sRunDistFk;
 
-static bool paradeFinished = false;
+static bool lapFinished;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static eSEGMENT_TYPE sRunGetSegmentType (void);
 static void sRunLoadInParamsToRun (void);
+static void sRunSpeedUpParadeLap (void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
-	actLapSegment = 2;
+	smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
+	actLapSegment = 0;
 	overtakeState = eSTATE_OVERTAKE_START;
 	actLapIsFinished = false;
 
@@ -107,7 +109,7 @@ void sRunInitStateMachines (void)
 	paramListSRun.overtaking.P = 0;
 	paramListSRun.overtaking.Kp = 0.01;
 	paramListSRun.overtaking.Kd = 0.5;
-	paramListSRun.overtaking.Speed = 15;
+	paramListSRun.overtaking.Speed = 10;
 
 	tryToOvertake 	= true;
 	behindSafetyCar = true;
@@ -126,7 +128,9 @@ void sRunInitStateMachines (void)
 	lineSpeedUpCounter = 0;
 
 	lineEnab = true;
-	turnOffLineFollow = false;
+	sRunTurnOffLineFollow = false;
+
+	lapFinished = false;
 
 	setRaceRs(InitFast);
 }
@@ -191,7 +195,7 @@ void sRunMainStateMachine (void)
 			sRunLoadInParamsToRun();
 
 			// Drive state machine.
-			actLapIsFinished = sRunDriveStateMachine();
+			sRunDriveStateMachine();
 
 			if (startGateFound == true || actLapIsFinished)
 			{
@@ -216,7 +220,7 @@ void sRunMainStateMachine (void)
 //! Function: sRunDriveStateMachine
 bool sRunDriveStateMachine (void)	// TODO implementation
 {
-	bool lapFinished = false;
+	bool robotInLastSegment = false;
 	RACE_RS roadSign;
 
 	roadSign = getRaceRs();
@@ -225,6 +229,8 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 	{
 		case 0:
 		{
+			lapFinished = false;
+
 			if (roadSign != Fast)
 			{
 				actLapSegment = 1;
@@ -284,7 +290,7 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 			if (roadSign == Fast)
 			{
 				actLapSegment = 8;
-				paradeFinished = true;
+				robotInLastSegment = true;
 			}
 			break;
 		}
@@ -303,13 +309,14 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 		}
 	}
 
-	return lapFinished;
+	return robotInLastSegment;
 }
 
 //! Function: sRunOvertakeStateMachine
 void sRunOvertakeStateMachine (void)
 {
 	float lenght;
+	bool robotInLastSegment = false;
 
 	// Actual distance from start.
 	overtakeEndPoint = speedGetDistance();
@@ -342,7 +349,7 @@ void sRunOvertakeStateMachine (void)
 			// Slow down.
 			overtakeSpeed = SRUN_OVERTAKE_SPEED_SLOW;
 			// Turn off line follow.
-			turnOffLineFollow = true;
+			sRunTurnOffLineFollow = true;
 
 			if (lenght < SRUN_OVERTAKE_DIST_TURN)
 			{
@@ -352,7 +359,7 @@ void sRunOvertakeStateMachine (void)
 			else
 			{
 				// Steer back to straight.
-				sRunServoAngle = SRUN_OVERTAKE_SERVO_STRAIGHT;
+				sRunServoAngle = SERVO_MIDDLE_RAD;
 
 				if (lenght > SRUN_OVERTAKE_DIST_FROM_LINE)
 				{
@@ -374,7 +381,7 @@ void sRunOvertakeStateMachine (void)
 			}
 			else
 			{
-				sRunServoAngle = SRUN_OVERTAKE_SERVO_STRAIGHT;
+				sRunServoAngle = SERVO_MIDDLE_RAD;
 				overtakeStartPoint = speedGetDistance();
 
 				overtakeState = eSTATE_OVERTAKE_PASS_SAFETY_CAR;
@@ -384,9 +391,9 @@ void sRunOvertakeStateMachine (void)
 		case eSTATE_OVERTAKE_PASS_SAFETY_CAR:
 		{
 			// Speed up.
-			overtakeSpeed = paramListSRun.overtaking.Speed;
+			overtakeSpeed = SRUN_OVERTAKE_SPEED_FAST;
 
-			sRunServoAngle = SRUN_OVERTAKE_SERVO_STRAIGHT;
+			sRunServoAngle = SERVO_MIDDLE_RAD;
 
 			if (lenght > SRUN_OVERTAKE_DIST_STRAIGHT)
 			{
@@ -402,7 +409,8 @@ void sRunOvertakeStateMachine (void)
 			// If the line is back, then it was successful. If not stop after a time (no collision).
 			if (lineGetRawFront().cnt != 0)
 			{
-				turnOffLineFollow = false;
+				sRunTurnOffLineFollow = false;
+				actLapSegment = SRUN_OVERTAKE_SEGMENT;
 
 				// The car is back on track.
 				overtakeState = eSTATE_OVERTAKE_SUCCESS;
@@ -417,7 +425,7 @@ void sRunOvertakeStateMachine (void)
 			}
 			else if (lenght > SRUN_OVERTAKE_DIST_FROM_LINE)
 			{
-				sRunServoAngle = SRUN_OVERTAKE_SERVO_STRAIGHT;
+				sRunServoAngle = SERVO_MIDDLE_RAD;
 			}
 			break;
 		}
@@ -427,7 +435,12 @@ void sRunOvertakeStateMachine (void)
 			tryToOvertake = false;
 			behindSafetyCar = false;
 
-			smMainStateSRun = eSTATE_MAIN_LAP_1;
+			sRunSpeedUpParadeLap();
+
+			if (robotInLastSegment == sRunDriveStateMachine())
+			{
+				smMainStateSRun = eSTATE_MAIN_LAP_1;
+			}
 		}
 		case eSTATE_OVERTAKE_FAILED:
 		{
@@ -457,6 +470,8 @@ void sRunOvertakeStateMachine (void)
 //! Function: sRunParadeLapAlgorithm
 void sRunParadeLapAlgorithm (void)
 {
+	bool startToAccel = false;
+
 	if (behindSafetyCar == true)
 	{
 		// Load in control parameters.
@@ -465,7 +480,7 @@ void sRunParadeLapAlgorithm (void)
 		sRunActualParams.Kd 	= paramListSRun.lapParade.Kd;
 		sRunActualParams.Speed	= paramListSRun.lapParade.Speed;
 
-		sRunDriveStateMachine();
+		startToAccel = sRunDriveStateMachine();
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
 		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT, sRunPrevFrontDist, sRunActFrontDist, 0.03f, 0.0f, 3.0f);
@@ -480,10 +495,7 @@ void sRunParadeLapAlgorithm (void)
 			// Follow the safety car until the last corner.
 
 			// Start gate means a new lap.
-			if (paradeFinished == true)
-			{
-				smMainStateSRun = eSTATE_MAIN_LAP_1;
-			}
+			smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
 		}
 	}
 	else
@@ -673,7 +685,11 @@ static eSEGMENT_TYPE sRunGetSegmentType (void)
 	return actualSegmentType;
 }
 
-
+//**********************************************************************************************************************
+//!
+//!
+//! @return -
+//**********************************************************************************************************************
 static void sRunLoadInParamsToRun (void)
 {
 	// Load in control parameters.
@@ -708,4 +724,17 @@ static void sRunLoadInParamsToRun (void)
 			break;
 		}
 	}
+}
+
+//**********************************************************************************************************************
+//!
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunSpeedUpParadeLap (void)
+{
+	sRunActualParams.P 		= paramListSRun.lap1[actLapSegment].P;
+	sRunActualParams.Kp 	= paramListSRun.lap1[actLapSegment].Kp;
+	sRunActualParams.Kd 	= paramListSRun.lap1[actLapSegment].Kd;
+	sRunActualParams.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
 }

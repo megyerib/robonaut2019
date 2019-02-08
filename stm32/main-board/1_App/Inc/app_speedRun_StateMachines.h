@@ -27,7 +27,6 @@
 #define SRUN_OVERTAKE_SPEED_FAST		(3.0f)				//!< m/2
 #define SRUN_OVERTAKE_SERVO_ANGLE		(30.0f*PI/180.0f)	//!< deg
 #define SRUN_OVERTAKE_SERVO_RET_ANGLE	(-12.0f*PI/180.0f)	//!< deg
-#define SRUN_OVERTAKE_SERVO_STRAIGHT	(1.25f*PI/180.0f)
 #define SRUN_OVERTAKE_DIST_TURN			(0.6f)				//! m
 #define SRUN_OVERTAKE_DIST_FROM_LINE	(0.88f)				//! m
 #define SRUN_OVERTAKE_DIST_STRAIGHT		(3.8f)				//! m

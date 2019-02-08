@@ -58,6 +58,14 @@ typedef struct
 	uint32_t negative[3];		// 0 = L, 1 = M, 2 = R
 } cSEGMENT;
 
+typedef enum
+{
+	eSTATE_INCLIN_START = 0,
+	eSTATE_INCLIN_STEER_OUT,
+	eSTATE_INCLIN_LEAVE_LINE,
+	eSTATE_INCLIN_CATCH_LINE,
+} eSTATE_INCLIN;
+
 // Variables -----------------------------------------------------------------------------------------------------------
 // Function prototypes -------------------------------------------------------------------------------------------------
 
