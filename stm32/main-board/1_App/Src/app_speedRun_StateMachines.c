@@ -46,6 +46,10 @@ static uint32_t timeCounter;	//!< Counter for the individual timing functionalit
 
 static eSTATE_OVERTAKE overtakeState;	//!< Actual state of the overtake state machine.
 static bool actLapIsFinished;
+static float overtakeStartPoint;
+static float overtakeEndPoint;
+static float overtakeSpeed;
+bool turnOffLineFollow;
 
 uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
 uint32_t sRunPrevFrontDist;		//! Measured distance value in front of the car in the previous task run.
@@ -73,6 +77,8 @@ uint32_t sRunActDuty;
 
 static float sRunDistFk;
 
+static bool paradeFinished = false;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static eSEGMENT_TYPE sRunGetSegmentType (void);
@@ -83,9 +89,9 @@ static void sRunLoadInParamsToRun (void);
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_LAP_1;
-	actLapSegment = 0;
-	overtakeState = eSTATE_OVERTAKE_LEAVE_LINE;
+	smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+	actLapSegment = 2;
+	overtakeState = eSTATE_OVERTAKE_START;
 	actLapIsFinished = false;
 
 	sRunActualParams.P		= 0.05;
@@ -96,9 +102,14 @@ void sRunInitStateMachines (void)
 	paramListSRun.lapParade.P = 0.05;
 	paramListSRun.lapParade.Kp = 0.025;
 	paramListSRun.lapParade.Kd = 3.5;
-	paramListSRun.lapParade.Speed = 18;
+	paramListSRun.lapParade.Speed = 17;
 
-	tryToOvertake 	= false;
+	paramListSRun.overtaking.P = 0;
+	paramListSRun.overtaking.Kp = 0.01;
+	paramListSRun.overtaking.Kd = 0.5;
+	paramListSRun.overtaking.Speed = 15;
+
+	tryToOvertake 	= true;
 	behindSafetyCar = true;
 	startGateFound  = false;
 	timeCounter 	= 0;
@@ -115,6 +126,7 @@ void sRunInitStateMachines (void)
 	lineSpeedUpCounter = 0;
 
 	lineEnab = true;
+	turnOffLineFollow = false;
 
 	setRaceRs(InitFast);
 }
@@ -272,6 +284,7 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 			if (roadSign == Fast)
 			{
 				actLapSegment = 8;
+				paradeFinished = true;
 			}
 			break;
 		}
@@ -291,331 +304,120 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 	}
 
 	return lapFinished;
-
-	/*bool lapFinished = false;
-	eSEGMENT_TYPE segmentType;
-
-	// Determine which segment type the car is on
-	if (lineEnab == true)
-	{
-		segmentType = sRunGetSegmentType();
-	}
-	else
-	{
-		segmentType = eSEG_SLOW_OR_SPEED;
-	}
-
-
-	// Search for the end of the segment: 3 continuous lines (slow down segment).
-	switch (actLapSegment)
-	{
-		case 0:
-		{
-			// Find slowing segment (3 continuous lines).
-			if (segmentType == eSEG_SLOW_OR_SPEED)
-			{
-				actLapSegment = 1;
-			}
-			break;
-		}
-		case 1:
-		{
-			// Find main track (1 line). Corner.
-			if (segmentType == eSEG_CORNER)
-			{
-				actLapSegment = 2;
-			}
-			break;
-		}
-		case 2:
-		{
-			// Find acceleration segment (3 discrete line segments).
-			if (segmentType == eSEG_SLOW_OR_SPEED)
-			{
-				if (lineSpeedUpCounter == 0)
-				{
-					lineEnab = false;
-					lineSpeedUpStart = speedGetDistance();
-				}
-
-				lineSpeedUpCounter++;
-				lineLenght = speedGetDistance();
-
-				if (lineLenght - lineSpeedUpStart > 0.8)
-				{
-					lineEnab = true;
-					lineSpeedUpCounter = 0;
-					actLapSegment = 3;
-				}
-			}
-			break;
-		}
-		case 3:
-		{
-			// Find main track (1 line).
-			if (segmentType == eSEG_CORNER //eSEG_STRAIGHT)
-			{
-				actLapSegment = 4;
-			}
-			break;
-		}
-		case 4:
-		{
-			// Find slowing segment (3 continuous lines).
-			if (segmentType == eSEG_SLOW_OR_SPEED)
-			{
-				actLapSegment = 5;
-			}
-			break;
-		}
-		case 5:
-		{
-			// Find main track (1 line).
-			if (segmentType == eSEG_CORNER)
-			{
-				actLapSegment = 6;
-			}
-			break;
-		}
-		case 6:
-		{
-			// Find acceleration segment (3 discrete line segments).
-			if (segmentType == eSEG_SLOW_OR_SPEED)
-			{
-				if (lineSpeedUpCounter == 0)
-				{
-					lineEnab = false;
-					lineSpeedUpStart = speedGetDistance();
-				}
-
-				lineSpeedUpCounter++;
-				lineLenght = speedGetDistance();
-
-				if (lineLenght - lineSpeedUpStart > 0.8)
-				{
-					lineEnab = true;
-					lineSpeedUpCounter = 0;
-					actLapSegment = 7;
-				}
-			}
-			break;
-		}
-		case 7:
-		{
-			// Find main track (1 line).
-			if (segmentType == eSEG_CORNER //eSEG_STRAIGHT)
-			{
-				actLapSegment = 8;
-			}
-			break;
-		}
-		case 8:
-		{
-			// Find slowing segment (3 continuous lines).
-			if (segmentType == eSEG_SLOW_OR_SPEED)
-			{
-				actLapSegment = 9;
-			}
-			break;
-		}
-		case 9:
-		{
-			// Find main track (1 line).
-			if (segmentType == eSEG_CORNER)
-			{
-				actLapSegment = 10;
-			}
-			break;
-		}
-		case 10:
-		{
-			// Find acceleration segment (3 discrete line segments).
-			if (segmentType == eSEG_SLOW_OR_SPEED)
-			{
-				if (lineSpeedUpCounter == 0)
-				{
-					lineEnab = false;
-					lineSpeedUpStart = speedGetDistance();
-				}
-
-				lineSpeedUpCounter++;
-				lineLenght = speedGetDistance();
-
-				if (lineLenght - lineSpeedUpStart > 0.8)
-				{
-					lineEnab = true;
-					lineSpeedUpCounter = 0;
-					actLapSegment = 11;
-				}
-			}
-			break;
-		}
-		case 11:
-		{
-			// Find main track (1 line).
-			if (segmentType == eSEG_CORNER //eSEG_STRAIGHT)
-			{
-				actLapSegment = 12;
-			}
-			break;
-		}
-		case 12:
-		{
-			// Find slowing segment (3 continuous lines).
-			if (segmentType == eSEG_SLOW_OR_SPEED)
-			{
-
-				actLapSegment = 13;
-			}
-			break;
-		}
-		case 13:
-		{
-			// Find main track (1 line).
-			if (segmentType == eSEG_CORNER)
-			{
-				actLapSegment = 14;
-			}
-			break;
-		}
-		case 14:
-		{
-			// Find acceleration segment (3 discrete line segments).
-			if (segmentType == eSEG_SLOW_OR_SPEED)
-			{
-				if (lineSpeedUpCounter == 0)
-				{
-					lineEnab = false;
-					lineSpeedUpStart = speedGetDistance();
-				}
-
-				lineSpeedUpCounter++;
-				lineLenght = speedGetDistance();
-
-				if (lineLenght - lineSpeedUpStart > 0.8)
-				{
-					lineEnab = true;
-					lineSpeedUpCounter = 0;
-					actLapSegment = 15;
-				}
-			}
-			break;
-		}
-		case 15:
-		{
-			// At the end of the segment.
-			if (segmentType == eSEG_CORNER //eSEG_STRAIGHT)
-			{
-				// The lap is complete, stop
-				lapFinished = true;
-			}
-			break;
-		}
-		default:
-		{
-			// NOP
-			break;
-		}
-	}
-
-	return lapFinished;*/
 }
 
 //! Function: sRunOvertakeStateMachine
 void sRunOvertakeStateMachine (void)
 {
+	float lenght;
+
+	// Actual distance from start.
+	overtakeEndPoint = speedGetDistance();
+	// Distance form the start position.
+	lenght = overtakeEndPoint - overtakeStartPoint;
+
 	// Maneuver
 	switch (overtakeState)
 	{
+		case eSTATE_OVERTAKE_START:
+		{
+			overtakeStartPoint = speedGetDistance();
+			overtakeSpeed = 0.6f;
+
+			overtakeState = eSTATE_OVERTAKE_DELAY;
+			break;
+		}
+		case eSTATE_OVERTAKE_DELAY:
+		{
+			if (lenght > 1.2f)
+			{
+				overtakeStartPoint = speedGetDistance();
+
+				overtakeState = eSTATE_OVERTAKE_LEAVE_LINE;
+			}
+			break;
+		}
 		case eSTATE_OVERTAKE_LEAVE_LINE:
 		{
 			// Slow down.
-			motorSetDutyCycle(SRUN_OVERTAKE_SPEED_SLOW);
+			overtakeSpeed = SRUN_OVERTAKE_SPEED_SLOW;
+			// Turn off line follow.
+			turnOffLineFollow = true;
 
-			// Turn left for a bit
-			servoSetAngle(SRUN_OVERTAKE_SERVO_ANGLE);
-
-			// Time is ticking.
-			if (timeCounter >= SRUN_OVERTAKE_TURN_TIME)
+			if (lenght < SRUN_OVERTAKE_DIST_TURN)
 			{
-				// Reset the time counter.
-				timeCounter = 0;
-
-				// Get back to parallel.
-				overtakeState = eSTATE_OVERTAKE_GET_PARALLEL;
+				// Turn left for a bit
+				sRunServoAngle = SRUN_OVERTAKE_SERVO_ANGLE;
 			}
 			else
 			{
-				timeCounter++;
+				// Steer back to straight.
+				sRunServoAngle = SRUN_OVERTAKE_SERVO_STRAIGHT;
+
+				if (lenght > SRUN_OVERTAKE_DIST_FROM_LINE)
+				{
+					overtakeState = eSTATE_OVERTAKE_GET_PARALLEL;
+					overtakeStartPoint = speedGetDistance();
+				}
 			}
 			break;
 		}
 		case eSTATE_OVERTAKE_GET_PARALLEL:
 		{
-			// Turn right to get parallel with the line.
-			servoSetAngle(-SRUN_OVERTAKE_SERVO_ANGLE);
+			// Slow down.
+			overtakeSpeed = SRUN_OVERTAKE_SPEED_SLOW;
 
-			// Time is ticking.
-			if (timeCounter >= SRUN_OVERTAKE_TURN_TIME)
+			if (lenght < SRUN_OVERTAKE_DIST_TURN)
 			{
-				// Reset the time counter.
-				timeCounter = 0;
-
-				// Pass the safety car.
-				overtakeState = eSTATE_OVERTAKE_PASS_SAFETY_CAR;
+				// Turn right to get parallel with the line.
+				sRunServoAngle = -SRUN_OVERTAKE_SERVO_ANGLE;
 			}
 			else
 			{
-				timeCounter++;
+				sRunServoAngle = SRUN_OVERTAKE_SERVO_STRAIGHT;
+				overtakeStartPoint = speedGetDistance();
+
+				overtakeState = eSTATE_OVERTAKE_PASS_SAFETY_CAR;
 			}
 			break;
 		}
 		case eSTATE_OVERTAKE_PASS_SAFETY_CAR:
 		{
 			// Speed up.
-			motorSetDutyCycle(paramListSRun.overtaking.Speed);
+			overtakeSpeed = paramListSRun.overtaking.Speed;
 
-			// After a given time slow down.
-			// Time is ticking.
-			if (timeCounter >= SRUN_OVERTAKE_PASS_TIME)
+			sRunServoAngle = SRUN_OVERTAKE_SERVO_STRAIGHT;
+
+			if (lenght > SRUN_OVERTAKE_DIST_STRAIGHT)
 			{
-				// Reset the time counter.
-				timeCounter = 0;
-
 				// Get back to the track
 				overtakeState = eSTATE_OVERTAKE_FIND_LINE;
-			}
-			else
-			{
-				timeCounter++;
+
+				overtakeStartPoint = speedGetDistance();
 			}
 			break;
 		}
 		case eSTATE_OVERTAKE_FIND_LINE:
 		{
-			// Slow down.
-			motorSetDutyCycle(SRUN_OVERTAKE_SPEED_SLOW);
-
-			// Turn right.
-			servoSetAngle(-SRUN_OVERTAKE_SERVO_ANGLE);
-
-			// Search for the line.
-			// Time is ticking.
-			if (timeCounter >= SRUN_OVERTAKE_FIND_TIME)
+			// If the line is back, then it was successful. If not stop after a time (no collision).
+			if (lineGetRawFront().cnt != 0)
 			{
-				// Could not find the line, the car is lost.
-				overtakeState = eSTATE_OVERTAKE_FAILED;
+				turnOffLineFollow = false;
+
+				// The car is back on track.
+				overtakeState = eSTATE_OVERTAKE_SUCCESS;
 			}
-			else
-			{
-				timeCounter++;
 
-				// If the line is back, then it was successful. If not stop after a time (no collision).
-				if (lineGetRawFront().cnt != 0)
-				{
-					// The car is back on track.
-					overtakeState = eSTATE_OVERTAKE_SUCCESS;
-				}
+			// Slow down.
+			overtakeSpeed = SRUN_OVERTAKE_SPEED_SLOW;
+
+			if (lenght < SRUN_OVERTAKE_DIST_TURN)
+			{
+				sRunServoAngle = SRUN_OVERTAKE_SERVO_RET_ANGLE;
+			}
+			else if (lenght > SRUN_OVERTAKE_DIST_FROM_LINE)
+			{
+				sRunServoAngle = SRUN_OVERTAKE_SERVO_STRAIGHT;
 			}
 			break;
 		}
@@ -625,8 +427,7 @@ void sRunOvertakeStateMachine (void)
 			tryToOvertake = false;
 			behindSafetyCar = false;
 
-			// Resume the Parade lap.
-			smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+			smMainStateSRun = eSTATE_MAIN_LAP_1;
 		}
 		case eSTATE_OVERTAKE_FAILED:
 		{
@@ -664,6 +465,8 @@ void sRunParadeLapAlgorithm (void)
 		sRunActualParams.Kd 	= paramListSRun.lapParade.Kd;
 		sRunActualParams.Speed	= paramListSRun.lapParade.Speed;
 
+		sRunDriveStateMachine();
+
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
 		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT, sRunPrevFrontDist, sRunActFrontDist, 0.03f, 0.0f, 3.0f);
 
@@ -671,16 +474,13 @@ void sRunParadeLapAlgorithm (void)
 		if (tryToOvertake == true && actLapSegment == SRUN_OVERTAKE_SEGMENT)
 		{
 			smMainStateSRun = eSTATE_MAIN_OVERTAKING;
-
-			// Reset the time counter for the maneuver.
-			timeCounter = 0;
 		}
 		else
 		{
 			// Follow the safety car until the last corner.
 
 			// Start gate means a new lap.
-			if (sRunDriveStateMachine() == true)
+			if (paradeFinished == true)
 			{
 				smMainStateSRun = eSTATE_MAIN_LAP_1;
 			}
