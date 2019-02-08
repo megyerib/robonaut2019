@@ -6,7 +6,7 @@
 static int isAllVerticesVisited(uint8_t* visited, int vnum);
 static int nextPoint(uint8_t* visited, uint32_t* cost, int vnum);
 
-void dijkstra(EDGE* edges, int edgenum, int entry, int exit, uint8_t* path, int* pathlen)
+void dijkstra(EDGE* edges, int edgenum, int entry, int exit, int* path, int* pathlen)
 {
     uint8_t visited[MAX_VERTICES];
     uint32_t cost[MAX_VERTICES];
@@ -76,7 +76,7 @@ void dijkstra(EDGE* edges, int edgenum, int entry, int exit, uint8_t* path, int*
     }
 }
 
-void dijkstraPathToNearestValid(EDGE* edges, int* valid, int edgenum, int entry, uint8_t* path, int* pathlen)
+void dijkstraPathToNearestValid(EDGE* edges, int* valid, int edgenum, int entry, int* path, int* pathlen)
 {
 	uint8_t visited[MAX_VERTICES];
 	uint32_t cost[MAX_VERTICES];
