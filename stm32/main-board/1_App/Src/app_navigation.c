@@ -98,6 +98,13 @@ void Task_Navigation(void* p)
 	naviInertOffsetCalibration();
 	naviInertOffsetCalibration();
 	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
+	naviInertOffsetCalibration();
 
 	while(1)
 	{

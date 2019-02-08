@@ -107,6 +107,8 @@ void Error_Handler(void);
 #define INRT_CS_GPIO_Port GPIOC
 #define INRT_SD0_Pin GPIO_PIN_14
 #define INRT_SD0_GPIO_Port GPIOB
+#define BTN_RST_EXTRA_Pin GPIO_PIN_15
+#define BTN_RST_EXTRA_GPIO_Port GPIOB
 #define RADIO_UA6_TX_Pin GPIO_PIN_6
 #define RADIO_UA6_TX_GPIO_Port GPIOC
 #define RADIO_UA6_RX_Pin GPIO_PIN_7
@@ -133,8 +135,12 @@ void Error_Handler(void);
 #define BT_UA5_RX_GPIO_Port GPIOD
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+#define BTN_RST_HARD_Pin GPIO_PIN_5
+#define BTN_RST_HARD_GPIO_Port GPIOB
 #define BT_CONN_Pin GPIO_PIN_8
 #define BT_CONN_GPIO_Port GPIOB
+#define BTN_RST_SOFT_Pin GPIO_PIN_9
+#define BTN_RST_SOFT_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

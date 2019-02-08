@@ -166,7 +166,7 @@ double naviNormaliseOrientation (const double psi)
 	{
 		// Positive.
 
-		// Convert into [0; 2PI)
+		// Convert into [0; PI)
 		while (temp >= 2.0 * NAVI_PI)
 		{
 			temp -= 2.0 * NAVI_PI;
@@ -178,7 +178,7 @@ double naviNormaliseOrientation (const double psi)
 	{
 		// Negative.
 
-		// Convert into (-2PI; 0]
+		// Convert into (-PI; 0]
 		while (temp <= -2.0 * NAVI_PI)
 		{
 			temp += 2.0 * NAVI_PI;
@@ -188,6 +188,12 @@ double naviNormaliseOrientation (const double psi)
 	}
 
 	return normOri;
+}
+
+void naviResetNaviState (const cNAVI_STATE naviData)
+{
+	prevPhi = naviData.psi;
+	prevP = naviData.p;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
