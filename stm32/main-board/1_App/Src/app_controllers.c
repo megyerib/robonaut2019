@@ -102,7 +102,7 @@ float cntrDistance (const uint32_t followDist,
 	// Calculate control variable.
 	speed = diff  * kP;
 
-	if (actDist > 230)
+	if (actDist > 220)
 	{
 		speed = 0.8f;
 	}

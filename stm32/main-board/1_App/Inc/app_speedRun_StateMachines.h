@@ -14,7 +14,7 @@
 //! Determines how many segments a lap has.
 #define	SRUN_LAP_SEGMENTS				16
 
-#define SRUN_FOLLOW_DISTANCE			40			//!< cm TODO determine
+#define SRUN_FOLLOW_DISTANCE			42			//!< cm TODO determine
 
 #define SRUN_START_GATE_DISTANCE		15			//!< cm TODO measure
 

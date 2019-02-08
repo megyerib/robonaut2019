@@ -70,18 +70,22 @@ static bool lineNewLine;
 
 static bool lapFinished;
 
+static uint32_t lapSegStart;
+static uint32_t lapSegEnd;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static eSEGMENT_TYPE sRunGetSegmentType (void);
 static void sRunLoadInParamsToRun (void);
 static void sRunSpeedUpParadeLap (void);
+static float sRunConvertAngleTo180 (const float angle);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
+	smMainStateSRun = eSTATE_MAIN_OVERTAKING;
 	actLapSegment = 0;
 	overtakeState = eSTATE_OVERTAKE_START;
 	actLapIsFinished = false;
@@ -99,7 +103,7 @@ void sRunInitStateMachines (void)
 	paramListSRun.overtaking.P = 0;
 	paramListSRun.overtaking.Kp = 0.01;
 	paramListSRun.overtaking.Kd = 0.5;
-	paramListSRun.overtaking.Speed = 10;
+	paramListSRun.overtaking.Speed = 5;
 
 	tryToOvertake 	= true;
 	behindSafetyCar = true;
@@ -206,8 +210,11 @@ bool sRunDriveStateMachine (void)
 {
 	bool robotInLastSegment = false;
 	RACE_RS roadSign;
+	float lenght;
 
 	roadSign = getRaceRs();
+	lapSegEnd = speedGetDistance();
+	lenght = lapSegEnd - lapSegStart;
 
 	switch (actLapSegment)
 	{
@@ -218,20 +225,20 @@ bool sRunDriveStateMachine (void)
 			if (roadSign != Fast)
 			{
 				actLapSegment = 1;
+				lapSegStart = speedGetDistance();
 			}
 			break;
 		}
 		case 1:
 		{
-			if (roadSign == Fast)
+			if (lenght > 2.0f)
 			{
 				actLapSegment = 2;
 			}
-			break;
 		}
 		case 2:
 		{
-			if (roadSign != Fast)
+			if (roadSign == Fast)
 			{
 				actLapSegment = 3;
 			}
@@ -239,31 +246,31 @@ bool sRunDriveStateMachine (void)
 		}
 		case 3:
 		{
-			if (roadSign == Fast)
+			if (roadSign != Fast)
 			{
 				actLapSegment = 4;
+				lapSegStart = speedGetDistance();
 			}
 			break;
 		}
 		case 4:
 		{
-			if (roadSign != Fast)
+			if (lenght > 3.0f)
 			{
 				actLapSegment = 5;
+				lapSegStart = speedGetDistance();
 			}
-			break;
 		}
 		case 5:
 		{
-			if (roadSign == Fast)
+			if (lenght > 3.0f)
 			{
 				actLapSegment = 6;
 			}
-			break;
 		}
 		case 6:
 		{
-			if (roadSign != Fast)
+			if (roadSign == Fast)
 			{
 				actLapSegment = 7;
 			}
@@ -271,14 +278,54 @@ bool sRunDriveStateMachine (void)
 		}
 		case 7:
 		{
-			if (roadSign == Fast)
+			if (roadSign != Fast)
 			{
 				actLapSegment = 8;
-				robotInLastSegment = true;
+				lapSegStart = speedGetDistance();
 			}
 			break;
 		}
 		case 8:
+		{
+			if (lenght > 2.0f)
+			{
+				actLapSegment = 9;
+				lapSegStart = speedGetDistance();
+			}
+		}
+		case 9:
+		{
+			if (lenght > 3.0f)
+			{
+				actLapSegment = 10;
+			}
+		}
+		case 10:
+		{
+			if (roadSign == Fast)
+			{
+				actLapSegment = 11;
+			}
+			break;
+		}
+		case 11:
+		{
+			if (roadSign != Fast)
+			{
+				actLapSegment = 12;
+			}
+			break;
+		}
+		case 12:
+		{
+			if (roadSign == Fast)
+			{
+				actLapSegment = 13;
+				robotInLastSegment = true;
+			}
+			break;
+		}
+		case 13:
 		{
 			if (roadSign != Fast)
 			{
@@ -369,32 +416,39 @@ void sRunOvertakeStateMachine (void)
 				sRunServoAngle = SERVO_MIDDLE_RAD;
 				overtakeStartPoint = speedGetDistance();
 
+
 				overtakeState = eSTATE_OVERTAKE_PASS_SAFETY_CAR;
 			}
 			break;
 		}
 		case eSTATE_OVERTAKE_PASS_SAFETY_CAR:
 		{
+			float actAngle;
+			float wantedAngle;
+
 			// Speed up.
 			overtakeSpeed = SRUN_OVERTAKE_SPEED_FAST;
 
 			// Get actual angular velocity of z axis (Yaw).
-			xQueuePeek(qNaviPSI_f, &actPsi, 0);
+			/*xQueuePeek(qNaviPSI_f, &actPsi, 0);
+
+			actAngle = sRunConvertAngleTo180(actPsi);
+			wantedAngle = sRunConvertAngleTo180(overtakePsi);
 
 			// TODO TEST
-			if (overtakePsi > 0.02)
+			if (actAngle > wantedAngle + 0.17f)
 			{
-				sRunServoAngle += -1.0f*PI/180.0f;
+				sRunServoAngle = SERVO_MIDDLE_RAD + 30.0f*PI/180.0f;
 			}
-			else if (overtakePsi < -0.02)
+			else if (actAngle < wantedAngle - 0.17f)
 			{
-				sRunServoAngle += 1.0f*PI/180.0f;
+				sRunServoAngle = SERVO_MIDDLE_RAD - 30.0f*PI/180.0f;
 			}
 			else
 			{
 				sRunServoAngle = SERVO_MIDDLE_RAD;
-			}
-
+			}*/
+			sRunServoAngle = SERVO_MIDDLE_RAD;
 
 			if (lenght > SRUN_OVERTAKE_DIST_STRAIGHT)
 			{
@@ -738,4 +792,20 @@ static void sRunSpeedUpParadeLap (void)
 	sRunActualParams.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
 
 	sRunActSpeedDist = paramListSRun.lap1[actLapSegment].Speed;
+}
+
+static float sRunConvertAngleTo180 (const float angle)
+{
+	float retVal;
+
+	if (angle > PI)
+	{
+		retVal = angle - PI;
+	}
+	else
+	{
+		retVal = angle + PI;
+	}
+
+	return retVal;
 }

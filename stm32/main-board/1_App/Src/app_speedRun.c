@@ -124,16 +124,16 @@ void TaskInit_SpeedRun (void)
 {
 	// Configure the GPIOs of the buttons.
 	btnHardRstSpeedRun = GPIO_PIN_SET;
-	//btnHardRst_Port  = GPIOx;
-	//btnHardRst_Pin   = GPIO_PIN_x;
+	btnHardRst_Port  = BTN_RST_HARD_GPIO_Port;
+	btnHardRst_Pin   = BTN_RST_HARD_Pin;
 
 	btnSoftRstSpeedRun = GPIO_PIN_SET;
-	//btnSoftRst_Port  = GPIOx;
-	//btnSoftRst_Pin   = GPIO_PIN_x;
+	btnSoftRst_Port  = BTN_RST_SOFT_GPIO_Port;
+	btnSoftRst_Pin   = BTN_RST_SOFT_Pin;
 
 	btnExtraRstSpeedRun = GPIO_PIN_SET;
-	//btnExtraRst_Port  = GPIOx;
-	//btnExtraRst_Pin   = GPIO_PIN_x;
+	btnExtraRst_Port  = BTN_RST_EXTRA_GPIO_Port;
+	btnExtraRst_Pin   = BTN_RST_EXTRA_Pin;
 
 	// Reset the module.
 	speedRunStarted = false;
@@ -211,7 +211,7 @@ void Task_SpeedRun (void* p)
 				sRunActSpeedDuty = cntrSpeed(((float)sRunActualParams.Speed/10.0f), sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunSpeedFk, SRUN_SPEED_KC);
 			}
 
-			if (cntrLineFollowActive == false)
+			if (cntrLineFollowActive == true)
 			{
 				// Control the servo.
 				sRunServoAngle = cntrlLineFollow(sRunActLine, sRunPrevLine, sRunActualParams.P, sRunActualParams.Kp, sRunActualParams.Kd);
@@ -529,7 +529,7 @@ static void sRunUpdateParams (void)
 static void sRunCheckRstBtn_Hard (void)
 {
 	btnHardRstSpeedRun = HAL_GPIO_ReadPin(btnHardRst_Port, btnHardRst_Pin);
-	if (/*btnHardRstSpeedRun == GPIO_PIN_RESET || TODO*/ recHardReset == true)
+	if (btnHardRstSpeedRun == GPIO_PIN_RESET || recHardReset == true)
 	{
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
 
@@ -554,7 +554,7 @@ static void sRunCheckRstBtn_Hard (void)
 static void sRunCheckRstBtn_Soft (void)
 {
 	btnSoftRstSpeedRun = HAL_GPIO_ReadPin(btnSoftRst_Port, btnSoftRst_Pin);
-	if (/*btnSoftRstSpeedRun == GPIO_PIN_RESET || TODO */ recSoftReset == true)
+	if (btnSoftRstSpeedRun == GPIO_PIN_RESET || recSoftReset == true)
 	{
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
 
@@ -581,7 +581,7 @@ static void sRunCheckRstBtn_Soft (void)
 static void sRunCheckRstBtn_Extra (void)
 {
 	btnExtraRstSpeedRun = HAL_GPIO_ReadPin(btnExtraRst_Port, btnExtraRst_Pin);
-	if (/*btnExtraRstSpeedRun == GPIO_PIN_RESET || TODO */ true)
+	if (btnExtraRstSpeedRun == GPIO_PIN_RESET)
 	{
 		//TODO
 	}
