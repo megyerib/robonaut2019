@@ -32,7 +32,7 @@
 #define DIFF_IN_GEAR   13
 #define DIFF_OUT_GEAR  38
 
-#define MOTOR_D_MAX   (0.85f)
+#define MOTOR_D_MAX   (0.95f)
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
