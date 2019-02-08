@@ -25,14 +25,14 @@
 #define SRUN_SPEED_SUB_SEG_LEN_MAX 	(100U)  	//!< mm
 
 #define SRUN_DIST_KEEP_SPEED_MIN	(0.0f)		//!< m/s
-#define SRUN_DIST_KEEP_SPEED_MAX	(1.5f)  	//!< m/s
-#define SRUN_DIST_SETPOINT			(60u)		//!< cm
-#define SRUN_DIST_TI				(150.0f)		//!< ms
-#define SRUN_DIST_KC				(0.15f)		//!<
+#define SRUN_DIST_KEEP_SPEED_MAX	(3.0f)  	//!< m/s
+#define SRUN_DIST_KEEP_KP			(0.03f)
+#define SRUN_DIST_SETPOINT			(62u)		//!< cm
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
 
+extern QueueHandle_t qNaviPSI_f;
 
 eSTATE_MAIN smMainStateSRun;	//!< State of the speed run main state machine.
 uint8_t actLapSegment;			//!< The lap is divided into a given number of segments, and this many states has a lap state machine.
@@ -41,6 +41,14 @@ cPD_CNTRL_PARAMS sRunActualParams;			//!< Control parameters of the actual state
 cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;	//!< Contain all of the control parameters.
 
 bool tryToOvertake;				//!< During the Parade lap the car is allowed to try to overtake the safety car.
+
+float sRunServoAngle;
+float sRunActSpeedDist;
+
+uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
+uint32_t sRunPrevFrontDist;		//! Measured distance value in front of the car in the previous task run.
+
+
 static bool behindSafetyCar;	//!< Flag that indicates that the car is behind the safety car.
 static bool startGateFound;		//!< Flag that indicates if the car went through the start gate, which means a new lap is started.
 static uint32_t timeCounter;	//!< Counter for the individual timing functionalities.
@@ -50,10 +58,7 @@ static bool actLapIsFinished;
 static float overtakeStartPoint;
 static float overtakeEndPoint;
 static float overtakeSpeed;
-bool sRunTurnOffLineFollow;
-
-uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
-uint32_t sRunPrevFrontDist;		//! Measured distance value in front of the car in the previous task run.
+static float overtakePsi;
 
 static uint8_t segmentTypeCounter;
 static uint32_t lineStart;
@@ -62,19 +67,6 @@ static uint32_t lineTimeCounter;
 static uint32_t lineTimePoint;
 static uint8_t prevSegmentType;
 static bool lineNewLine;
-
-static uint8_t lineSpeedUpCounter;
-static bool lineEnab;
-
-float sRunActLine;
-float sRunPrevLine;
-float sRunServoAngle;
-float sRunActSpeed;
-float sRunActSpeedDist;
-
-uint32_t sRunActDuty;
-
-static float sRunDistFk;
 
 static bool lapFinished;
 
@@ -114,8 +106,6 @@ void sRunInitStateMachines (void)
 	startGateFound  = false;
 	timeCounter 	= 0;
 
-	sRunDistFk = 0;
-
 	sRunActFrontDist  = 0;
 	sRunPrevFrontDist = 0;
 
@@ -123,10 +113,7 @@ void sRunInitStateMachines (void)
 	lineTimeCounter = 0;
 	prevSegmentType = eSEG_LOST_TRACK;
 
-	lineSpeedUpCounter = 0;
-
-	lineEnab = true;
-	sRunTurnOffLineFollow = false;
+	sRunCntrlLineFollow_ON();
 
 	lapFinished = false;
 
@@ -143,7 +130,6 @@ void sRunMainStateMachine (void)
 			// Check the distance change of the safety car.
 			sRunPrevFrontDist = sRunActFrontDist;
 			sRunActFrontDist = sharpGetMeasurement().Distance;
-			sRunActSpeed = 0;
 
 			if (sRunActFrontDist >= SRUN_DIST_SETPOINT)
 			{
@@ -216,7 +202,7 @@ void sRunMainStateMachine (void)
 }
 
 //! Function: sRunDriveStateMachine
-bool sRunDriveStateMachine (void)	// TODO implementation
+bool sRunDriveStateMachine (void)
 {
 	bool robotInLastSegment = false;
 	RACE_RS roadSign;
@@ -314,6 +300,7 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 void sRunOvertakeStateMachine (void)
 {
 	float lenght;
+	float actPsi;
 
 	// Actual distance from start.
 	overtakeEndPoint = speedGetDistance();
@@ -336,6 +323,7 @@ void sRunOvertakeStateMachine (void)
 			if (lenght > 1.2f)
 			{
 				overtakeStartPoint = speedGetDistance();
+				xQueuePeek(qNaviPSI_f, &overtakePsi, 0);
 
 				overtakeState = eSTATE_OVERTAKE_LEAVE_LINE;
 			}
@@ -346,7 +334,7 @@ void sRunOvertakeStateMachine (void)
 			// Slow down.
 			overtakeSpeed = SRUN_OVERTAKE_SPEED_SLOW;
 			// Turn off line follow.
-			sRunTurnOffLineFollow = true;
+			sRunCntrlLineFollow_OFF();
 
 			if (lenght < SRUN_OVERTAKE_DIST_TURN)
 			{
@@ -390,7 +378,23 @@ void sRunOvertakeStateMachine (void)
 			// Speed up.
 			overtakeSpeed = SRUN_OVERTAKE_SPEED_FAST;
 
-			sRunServoAngle = SERVO_MIDDLE_RAD;
+			// Get actual angular velocity of z axis (Yaw).
+			xQueuePeek(qNaviPSI_f, &actPsi, 0);
+
+			// TODO TEST
+			if (overtakePsi > 0.02)
+			{
+				sRunServoAngle += -1.0f*PI/180.0f;
+			}
+			else if (overtakePsi < -0.02)
+			{
+				sRunServoAngle += 1.0f*PI/180.0f;
+			}
+			else
+			{
+				sRunServoAngle = SERVO_MIDDLE_RAD;
+			}
+
 
 			if (lenght > SRUN_OVERTAKE_DIST_STRAIGHT)
 			{
@@ -406,7 +410,7 @@ void sRunOvertakeStateMachine (void)
 			// If the line is back, then it was successful. If not stop after a time (no collision).
 			if (lineGetRawFront().cnt != 0)
 			{
-				sRunTurnOffLineFollow = false;
+				sRunCntrlLineFollow_ON();
 				actLapSegment = SRUN_OVERTAKE_SEGMENT;
 
 				// The car is back on track.
@@ -476,7 +480,12 @@ void sRunParadeLapAlgorithm (void)
 		sRunDriveStateMachine();
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
-		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT, sRunPrevFrontDist, sRunActFrontDist, 0.03f, 0.0f, 3.0f);
+		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT,
+										sRunPrevFrontDist,
+										sRunActFrontDist,
+										SRUN_DIST_KEEP_KP,
+										SRUN_DIST_KEEP_SPEED_MIN,
+										SRUN_DIST_KEEP_SPEED_MAX);
 
 		// Try to overtake if it is enabled.
 		if (tryToOvertake == true && actLapSegment == SRUN_OVERTAKE_SEGMENT)
@@ -727,4 +736,6 @@ static void sRunSpeedUpParadeLap (void)
 	sRunActualParams.Kp 	= paramListSRun.lap1[actLapSegment].Kp;
 	sRunActualParams.Kd 	= paramListSRun.lap1[actLapSegment].Kd;
 	sRunActualParams.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
+
+	sRunActSpeedDist = paramListSRun.lap1[actLapSegment].Speed;
 }

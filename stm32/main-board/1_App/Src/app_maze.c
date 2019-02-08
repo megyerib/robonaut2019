@@ -43,8 +43,6 @@ extern uint32_t inclinSegment;
 extern cPD_CNTRL_PARAMS mazeActualParams;
 extern cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
- bool sRunTurnOffLineFollow;
-
 static cTRACE_RX_DATA rxData;		//!< Structure that contain the received serial data.
 static bool	recStopCar;				//!< Flag that indicates if the car must be stopped.
 static bool recMainSMReset;			//!< Flag that indicates if the main state machine must be reset.
@@ -80,6 +78,8 @@ static float mazePrevSpeed;
 static float mazeFk;
 static float mazeActSpeedDuty;
 
+static float lineToFollow;
+
 static bool lineFollowActive;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
@@ -111,6 +111,7 @@ void TaskInit_Maze (void)
 	// Initial parameters for the line follower controller.
 	mazeActLine = 0;
 	mazePrevLine = 0;
+	lineToFollow = 0;
 
 	lineFollowActive = true;
 
@@ -153,6 +154,17 @@ void Task_Maze (void* p)
 			if (mazeFinished == false && recStopCar == false)
 			{
 				MazeMainStateMachine();
+
+				lineToFollow = 0;	//TODO
+
+				if (false)
+				{
+
+				}
+				else
+				{
+					mazeStateMachineInclination();
+				}
 			}
 
 			// Controllers.

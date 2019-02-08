@@ -79,17 +79,13 @@ static float inclinDistEnd;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
-static void mazeStateMachineDiscovery   (void);
-static void mazeStateMachineInclination (void);
-
 static bool mazeCrossingAlreadyFound 	(const cNAVI_STATE crossingNaviState);
 static void mazeUpdateMap 				(const CROSSING_TYPE crossingType);
 static void mazeCheckDiscoveredSegments (void);
 static void mazeMergeSegments 			(void);
-
+static void mazeStateMachineDiscovery   (void);
 static bool mazeAllSegmentsDiscovered	(void);
 static void mazePlanExitRoute			(void);
-static void mazeFollowRoute 			(void);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
@@ -123,8 +119,6 @@ void MazeStateMachinesInit (void)
 	//actualSegment = 0;
 	//nextNewSegmentIndex = 1;
 	//alreadyFoundSegment = 0;
-    //
-	//turnOffLineFollow = false;
 
 	mazeActLine = 0.0f;
 	mazePrevLine = 0.0f;
@@ -198,6 +192,78 @@ void MazeMainStateMachine (void)
 		default:
 		{
 			// NOP
+			break;
+		}
+	}
+}
+
+void mazeStateMachineInclination (void)
+{
+	float lenght;
+
+	// Actual distance from start.
+	inclinDistEnd = speedGetDistance();
+
+	// Calculate distance.
+	lenght = inclinDistEnd - inclinDistStart;
+
+	// In the right place. Inclination to the right.
+	switch (inclinState)
+	{
+		case eSTATE_INCLIN_START:
+		{
+			// Distance measurement.
+			inclinDistStart = speedGetDistance();
+
+			// Turn off the line follow controller.
+			appMazeLineFollow_OFF();
+
+			// Change state.
+			inclinState = eSTATE_INCLIN_STEER_OUT;
+			break;
+		}
+		case eSTATE_INCLIN_STEER_OUT:
+		{
+			// Turn the wheel to the right.
+			mazeServoAngle = MAZE_INCLIN_TURN_ANGLE;
+
+			// After a given distance, change state.
+			if (lenght > MAZE_INCLIN_TURN_DIST)
+			{
+				// Reset distance measurement.
+				inclinDistStart = speedGetDistance();
+
+				inclinState = eSTATE_INCLIN_LEAVE_LINE;
+			}
+
+			break;
+		}
+		case eSTATE_INCLIN_LEAVE_LINE:
+		{
+			// Steer back to straight.
+			mazeServoAngle = SERVO_MIDDLE_RAD;
+
+			// After a given distance catch the line.
+			if (lenght > MAZE_INCLIN_LEAVE_DIST)
+			{
+				inclinState = eSTATE_INCLIN_CATCH_LINE;
+			}
+
+			break;
+		}
+		case eSTATE_INCLIN_CATCH_LINE:
+		{
+			if (lineGetRawFrontFloat().cnt != 0)
+			{
+				// Turn back the line follow controller.
+				appMazeLineFollow_ON();
+
+				mazeFinished = true;
+			}
+			break;
+		}
+		default:
+		{
 			break;
 		}
 	}
@@ -320,78 +386,6 @@ static void mazeStateMachineDiscovery (void)
 		mazeActLine = getPrevLine();
 	}
 
-}
-
-static void mazeStateMachineInclination (void)
-{
-	float lenght;
-
-	// Actual distance from start.
-	inclinDistEnd = speedGetDistance();
-
-	// Calculate distance.
-	lenght = inclinDistEnd - inclinDistStart;
-
-	// In the right place. Inclination to the right.
-	switch (inclinState)
-	{
-		case eSTATE_INCLIN_START:
-		{
-			// Distance measurement.
-			inclinDistStart = speedGetDistance();
-
-			// Turn off the line follow controller.
-			appMazeLineFollow_OFF();
-
-			// Change state.
-			inclinState = eSTATE_INCLIN_STEER_OUT;
-			break;
-		}
-		case eSTATE_INCLIN_STEER_OUT:
-		{
-			// Turn the wheel to the right.
-			mazeServoAngle = MAZE_INCLIN_TURN_ANGLE;
-
-			// After a given distance, change state.
-			if (lenght > MAZE_INCLIN_TURN_DIST)
-			{
-				// Reset distance measurement.
-				inclinDistStart = speedGetDistance();
-
-				inclinState = eSTATE_INCLIN_LEAVE_LINE;
-			}
-
-			break;
-		}
-		case eSTATE_INCLIN_LEAVE_LINE:
-		{
-			// Steer back to straight.
-			mazeServoAngle = SERVO_MIDDLE_RAD;
-
-			// After a given distance catch the line.
-			if (lenght > MAZE_INCLIN_LEAVE_DIST)
-			{
-				inclinState = eSTATE_INCLIN_CATCH_LINE;
-			}
-
-			break;
-		}
-		case eSTATE_INCLIN_CATCH_LINE:
-		{
-			if (lineGetRawFrontFloat().cnt != 0)
-			{
-				// Turn back the line follow controller.
-				appMazeLineFollow_ON();
-
-				smMainState = eSTATE_MAIN_OUT;
-			}
-			break;
-		}
-		default:
-		{
-			break;
-		}
-	}
 }
 
 static bool mazeCrossingAlreadyFound (const cNAVI_STATE crossingNaviState)
@@ -1008,7 +1002,3 @@ static void mazePlanExitRoute (void)
 	}*/
 }
 
-static void mazeFollowRoute (void)
-{
-
-}

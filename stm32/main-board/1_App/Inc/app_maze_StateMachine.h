@@ -83,3 +83,5 @@ typedef enum
 void MazeMainStateMachine (void);
 
 void MazeStateMachinesInit (void);
+
+void mazeStateMachineInclination (void);
