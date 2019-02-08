@@ -39,6 +39,11 @@ void BSP_PWMStart()
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, PERIOD+1);	//to prevent any impulse on the output by starting
 	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, PERIOD+1);	//to prevent any impulse on the output by starting
 
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+
 	polarity = POSITIVE;
 }
 
@@ -90,20 +95,15 @@ void BSP_PWMSetCompareRegisters	(
 								int32_t* CompareValueLow1		//Transistor 2	(because PCB)
 							)
 {
-	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_2);
-	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_3);
-	HAL_TIM_PWM_Stop(&htim1, TIM_CHANNEL_4);
+	// 1. hídág
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);		           //Transistor 3 Felsõ tilt
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, *CompareValueLow2);   //Transistor 4 Alsó átír
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, *CompareValueHigh2);  //Transistor 3 Felsõ átír
 
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, *CompareValueHigh2);		//Transistor 3
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, *CompareValueLow2);		//Transistor 4
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, *CompareValueHigh1);		//Transistor 1
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, *CompareValueLow1);		//Transistor 2
-
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
-	HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+	// 2. hídág
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);		           //Transistor 1 Felsõ tilt
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, *CompareValueLow1);   //Transistor 2 Alsó átír
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, *CompareValueHigh1);  //Transistor 1 Felsõ átír
 }
 
 void BSP_SetDutyCycle(float* DutyCycle)

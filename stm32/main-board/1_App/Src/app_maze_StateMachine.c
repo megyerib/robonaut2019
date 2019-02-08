@@ -328,7 +328,7 @@ static void mazeStateMachineInclination (void)
 	(void)lineNbr;	// TODO
 
 	crossing = getCrossingType();
-	lineNbr = lineGetRawFrontFloat().cnt;
+	//lineNbr = lineGetRawFrontFloat().cnt;
 
 	//____________________________________________STEP 1________________________________________________
 	if (/*actualSegment != inclinSegment*/ false)	// TODO check direction
