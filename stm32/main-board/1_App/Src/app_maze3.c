@@ -87,11 +87,11 @@ JUNCTION;
 
 typedef struct
 {
-	int startVertex; // Orientáció számít
+	int startV; // Orientáció számít
 	int startExit;
-	int endVertex; // Orientáció számít
+	int endV; // Orientáció számít
 	int endExit;
-	int length;
+	int cost;
 }
 MAZE_EDGE;
 
@@ -114,7 +114,6 @@ static MAZE_EDGE curEdge;
 static MAZE_EDGE edges[32];
 static int edgeNum = 0;
 
-static int exitFound = 0;
 static int exitNewlyFound = 0;
 static int exitVertex;
 static EXIT exitJunctionExit;
@@ -138,7 +137,7 @@ static int vertexToJunctionNum(int vnum);
 
 // Global function definitions -----------------------------------------------------------------------------------------
 
-float Task_Maze3 ()
+float MazeStm()
 {
 	float lineToFollow = getPrevLine();
 	int skip = 0;
@@ -235,19 +234,21 @@ float Task_Maze3 ()
 
 			if (curJunctionOri == oriForward)
 			{
-				curEdge.endVertex = curJunction;
+				curEdge.endV = curJunction;
 			}
 			else
 			{
-				curEdge.endVertex = curJunction | VERTEX_ORI_MASK;
+				curEdge.endV = curJunction | VERTEX_ORI_MASK;
 			}
 
 			// Felfedeztük az él két végét -> visited = 1
-			junctions[vertexToJunctionNum(curEdge.startVertex)].visited[curEdge.startExit] = 1;
-			junctions[vertexToJunctionNum(curEdge.endVertex)].visited[curEdge.endExit] = 1;
+			junctions[vertexToJunctionNum(curEdge.startV)].visited[curEdge.startExit] = 1;
+			junctions[vertexToJunctionNum(curEdge.endV)].visited[curEdge.endExit] = 1;
 
 			// Felvesszük a két új élt
 			addEdgeAndInverse(curEdge);
+
+			// TODO cost
 
 			// Kijárat?
 			if (exitNewlyFound)
@@ -298,7 +299,7 @@ float Task_Maze3 ()
 			{
 				if (junctions[curJunction].visited[exitLeft] == 0)
 				{
-					curEdge.startVertex = curVertex;
+					curEdge.startV = curVertex;
 					curEdge.startExit   = exitLeft;
 
 					lineToFollow = getLeftLine();
@@ -307,7 +308,7 @@ float Task_Maze3 ()
 				}
 				else if (junctions[curJunction].visited[exitRight] == 0)
 				{
-					curEdge.startVertex = curVertex;
+					curEdge.startV = curVertex;
 					curEdge.startExit   = exitRight;
 
 					lineToFollow = getRightLine();
@@ -325,7 +326,7 @@ float Task_Maze3 ()
 				{
 					curVertex |= VERTEX_ORI_MASK; // Fordított edge
 
-					curEdge.startVertex = curVertex;
+					curEdge.startV = curVertex;
 					curEdge.startExit   = exitSource;
 
 					lineToFollow = getLeftLine();
@@ -547,8 +548,8 @@ static void addEdgeAndInverse(MAZE_EDGE e)
 	edgeNum++;
 
 	// Invert edge
-	edges[edgeNum].startVertex = e.endVertex   ^ VERTEX_ORI_MASK;
-	edges[edgeNum].endVertex   = e.startVertex ^ VERTEX_ORI_MASK;
+	edges[edgeNum].startV = e.endV   ^ VERTEX_ORI_MASK;
+	edges[edgeNum].endV   = e.startV ^ VERTEX_ORI_MASK;
 	edges[edgeNum].startExit   = e.endExit;
 	edges[edgeNum].endExit     = e.startExit;
 	edgeNum++;
@@ -557,6 +558,21 @@ static void addEdgeAndInverse(MAZE_EDGE e)
 static int vertexToJunctionNum(int vnum)
 {
 	return vnum & VERTEX_ORI_MASK_INVERSE;
+}
+
+static void getTargetVerticeList(uint8_t* tlist)
+{
+	for (int i = 0; i < junctionNum; i++)
+	{
+		if (junctions[i].visited[exitRight] || junctions[i].visited[exitLeft])
+		{
+			tlist[i] = 1;
+		}
+		if (junctions[i].visited[exitSource])
+		{
+			tlist[JUNCTION_MAX_NUM + i] = 1;
+		}
+	}
 }
 
 // END -----------------------------------------------------------------------------------------------------------------
