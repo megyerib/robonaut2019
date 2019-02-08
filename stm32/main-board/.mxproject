@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=D:/GitHub/robonaut/stm32/main-board/Inc
+HeaderPath=D:/_Engineering/BME/RobonAUT/5K/stm32/main-board/Inc
 HeaderFiles=gpio.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;adc.h;FreeRTOSConfig.h;spi.h;tim.h;usart.h;i2c.h;
-SourcePath=D:/GitHub/robonaut/stm32/main-board/Src
+SourcePath=D:/_Engineering/BME/RobonAUT/5K/stm32/main-board/Src
 SourceFiles=gpio.c;stm32f4xx_it.c;stm32f4xx_hal_msp.c;main.c;adc.c;freertos.c;spi.c;tim.c;usart.c;stm32f4xx_hal_timebase_TIM.c;i2c.c;stm32f4xx_hal_timebase_tim.c;
 
 [PreviousLibFiles]
