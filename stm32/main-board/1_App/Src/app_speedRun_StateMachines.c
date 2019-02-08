@@ -64,8 +64,6 @@ static uint8_t prevSegmentType;
 static bool lineNewLine;
 
 static uint8_t lineSpeedUpCounter;
-static uint8_t lineSpeedUpStart;
-static uint8_t lineSpeedUpLen;
 static bool lineEnab;
 
 float sRunActLine;
@@ -316,7 +314,6 @@ bool sRunDriveStateMachine (void)	// TODO implementation
 void sRunOvertakeStateMachine (void)
 {
 	float lenght;
-	bool robotInLastSegment = false;
 
 	// Actual distance from start.
 	overtakeEndPoint = speedGetDistance();
@@ -435,12 +432,8 @@ void sRunOvertakeStateMachine (void)
 			tryToOvertake = false;
 			behindSafetyCar = false;
 
-			sRunSpeedUpParadeLap();
-
-			if (robotInLastSegment == sRunDriveStateMachine())
-			{
-				smMainStateSRun = eSTATE_MAIN_LAP_1;
-			}
+			actLapSegment = SRUN_OVERTAKE_SEGMENT;
+			smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
 		}
 		case eSTATE_OVERTAKE_FAILED:
 		{
@@ -470,7 +463,7 @@ void sRunOvertakeStateMachine (void)
 //! Function: sRunParadeLapAlgorithm
 void sRunParadeLapAlgorithm (void)
 {
-	bool startToAccel = false;
+	bool lastSegment = false;
 
 	if (behindSafetyCar == true)
 	{
@@ -480,7 +473,7 @@ void sRunParadeLapAlgorithm (void)
 		sRunActualParams.Kd 	= paramListSRun.lapParade.Kd;
 		sRunActualParams.Speed	= paramListSRun.lapParade.Speed;
 
-		startToAccel = sRunDriveStateMachine();
+		sRunDriveStateMachine();
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
 		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT, sRunPrevFrontDist, sRunActFrontDist, 0.03f, 0.0f, 3.0f);
@@ -493,8 +486,6 @@ void sRunParadeLapAlgorithm (void)
 		else
 		{
 			// Follow the safety car until the last corner.
-
-			// Start gate means a new lap.
 			smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
 		}
 	}
@@ -502,13 +493,12 @@ void sRunParadeLapAlgorithm (void)
 	{
 		// We overtook the safety car!!! :D
 		// Speed up. Load in control parameters.
-		sRunActualParams.P = paramListSRun.lapParade.P;
-		sRunActualParams.Kp = paramListSRun.lapParade.Kp;
-		sRunActualParams.Kd = paramListSRun.lapParade.Kd;
-		sRunActualParams.Speed = paramListSRun.lapParade.Speed;
+		sRunSpeedUpParadeLap();
+
+		lastSegment = sRunDriveStateMachine();
 
 		// Start gate means a new lap.
-		if (startGateFound == true)
+		if (startGateFound == true || lastSegment == true)
 		{
 			smMainStateSRun = eSTATE_MAIN_LAP_1;
 		}
