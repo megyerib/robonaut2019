@@ -190,6 +190,12 @@ double naviNormaliseOrientation (const double psi)
 	return normOri;
 }
 
+void naviResetNaviState (const cNAVI_STATE naviData)
+{
+	prevPhi = naviData.psi;
+	prevP = naviData.p;
+}
+
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 //**********************************************************************************************************************
