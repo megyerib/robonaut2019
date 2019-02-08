@@ -134,6 +134,8 @@ void Task_Maze (void* p)
 		// Process the received parameters.
 		MazeProcessRecCommands();
 
+
+
 		if (mazeFinished == false)
 		{
 			// Check for the remote controller signal.
