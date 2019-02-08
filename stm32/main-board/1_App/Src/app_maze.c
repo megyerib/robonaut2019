@@ -43,8 +43,6 @@ extern uint32_t inclinSegment;
 extern cPD_CNTRL_PARAMS mazeActualParams;
 extern cMAZE_PD_CONTROL_PARAM_LIST paramList;
 
- bool turnOffLineFollow;
-
 static cTRACE_RX_DATA rxData;		//!< Structure that contain the received serial data.
 static bool	recStopCar;				//!< Flag that indicates if the car must be stopped.
 static bool recMainSMReset;			//!< Flag that indicates if the main state machine must be reset.
@@ -78,7 +76,11 @@ extern float mazeServoAngle;
 static float mazeActSpeed;
 static float mazePrevSpeed;
 static float mazeFk;
-static uint32_t mazeActSpeedDuty;
+static float mazeActSpeedDuty;
+
+static float lineToFollow;
+
+static bool lineFollowActive;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -103,14 +105,15 @@ void TaskInit_Maze (void)
 
 	// Initial parameters of the Discover state.
 	paramList.inclination.Kp	 = 0.025;
-	paramList.inclination.Kd	 = 4;
-	paramList.inclination.Speed  = 15;
+	paramList.inclination.Kd	 = 2.0f;
+	paramList.inclination.Speed  = 8;
 
 	// Initial parameters for the line follower controller.
 	mazeActLine = 0;
 	mazePrevLine = 0;
+	lineToFollow = 0;
 
-	smMainState = eSTATE_MAIN_READY;
+	lineFollowActive = true;
 
 	// Task can be created now.
 	xTaskCreate(Task_Maze,
@@ -125,14 +128,12 @@ void Task_Maze (void* p)
 {
 	(void)p;
 	//float r_speed = 2;
-	mazeFinished = true;
+	//mazeFinished = true;	TODO
 
 	while (1)
 	{
 		// Process the received parameters.
 		MazeProcessRecCommands();
-
-
 
 		if (mazeFinished == false)
 		{
@@ -148,19 +149,33 @@ void Task_Maze (void* p)
 			mazeActLine = lineGetSingle() * 1000;
 
 			// Run the state machine until the job is done or stop signal received.
-			if (mazeFinished == false && recStopCar == true)
+			if (mazeFinished == false && recStopCar == false)
 			{
 				MazeMainStateMachine();
+
+				lineToFollow = 0;	//TODO
+
+				if (false)
+				{
+
+				}
+				else
+				{
+					mazeStateMachineInclination();
+				}
 			}
 
 			// Controllers.
 			if (mazeFinished == false)
 			{
-				// Control the servo.
-				mazeServoAngle = cntrlLineFollow(mazeActLine, mazePrevLine, 0, mazeActualParams.Kp, mazeActualParams.Kd);
+				if (lineFollowActive == true)
+				{
+					// Control the servo.
+					mazeServoAngle = cntrlLineFollow(mazeActLine, mazePrevLine, 0, mazeActualParams.Kp, mazeActualParams.Kd);
+				}
 
 				// Control the speed.
-				mazeActSpeedDuty = cntrSpeed(mazeActualParams.Speed, mazePrevSpeed, mazeActSpeed, MAZE_SPEED_TI, &mazeFk, MAZE_SPEED_KC);
+				mazeActSpeedDuty = cntrSpeed(((float)mazeActualParams.Speed/10.0f), mazePrevSpeed, mazeActSpeed, MAZE_SPEED_TI, &mazeFk, MAZE_SPEED_KC);
 			}
 
 			// Stop if the car has to stop (remote signal is not present).
@@ -188,8 +203,8 @@ void Task_Maze (void* p)
 		// Actuate.
 		if (mazeFinished == false)
 		{
-			motorSetDutyCycle(mazeActSpeedDuty);
 			servoSetAngle(mazeServoAngle);
+			motorSetDutyCycle(mazeActSpeedDuty);
 		}
 
 		// Trace out the necessary infos.
@@ -197,6 +212,17 @@ void Task_Maze (void* p)
 
 		vTaskDelay(TASK_DELAY_5_MS);	// TASK_DELAY_5_MS TODO
 	}
+}
+
+void appMazeLineFollow_ON (void)
+{
+	lineFollowActive = true;
+}
+
+
+void appMazeLineFollow_OFF (void)
+{
+	lineFollowActive = false;
 }
 
 // Local (static) function definitions ---------------------------------------------------------------------------------

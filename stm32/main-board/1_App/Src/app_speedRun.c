@@ -47,6 +47,10 @@ static GPIO_PinState btnSoftRstSpeedRun;
 static GPIO_TypeDef* btnSoftRst_Port;	//!< GPIO port of the soft reset button.
 static uint16_t btnSoftRst_Pin;			//!< GPIO pin of the soft reset button.
 
+static GPIO_PinState btnExtraRstSpeedRun;
+static GPIO_TypeDef* btnExtraRst_Port;		//!<
+static uint16_t btnExtraRst_Pin;			//!<
+
 
 static cTRACE_RX_DATA rxData;		//!< Contains the received serial data.
 static bool	recStopCar;				//!< Flag that indicates if the car must stop.
@@ -79,14 +83,15 @@ extern uint8_t actLapSegment;
 extern cPD_CNTRL_PARAMS sRunActualParams;
 extern cSRUN_PD_CONTROL_PARAM_LIST paramListSRun;
 
-extern float sRunActLine;
-extern float sRunPrevLine;
+static float sRunActLine;
+static float sRunPrevLine;
 extern float sRunServoAngle;
-extern float sRunActSpeed;
+float sRunActSpeed;
 extern float sRunActSpeedDist;
 static float sRunPrevSpeed;
 static float sRunSpeedFk;
 static uint32_t sRunActSpeedDuty;
+
 extern uint32_t sRunActFrontDist;		//! Measured distance value in front of the car in the actual task run.
 extern uint32_t sRunPrevFrontDist;
 
@@ -96,8 +101,7 @@ static uint8_t txLineNumber;
 static float txLineMainLinePos;
 static float txLineSecLinePos;
 
-extern uint32_t sRunActDuty;
-extern bool turnOffLineFollow;
+static bool cntrLineFollowActive;
 
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
@@ -108,8 +112,9 @@ static void sRunProcessRecCommands   (void);
 static void sRunTraceInformations    (void);
 static void sRunCollectGetParams     (void);
 static void sRunUpdateParams	     (void);
-static void sRunCheckButtonHardRst   (void);
-static void sRunCheckButtonSoftRst   (void);
+static void sRunCheckRstBtn_Hard   (void);
+static void sRunCheckRstBtn_Soft   (void);
+static void sRunCheckRstBtn_Extra  (void);
 static void sRunCheckStartCondition  (void);
 static void SRun_CheckRemote		 (void);
 
@@ -119,21 +124,28 @@ void TaskInit_SpeedRun (void)
 {
 	// Configure the GPIOs of the buttons.
 	btnHardRstSpeedRun = GPIO_PIN_SET;
-	//btnHardRst_Port  = GPIOx;
-	//btnHardRst_Pin   = GPIO_PIN_x;
+	btnHardRst_Port  = BTN_RST_HARD_GPIO_Port;
+	btnHardRst_Pin   = BTN_RST_HARD_Pin;
 
 	btnSoftRstSpeedRun = GPIO_PIN_SET;
-	//btnSoftRst_Port  = GPIOx;
-	//btnSoftRst_Pin   = GPIO_PIN_x;
+	btnSoftRst_Port  = BTN_RST_SOFT_GPIO_Port;
+	btnSoftRst_Pin   = BTN_RST_SOFT_Pin;
+
+	btnExtraRstSpeedRun = GPIO_PIN_SET;
+	btnExtraRst_Port  = BTN_RST_EXTRA_GPIO_Port;
+	btnExtraRst_Pin   = BTN_RST_EXTRA_Pin;
 
 	// Reset the module.
-	speedRunStarted = true;  	//TODO remove
+	speedRunStarted = false;
+
 	sRunSetLap1Parameters();
 	sRunSetLap2Parameters();
 	sRunSetLap3Parameters();
 
 	// Init state machines
 	sRunInitStateMachines();
+
+	cntrLineFollowActive = true;
 
 	// Variable for the speed controller.
 	sRunSpeedFk = 0;
@@ -159,7 +171,7 @@ void Task_SpeedRun (void* p)
 			sRunCheckStartCondition();
 		}
 
-		// Check if remote is pulled. TODO remove before race
+		// Check if remote is pulled. TODO set true before race
 		SRun_CheckRemote();
 
 		// Receive and process the data from the CDT application.
@@ -174,10 +186,6 @@ void Task_SpeedRun (void* p)
 		sRunActLine = lineGetSingle() * 1000;
 		sRunActSpeed = speedGet();
 		sRunActFrontDist = sharpGetMeasurement().Distance;
-
-		// Saturate to valid distance range.
-		/*if (sRunActFrontDist > SRUN_SHARP_DIST_MAX)
-			sRunActFrontDist = SRUN_SHARP_DIST_MAX;*/
 
 		// Main state machine that drive though the speed run track.
 		if (speedRunStarted == true  && recStopCar == false)
@@ -203,7 +211,7 @@ void Task_SpeedRun (void* p)
 				sRunActSpeedDuty = cntrSpeed(((float)sRunActualParams.Speed/10.0f), sRunPrevSpeed, sRunActSpeed, SRUN_SPEED_TI, &sRunSpeedFk, SRUN_SPEED_KC);
 			}
 
-			if (turnOffLineFollow == false)
+			if (cntrLineFollowActive == true)
 			{
 				// Control the servo.
 				sRunServoAngle = cntrlLineFollow(sRunActLine, sRunPrevLine, sRunActualParams.P, sRunActualParams.Kp, sRunActualParams.Kd);
@@ -219,14 +227,17 @@ void Task_SpeedRun (void* p)
 		}
 
 		// Check the buttons.
-		sRunCheckButtonHardRst();
-		sRunCheckButtonSoftRst();
-
-		// TODO Check for frontal collision.
+		sRunCheckRstBtn_Hard();
+		sRunCheckRstBtn_Soft();
 
 		// Actuate.
-		motorSetDutyCycle(sRunActSpeedDuty);
-		servoSetAngle(sRunServoAngle);
+		if (speedRunStarted == true)
+		{
+			// TODO Check for frontal collision.
+
+			motorSetDutyCycle(sRunActSpeedDuty);
+			servoSetAngle(sRunServoAngle);
+		}
 
 		// Trace out the speed run informations.
 		sRunTraceInformations();
@@ -234,6 +245,17 @@ void Task_SpeedRun (void* p)
 		vTaskDelay(TASK_DELAY_5_MS);
 	}
 }
+
+void sRunCntrlLineFollow_ON (void)
+{
+	cntrLineFollowActive = true;
+}
+
+void sRunCntrlLineFollow_OFF (void)
+{
+	cntrLineFollowActive = false;
+}
+
 
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
@@ -244,7 +266,7 @@ void Task_SpeedRun (void* p)
 //**********************************************************************************************************************
 static void sRunSetLap1Parameters (void)
 {
-	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.007f;	paramListSRun.lap1[0].Kd = 2.0f;	paramListSRun.lap1[0].Speed = 18;	// Fast
+	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.007f;	paramListSRun.lap1[0].Kd = 0.12f;	paramListSRun.lap1[0].Speed = 65;	// Fast
 	paramListSRun.lap1[1].P = 0; 	paramListSRun.lap1[1].Kp = 0.007f;	paramListSRun.lap1[1].Kd = 2.0f;	paramListSRun.lap1[1].Speed = 18;	// Slow
 	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0.001f;	paramListSRun.lap1[2].Kd = 0.12f;	paramListSRun.lap1[2].Speed = 65;	// Fast
 	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.007f;	paramListSRun.lap1[3].Kd = 2.0f;	paramListSRun.lap1[3].Speed = 15;	// Slow
@@ -271,18 +293,17 @@ static void sRunSetLap1Parameters (void)
 //**********************************************************************************************************************
 static void sRunSetLap2Parameters (void)
 {
-	paramListSRun.lap2[0].P = 0;	paramListSRun.lap2[0].Kp = 0.01f;	paramListSRun.lap2[0].Kd = 3.4f;	paramListSRun.lap2[0].Speed = 18;	// Straight
-	paramListSRun.lap2[1].P = 0; 	paramListSRun.lap2[1].Kp = 0.02f;	paramListSRun.lap2[1].Kd = 3.4f;	paramListSRun.lap2[1].Speed = 16;	// Slow
-	paramListSRun.lap2[2].P = 0; 	paramListSRun.lap2[2].Kp = 0.01f;	paramListSRun.lap2[2].Kd = 3.4f;	paramListSRun.lap2[2].Speed = 18;	// Corner
-	paramListSRun.lap2[3].P = 0; 	paramListSRun.lap2[3].Kp = 0.02f;	paramListSRun.lap2[3].Kd = 3.4f;	paramListSRun.lap2[3].Speed = 16;	// Speed
-	paramListSRun.lap2[4].P = 0; 	paramListSRun.lap2[4].Kp = 0.01f;	paramListSRun.lap2[4].Kd = 3.4f;	paramListSRun.lap2[4].Speed = 18;	// Straight
+	paramListSRun.lap2[0].P = 0;	paramListSRun.lap2[0].Kp = 0.001f;	paramListSRun.lap2[0].Kd = 0.12f;	paramListSRun.lap2[0].Speed = 65;	// Straight
+	paramListSRun.lap2[1].P = 0; 	paramListSRun.lap2[1].Kp = 0.007f;	paramListSRun.lap2[1].Kd = 2.0f;	paramListSRun.lap2[1].Speed = 18;	// Slow
+	paramListSRun.lap2[2].P = 0; 	paramListSRun.lap2[2].Kp = 0.001f;	paramListSRun.lap2[2].Kd = 0.12f;	paramListSRun.lap2[2].Speed = 65;	// Corner
+	paramListSRun.lap2[3].P = 0; 	paramListSRun.lap2[3].Kp = 0.007f;	paramListSRun.lap2[3].Kd = 2.0f;	paramListSRun.lap2[3].Speed = 18;	// Speed
+	paramListSRun.lap2[4].P = 0; 	paramListSRun.lap2[4].Kp = 0.001f;	paramListSRun.lap2[4].Kd = 0.12f;	paramListSRun.lap2[4].Speed = 65;	// Straight
+	paramListSRun.lap2[5].P = 0; 	paramListSRun.lap2[5].Kp = 0.007f;	paramListSRun.lap2[5].Kd = 2.0f;	paramListSRun.lap2[5].Speed = 18;	// Slow
+	paramListSRun.lap2[6].P = 0; 	paramListSRun.lap2[6].Kp = 0.001f;	paramListSRun.lap2[6].Kd = 0.12f;	paramListSRun.lap2[6].Speed = 65;	// Corner
+	paramListSRun.lap2[7].P = 0; 	paramListSRun.lap2[7].Kp = 0.007f;	paramListSRun.lap2[7].Kd = 2.0f;	paramListSRun.lap2[7].Speed = 18;	// Speed
+	paramListSRun.lap2[8].P = 0; 	paramListSRun.lap2[8].Kp = 0.001f;	paramListSRun.lap2[8].Kd = 0.12f;	paramListSRun.lap2[8].Speed = 65;	// Straight
 
-	paramListSRun.lap2[5].P = 0; 	paramListSRun.lap2[5].Kp = 0.02f;	paramListSRun.lap2[5].Kd = 3.4f;	paramListSRun.lap2[5].Speed = 16;	// Slow
-	paramListSRun.lap2[6].P = 0; 	paramListSRun.lap2[6].Kp = 0.01f;	paramListSRun.lap2[6].Kd = 3.4f;	paramListSRun.lap2[6].Speed = 18;	// Corner
-	paramListSRun.lap2[7].P = 0; 	paramListSRun.lap2[7].Kp = 0.02f;	paramListSRun.lap2[7].Kd = 3.4f;	paramListSRun.lap2[7].Speed = 16;	// Speed
-	paramListSRun.lap2[8].P = 0; 	paramListSRun.lap2[8].Kp = 0.01f;	paramListSRun.lap2[8].Kd = 3.4f;	paramListSRun.lap2[8].Speed = 18;	// Straight
-	paramListSRun.lap2[9].P = 0; 	paramListSRun.lap2[9].Kp = 0.02f;	paramListSRun.lap2[9].Kd = 3.4f;	paramListSRun.lap2[9].Speed = 16;	// Slow
-
+	paramListSRun.lap2[9].P = 0; 	paramListSRun.lap2[9].Kp = 0.001f;	paramListSRun.lap2[9].Kd = 2.0f;	paramListSRun.lap2[9].Speed = 18;	// Slow
 	paramListSRun.lap2[10].P = 0;	paramListSRun.lap2[10].Kp = 0.025f;	paramListSRun.lap2[10].Kd = 3.5f;	paramListSRun.lap2[10].Speed = 15;	// Corner
 	paramListSRun.lap2[11].P = 0;	paramListSRun.lap2[11].Kp = 0.025f;	paramListSRun.lap2[11].Kd = 3.5f;	paramListSRun.lap2[11].Speed = 15;	// Speed
 	paramListSRun.lap2[12].P = 0;	paramListSRun.lap2[12].Kp = 0.025f;	paramListSRun.lap2[12].Kd = 3.5f;	paramListSRun.lap2[12].Speed = 15;	// Straight
@@ -298,17 +319,18 @@ static void sRunSetLap2Parameters (void)
 //**********************************************************************************************************************
 static void sRunSetLap3Parameters (void)
 {
-	paramListSRun.lap3[0].P = 0;	paramListSRun.lap3[0].Kp = 0.025;	paramListSRun.lap3[0].Kd = 3.5;	paramListSRun.lap3[0].Speed = 20;
-	paramListSRun.lap3[1].P = 0; 	paramListSRun.lap3[1].Kp = 0.025;	paramListSRun.lap3[1].Kd = 3.5;	paramListSRun.lap3[1].Speed = 20;
-	paramListSRun.lap3[2].P = 0; 	paramListSRun.lap3[2].Kp = 0.025;	paramListSRun.lap3[2].Kd = 3.5;	paramListSRun.lap3[2].Speed = 20;
-	paramListSRun.lap3[3].P = 0; 	paramListSRun.lap3[3].Kp = 0.025;	paramListSRun.lap3[3].Kd = 3.5;	paramListSRun.lap3[3].Speed = 20;
-	paramListSRun.lap3[4].P = 0; 	paramListSRun.lap3[4].Kp = 0.025;	paramListSRun.lap3[4].Kd = 3.5;	paramListSRun.lap3[4].Speed = 20;
+	paramListSRun.lap3[0].P = 0;	paramListSRun.lap3[0].Kp = 0.001f;	paramListSRun.lap3[0].Kd = 0.12f;	paramListSRun.lap3[0].Speed = 65;
+	paramListSRun.lap3[1].P = 0; 	paramListSRun.lap3[1].Kp = 0.007f;	paramListSRun.lap3[1].Kd = 2.0f;	paramListSRun.lap3[1].Speed = 18;
+	paramListSRun.lap3[2].P = 0; 	paramListSRun.lap3[2].Kp = 0.001f;	paramListSRun.lap3[2].Kd = 0.12f;	paramListSRun.lap3[2].Speed = 65;
+	paramListSRun.lap3[3].P = 0; 	paramListSRun.lap3[3].Kp = 0.007f;	paramListSRun.lap3[3].Kd = 2.0f;	paramListSRun.lap3[3].Speed = 18;
+	paramListSRun.lap3[4].P = 0; 	paramListSRun.lap3[4].Kp = 0.001f;	paramListSRun.lap3[4].Kd = 0.12f;	paramListSRun.lap3[4].Speed = 65;
 
-	paramListSRun.lap3[5].P = 0; 	paramListSRun.lap3[5].Kp = 0.025;	paramListSRun.lap3[5].Kd = 3.5;	paramListSRun.lap3[5].Speed = 20;
-	paramListSRun.lap3[6].P = 0; 	paramListSRun.lap3[6].Kp = 0.025;	paramListSRun.lap3[6].Kd = 3.5;	paramListSRun.lap3[6].Speed = 20;
-	paramListSRun.lap3[7].P = 0; 	paramListSRun.lap3[7].Kp = 0.025;	paramListSRun.lap3[7].Kd = 3.5;	paramListSRun.lap3[7].Speed = 20;
-	paramListSRun.lap3[8].P = 0; 	paramListSRun.lap3[8].Kp = 0.025;	paramListSRun.lap3[8].Kd = 3.5;	paramListSRun.lap3[8].Speed = 20;
-	paramListSRun.lap3[9].P = 0; 	paramListSRun.lap3[9].Kp = 0.025;	paramListSRun.lap3[9].Kd = 3.5;	paramListSRun.lap3[9].Speed = 20;
+	paramListSRun.lap3[5].P = 0; 	paramListSRun.lap3[5].Kp = 0.007f;	paramListSRun.lap3[5].Kd = 2.0f;	paramListSRun.lap3[5].Speed = 18;
+	paramListSRun.lap3[6].P = 0; 	paramListSRun.lap3[6].Kp = 0.001f;	paramListSRun.lap3[6].Kd = 0.12f;	paramListSRun.lap3[6].Speed = 65;
+	paramListSRun.lap3[7].P = 0; 	paramListSRun.lap3[7].Kp = 0.007f;	paramListSRun.lap3[7].Kd = 2.0f;	paramListSRun.lap3[7].Speed = 18;
+	paramListSRun.lap3[8].P = 0; 	paramListSRun.lap3[8].Kp = 0.001f;	paramListSRun.lap3[8].Kd = 0.12f;	paramListSRun.lap3[8].Speed = 65;
+
+	paramListSRun.lap3[9].P = 0; 	paramListSRun.lap3[9].Kp = 0.007f;	paramListSRun.lap3[9].Kd = 2.0f;	paramListSRun.lap3[9].Speed = 18;
 
 	paramListSRun.lap3[10].P = 0;	paramListSRun.lap3[10].Kp = 0.025;	paramListSRun.lap3[10].Kd = 3.5;	paramListSRun.lap3[10].Speed = 15;
 	paramListSRun.lap3[11].P = 0;	paramListSRun.lap3[11].Kp = 0.025;	paramListSRun.lap3[11].Kd = 3.5;	paramListSRun.lap3[11].Speed = 15;
@@ -339,7 +361,7 @@ static void sRunProcessRecCommands (void)
 	recSetSpeed  	 = rxData.SRunSetSpeed;
 
 	// Update overtake flag
-	//tryToOvertake = recTryOvertake;
+	//tryToOvertake = recTryOvertake;	//TODO TURN OFF BEFORE RACE!
 
 	// Emit hard reset in sRunCheckButtonHardRst function.
 	// Emit soft reset in sRunCheckButtonSoftRst function.
@@ -348,7 +370,7 @@ static void sRunProcessRecCommands (void)
 	sRunCollectGetParams();
 
 	// Set parameters
-	//sRunUpdateParams();
+	//sRunUpdateParams();				//TODO TURN OFF BEFORE RACE!
 }
 
 //**********************************************************************************************************************
@@ -376,25 +398,9 @@ static void sRunTraceInformations  (void)
 	traceBluetooth(BT_LOG_SRUN_GET_KD, 		&txGetKd);
 	traceBluetooth(BT_LOG_SRUN_GET_SPEED, 	&txGetSpeed);
 
-
 	txServoAngle = sRunServoAngle;
 	txSteerWheelAngle = sRunServoAngle;
 	txLineNumber = lineGetRawFront().cnt;
-
-	/*if (lineGetRoadSignal() != Nothing)
-	{
-		txLineSecLinePos = lineGetRawFront().lines[0];
-	}
-
-	// TODO debug
-	if (txServoAngle < PI/2)
-	{
-		txSteerWheelAngle =  PI/2.0f - (PI/2.0f - txServoAngle) / 2.0f;
-	}
-	else
-	{
-		txSteerWheelAngle = PI/2.0f + (txServoAngle - PI/2.0f) / 2.0f;
-	}*/
 
 	traceBluetooth(BT_LOG_STEER_WHEEL_ANGLE, &txSteerWheelAngle);
 	traceBluetooth(BT_LOG_SERVO_ANGLE, &txServoAngle);
@@ -520,16 +526,17 @@ static void sRunUpdateParams (void)
 //!
 //! @return -
 //**********************************************************************************************************************
-static void sRunCheckButtonHardRst (void)
+static void sRunCheckRstBtn_Hard (void)
 {
 	btnHardRstSpeedRun = HAL_GPIO_ReadPin(btnHardRst_Port, btnHardRst_Pin);
-	if (/*btnHardRstSpeedRun == GPIO_PIN_RESET || TODO*/ recHardReset == true)
+	if (btnHardRstSpeedRun == GPIO_PIN_RESET || recHardReset == true)
 	{
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
 
 		// Reset the state machine.
 		smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
 		actLapSegment = 0;
+		speedRunStarted = true;
 
 		// Signal to the maze task that we are out of the maze.
 		xEventGroupSetBits(event_MazeOut, 0);
@@ -544,10 +551,10 @@ static void sRunCheckButtonHardRst (void)
 //!
 //! @return -
 //**********************************************************************************************************************
-static void sRunCheckButtonSoftRst (void)
+static void sRunCheckRstBtn_Soft (void)
 {
 	btnSoftRstSpeedRun = HAL_GPIO_ReadPin(btnSoftRst_Port, btnSoftRst_Pin);
-	if (/*btnSoftRstSpeedRun == GPIO_PIN_RESET || TODO */ recSoftReset == true)
+	if (btnSoftRstSpeedRun == GPIO_PIN_RESET || recSoftReset == true)
 	{
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
 
@@ -563,6 +570,20 @@ static void sRunCheckButtonSoftRst (void)
 
 		// Reset event is handled.
 		recSoftReset = false;
+	}
+}
+
+//**********************************************************************************************************************
+//!
+//!
+//! @return -
+//**********************************************************************************************************************
+static void sRunCheckRstBtn_Extra (void)
+{
+	btnExtraRstSpeedRun = HAL_GPIO_ReadPin(btnExtraRst_Port, btnExtraRst_Pin);
+	if (btnExtraRstSpeedRun == GPIO_PIN_RESET)
+	{
+		//TODO
 	}
 }
 

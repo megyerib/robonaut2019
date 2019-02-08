@@ -27,3 +27,6 @@ void TaskInit_SpeedRun (void);
 //! @brief
 //**********************************************************************************************************************
 void Task_SpeedRun (void* p);
+
+void sRunCntrlLineFollow_ON (void);
+void sRunCntrlLineFollow_OFF (void);

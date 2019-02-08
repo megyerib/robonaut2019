@@ -20,4 +20,10 @@
 
 void motorInit();
 void motorSetTorque(int16_t torqe);
+
+//**********************************************************************************************************************
+//! Set the duty cycle of the motor. It can be negative value.
+//!
+//! @param d	Duty cycle value in [%]
+//**********************************************************************************************************************
 void motorSetDutyCycle(float d);

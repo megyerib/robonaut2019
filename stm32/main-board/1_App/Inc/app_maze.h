@@ -22,3 +22,6 @@ void TaskInit_Maze (void);
 
 //! @brief
 void Task_Maze (void* p);
+
+void appMazeLineFollow_ON (void);
+void appMazeLineFollow_OFF (void);

@@ -176,8 +176,8 @@ ANGVELd inertGetAngVel()
     		    		  + invParamsAng.a3[1] * (measuredAngVel.omega_y - WyOfs)
 						  + invParamsAng.a3[2] * (measuredAngVel.omega_z - WzOfs);*/
 
-	trueAngVel.omega_x = measuredAngVel.omega_x - WxOfs;
-	trueAngVel.omega_y = measuredAngVel.omega_y - WyOfs;
+	//trueAngVel.omega_x = measuredAngVel.omega_x - WxOfs;
+	//trueAngVel.omega_y = measuredAngVel.omega_y - WyOfs;
 	trueAngVel.omega_z = measuredAngVel.omega_z - WzOfs;
 
 
