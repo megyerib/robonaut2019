@@ -9,5 +9,5 @@ typedef struct
 	int cost;
 } EDGE;
 
-void dijkstra(EDGE* edges, int edgenum, int entry, int exit, uint8_t* path, int* pathlen);
-void dijkstraPathToNearestValid(EDGE* edges, int* valid, int edgenum, int entry, uint8_t* path, int* pathlen);
+void dijkstra(EDGE* edges, int edgenum, int entry, int exit, int* path, int* pathlen);
+void dijkstraPathToNearestValid(EDGE* edges, int* valid, int edgenum, int entry, int* path, int* pathlen);
