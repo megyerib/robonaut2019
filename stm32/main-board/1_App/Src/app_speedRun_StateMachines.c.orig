@@ -85,8 +85,12 @@ static float sRunConvertAngleTo180 (const float angle);
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
-	actLapSegment = 7;
+<<<<<<< HEAD
+	smMainStateSRun = eSTATE_MAIN_LAP_1;
+=======
+	smMainStateSRun = eSTATE_MAIN_OVERTAKING;
+>>>>>>> origin/dev
+	actLapSegment = 0;
 	overtakeState = eSTATE_OVERTAKE_START;
 	actLapIsFinished = false;
 
@@ -103,7 +107,7 @@ void sRunInitStateMachines (void)
 	paramListSRun.overtaking.P = 0;
 	paramListSRun.overtaking.Kp = 0.01;
 	paramListSRun.overtaking.Kd = 0.5;
-	paramListSRun.overtaking.Speed = 30;
+	paramListSRun.overtaking.Speed = 5;
 
 	tryToOvertake 	= true;
 	behindSafetyCar = true;
@@ -231,7 +235,7 @@ bool sRunDriveStateMachine (void)
 		}
 		case 1:
 		{
-			if (lenght > 1.0f)
+			if (lenght > 2.0f)
 			{
 				actLapSegment = 2;
 			}
@@ -255,7 +259,7 @@ bool sRunDriveStateMachine (void)
 		}
 		case 4:
 		{
-			if (lenght > 1.5f)
+			if (lenght > 3.0f)
 			{
 				actLapSegment = 5;
 				lapSegStart = speedGetDistance();
@@ -287,7 +291,7 @@ bool sRunDriveStateMachine (void)
 		}
 		case 8:
 		{
-			if (lenght > 0.8f)
+			if (lenght > 2.0f)
 			{
 				actLapSegment = 9;
 				lapSegStart = speedGetDistance();
@@ -295,7 +299,7 @@ bool sRunDriveStateMachine (void)
 		}
 		case 9:
 		{
-			if (lenght > 4.5f)
+			if (lenght > 3.0f)
 			{
 				actLapSegment = 10;
 			}
@@ -349,11 +353,6 @@ void sRunOvertakeStateMachine (void)
 	float lenght;
 	float actPsi;
 
-	sRunActualParams.P 		= paramListSRun.overtaking.P;
-	sRunActualParams.Kp 	= paramListSRun.overtaking.Kp;
-	sRunActualParams.Kd 	= paramListSRun.overtaking.Kd;
-	sRunActualParams.Speed	= paramListSRun.overtaking.Speed;
-
 	// Actual distance from start.
 	overtakeEndPoint = speedGetDistance();
 	// Distance form the start position.
@@ -372,7 +371,7 @@ void sRunOvertakeStateMachine (void)
 		}
 		case eSTATE_OVERTAKE_DELAY:
 		{
-			if (lenght > 1.0f)
+			if (lenght > 1.2f)
 			{
 				overtakeStartPoint = speedGetDistance();
 				xQueuePeek(qNaviPSI_f, &overtakePsi, 0);
@@ -495,7 +494,7 @@ void sRunOvertakeStateMachine (void)
 			tryToOvertake = false;
 			behindSafetyCar = false;
 
-			actLapSegment = SRUN_OVERTAKE_SEGMENT + 1;
+			actLapSegment = SRUN_OVERTAKE_SEGMENT;
 			smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
 		}
 		case eSTATE_OVERTAKE_FAILED:
@@ -521,8 +520,6 @@ void sRunOvertakeStateMachine (void)
 			break;
 		}
 	}
-
-	paramListSRun.overtaking.Speed = overtakeSpeed * 10;
 }
 
 //! Function: sRunParadeLapAlgorithm
@@ -793,10 +790,10 @@ static void sRunLoadInParamsToRun (void)
 //**********************************************************************************************************************
 static void sRunSpeedUpParadeLap (void)
 {
-	paramListSRun.lapParade.P 		= paramListSRun.lap1[actLapSegment].P;
-	paramListSRun.lapParade.Kp 		= paramListSRun.lap1[actLapSegment].Kp;
-	paramListSRun.lapParade.Kd 		= paramListSRun.lap1[actLapSegment].Kd;
-	paramListSRun.lapParade.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
+	sRunActualParams.P 		= paramListSRun.lap1[actLapSegment].P;
+	sRunActualParams.Kp 	= paramListSRun.lap1[actLapSegment].Kp;
+	sRunActualParams.Kd 	= paramListSRun.lap1[actLapSegment].Kd;
+	sRunActualParams.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
 
 	sRunActSpeedDist = paramListSRun.lap1[actLapSegment].Speed;
 }
