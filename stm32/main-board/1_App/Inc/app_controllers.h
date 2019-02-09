@@ -60,4 +60,5 @@ float cntrDistance (const uint32_t followDist,
 					   const uint32_t actDist,
 					   const float kP,
 					   const uint32_t speedMin,
-					   const uint32_t speedMax);
+					   const uint32_t speedMax,
+					   const bool extraSpeed);

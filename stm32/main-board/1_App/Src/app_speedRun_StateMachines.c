@@ -27,7 +27,7 @@
 #define SRUN_DIST_KEEP_SPEED_MIN	(0.0f)		//!< m/s
 #define SRUN_DIST_KEEP_SPEED_MAX	(3.0f)  	//!< m/s
 #define SRUN_DIST_KEEP_KP			(0.03f)
-#define SRUN_DIST_SETPOINT			(62u)		//!< cm
+#define SRUN_DIST_SETPOINT			(60u)		//!< cm
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 // Local (static) & extern variables -----------------------------------------------------------------------------------
@@ -85,8 +85,8 @@ static float sRunConvertAngleTo180 (const float angle);
 //! Function: sRunInitStateMachines
 void sRunInitStateMachines (void)
 {
-	smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
-	actLapSegment = 7;
+	smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
+	actLapSegment = 0;
 	overtakeState = eSTATE_OVERTAKE_START;
 	actLapIsFinished = false;
 
@@ -161,7 +161,7 @@ void sRunMainStateMachine (void)
 
 			if (startGateFound == true || actLapIsFinished)
 			{
-				//smMainStateSRun = eSTATE_MAIN_LAP_2;
+				smMainStateSRun = eSTATE_MAIN_LAP_2;
 			}
 			break;
 		}
@@ -185,7 +185,7 @@ void sRunMainStateMachine (void)
 			// Drive state machine.
 			sRunDriveStateMachine();
 
-			if (startGateFound == true || actLapIsFinished)
+			if (startGateFound == true || lapFinished)
 			{
 				smMainStateSRun = eSTATE_MAIN_STOP;
 			}
@@ -235,6 +235,7 @@ bool sRunDriveStateMachine (void)
 			{
 				actLapSegment = 2;
 			}
+			break;
 		}
 		case 2:
 		{
@@ -255,18 +256,20 @@ bool sRunDriveStateMachine (void)
 		}
 		case 4:
 		{
-			if (lenght > 1.5f)
+			if (lenght > 2.0f)
 			{
 				actLapSegment = 5;
 				lapSegStart = speedGetDistance();
 			}
+			break;
 		}
 		case 5:
 		{
-			if (lenght > 3.0f)
+			if (lenght > 2.5f)
 			{
 				actLapSegment = 6;
 			}
+			break;
 		}
 		case 6:
 		{
@@ -292,6 +295,7 @@ bool sRunDriveStateMachine (void)
 				actLapSegment = 9;
 				lapSegStart = speedGetDistance();
 			}
+			break;
 		}
 		case 9:
 		{
@@ -299,6 +303,7 @@ bool sRunDriveStateMachine (void)
 			{
 				actLapSegment = 10;
 			}
+			break;
 		}
 		case 10:
 		{
@@ -411,7 +416,7 @@ void sRunOvertakeStateMachine (void)
 			// Slow down.
 			overtakeSpeed = SRUN_OVERTAKE_SPEED_SLOW;
 
-			if (lenght < SRUN_OVERTAKE_DIST_TURN)
+			if (lenght < SRUN_OVERTAKE_DIST_TURN + 0.05f)
 			{
 				// Turn right to get parallel with the line.
 				sRunServoAngle = -SRUN_OVERTAKE_SERVO_ANGLE;
@@ -434,26 +439,12 @@ void sRunOvertakeStateMachine (void)
 			// Speed up.
 			overtakeSpeed = SRUN_OVERTAKE_SPEED_FAST;
 
-			// Get actual angular velocity of z axis (Yaw).
-			/*xQueuePeek(qNaviPSI_f, &actPsi, 0);
-
-			actAngle = sRunConvertAngleTo180(actPsi);
-			wantedAngle = sRunConvertAngleTo180(overtakePsi);
-
-			// TODO TEST
-			if (actAngle > wantedAngle + 0.17f)
-			{
-				sRunServoAngle = SERVO_MIDDLE_RAD + 30.0f*PI/180.0f;
-			}
-			else if (actAngle < wantedAngle - 0.17f)
-			{
-				sRunServoAngle = SERVO_MIDDLE_RAD - 30.0f*PI/180.0f;
-			}
-			else
-			{
-				sRunServoAngle = SERVO_MIDDLE_RAD;
-			}*/
 			sRunServoAngle = SERVO_MIDDLE_RAD;
+
+			if (lenght > SRUN_OVERTAKE_DIST_STRAIGHT - 1.5f)
+			{
+				overtakeSpeed = 18.0f;
+			}
 
 			if (lenght > SRUN_OVERTAKE_DIST_STRAIGHT)
 			{
@@ -495,8 +486,9 @@ void sRunOvertakeStateMachine (void)
 			tryToOvertake = false;
 			behindSafetyCar = false;
 
-			actLapSegment = SRUN_OVERTAKE_SEGMENT + 1;
+			actLapSegment = SRUN_OVERTAKE_SEGMENT;
 			smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+			break;
 		}
 		case eSTATE_OVERTAKE_FAILED:
 		{
@@ -529,6 +521,7 @@ void sRunOvertakeStateMachine (void)
 void sRunParadeLapAlgorithm (void)
 {
 	bool lastSegment = false;
+	bool extraSpeed = false;
 
 	if (behindSafetyCar == true)
 	{
@@ -538,7 +531,12 @@ void sRunParadeLapAlgorithm (void)
 		sRunActualParams.Kd 	= paramListSRun.lapParade.Kd;
 		sRunActualParams.Speed	= paramListSRun.lapParade.Speed;
 
-		sRunDriveStateMachine();
+		lastSegment = sRunDriveStateMachine();
+
+		if (actLapSegment == 3 || actLapSegment == 4 || actLapSegment == 5)
+		{
+			extraSpeed = true;
+		}
 
 		// Follow the safety car. WARNING: Keep distance calculates the speed, line follow set the speed.
 		sRunActSpeedDist = cntrDistance(SRUN_DIST_SETPOINT,
@@ -546,7 +544,8 @@ void sRunParadeLapAlgorithm (void)
 										sRunActFrontDist,
 										SRUN_DIST_KEEP_KP,
 										SRUN_DIST_KEEP_SPEED_MIN,
-										SRUN_DIST_KEEP_SPEED_MAX);
+										SRUN_DIST_KEEP_SPEED_MAX,
+										extraSpeed);
 
 		// Try to overtake if it is enabled.
 		if (tryToOvertake == true && actLapSegment == SRUN_OVERTAKE_SEGMENT)
@@ -557,6 +556,11 @@ void sRunParadeLapAlgorithm (void)
 		{
 			// Follow the safety car until the last corner.
 			smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+		}
+
+		if (startGateFound == true || lastSegment == true)
+		{
+			smMainStateSRun = eSTATE_MAIN_LAP_1;
 		}
 	}
 	else
@@ -798,7 +802,12 @@ static void sRunSpeedUpParadeLap (void)
 	paramListSRun.lapParade.Kd 		= paramListSRun.lap1[actLapSegment].Kd;
 	paramListSRun.lapParade.Speed 	= paramListSRun.lap1[actLapSegment].Speed;
 
-	sRunActSpeedDist = paramListSRun.lap1[actLapSegment].Speed;
+	sRunActSpeedDist = (float)(paramListSRun.lap1[actLapSegment].Speed) / 10.0f;
+
+	if (actLapSegment == 7 || actLapSegment == 8)
+	{
+		sRunActSpeedDist = 1.8f;
+	}
 }
 
 static float sRunConvertAngleTo180 (const float angle)

@@ -93,8 +93,8 @@ void MazeStateMachinesInit (void)
 {
 	uint8_t i;
 
-	mazeFinished = true;
-	smMainState  = eSTATE_MAIN_INCLINATION;
+	mazeFinished = false;
+	smMainState  = eSTATE_MAIN_READY;
 
 	for (i = 0; i < MAZE_MAP_MAX_SEGEMENTS; i++)
 	{

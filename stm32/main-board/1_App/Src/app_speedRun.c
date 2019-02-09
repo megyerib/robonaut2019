@@ -266,20 +266,20 @@ void sRunCntrlLineFollow_OFF (void)
 //**********************************************************************************************************************
 static void sRunSetLap1Parameters (void)
 {
-	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.001f;	paramListSRun.lap1[0].Kd = 0.12f;	paramListSRun.lap1[0].Speed = 70;	// Fast  //elso egyenes
-	paramListSRun.lap1[1].P = 0;	paramListSRun.lap1[1].Kp = 0.001f;	paramListSRun.lap1[1].Kd = 0.12f;	paramListSRun.lap1[1].Speed = 70;	// Fast  //elso egyenes féktáv
-	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0.005f;	paramListSRun.lap1[2].Kd = 1.0;		paramListSRun.lap1[2].Speed = 15;	// Slow  //elso balra kanyar
-	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.001f;	paramListSRun.lap1[3].Kd = 0.1f;	paramListSRun.lap1[3].Speed = 70;	// Fast  //masodik egyenes
-	paramListSRun.lap1[4].P = 0; 	paramListSRun.lap1[4].Kp = 0.001f;	paramListSRun.lap1[4].Kd = 0.1f;	paramListSRun.lap1[4].Speed = 70;	// Fast  //masodik egyenes féktáv
-	paramListSRun.lap1[5].P = 0; 	paramListSRun.lap1[5].Kp = 0.01f;	paramListSRun.lap1[5].Kd = 1.0f;	paramListSRun.lap1[5].Speed = 15;	// Slow  //elso kanyarkombinacio jobb
-	paramListSRun.lap1[6].P = 0; 	paramListSRun.lap1[6].Kp = 0.01f;	paramListSRun.lap1[6].Kd = 1.0f;	paramListSRun.lap1[6].Speed = 15;	// Slow  //elso kanyarkombinacio bal
-	paramListSRun.lap1[7].P = 0; 	paramListSRun.lap1[7].Kp = 0.001f;	paramListSRun.lap1[7].Kd = 0.12f;	paramListSRun.lap1[7].Speed = 70;	// Fast  //harmadik egyenes
-	paramListSRun.lap1[8].P = 0; 	paramListSRun.lap1[8].Kp = 0.001f;	paramListSRun.lap1[8].Kd = 0.12f;	paramListSRun.lap1[8].Speed = 70;	// Fast  //harmadik egyenes féktáv
-	paramListSRun.lap1[9].P = 0; 	paramListSRun.lap1[9].Kp = 0.01f;	paramListSRun.lap1[9].Kd = 1.0f;	paramListSRun.lap1[9].Speed = 15;	// Slow  //masodik kanyarkombinacio bal
-	paramListSRun.lap1[10].P = 0; 	paramListSRun.lap1[10].Kp = 0.01f;	paramListSRun.lap1[10].Kd = 1.0f;	paramListSRun.lap1[10].Speed = 15;	// Slow  //masodik kanyarkombinacio jobb
-	paramListSRun.lap1[11].P = 0; 	paramListSRun.lap1[11].Kp = 0.001f;	paramListSRun.lap1[11].Kd = 0.12f;	paramListSRun.lap1[11].Speed = 70;	// Fast  //lefele egyenes
-	paramListSRun.lap1[12].P = 0; 	paramListSRun.lap1[12].Kp = 0.005f;	paramListSRun.lap1[12].Kd = 1.0f;	paramListSRun.lap1[12].Speed = 15;	// Slow  //utolsó balra kanyar
-	paramListSRun.lap1[13].P = 0; 	paramListSRun.lap1[13].Kp = 0.001f;	paramListSRun.lap1[13].Kd = 0.12f;	paramListSRun.lap1[13].Speed = 70;	// Fast  //utolsó kör végi gyorsítás
+	paramListSRun.lap1[0].P = 0;	paramListSRun.lap1[0].Kp = 0.001f;	paramListSRun.lap1[0].Kd = 0.12f;	paramListSRun.lap1[0].Speed = 50;	// Fast  //elso egyenes
+	paramListSRun.lap1[1].P = 0;	paramListSRun.lap1[1].Kp = 0.001f;	paramListSRun.lap1[1].Kd = 0.12f;	paramListSRun.lap1[1].Speed = 50;	// Fast  //elso egyenes féktáv
+	paramListSRun.lap1[2].P = 0; 	paramListSRun.lap1[2].Kp = 0.005f;	paramListSRun.lap1[2].Kd = 1.0;		paramListSRun.lap1[2].Speed = 14;	// Slow  //elso balra kanyar
+	paramListSRun.lap1[3].P = 0; 	paramListSRun.lap1[3].Kp = 0.001f;	paramListSRun.lap1[3].Kd = 0.1f;	paramListSRun.lap1[3].Speed = 50;	// Fast  //masodik egyenes
+	paramListSRun.lap1[4].P = 0; 	paramListSRun.lap1[4].Kp = 0.001f;	paramListSRun.lap1[4].Kd = 0.1f;	paramListSRun.lap1[4].Speed = 50;	// Fast  //masodik egyenes féktáv
+	paramListSRun.lap1[5].P = 0; 	paramListSRun.lap1[5].Kp = 0.01f;	paramListSRun.lap1[5].Kd = 1.0f;	paramListSRun.lap1[5].Speed = 14;	// Slow  //elso kanyarkombinacio jobb
+	paramListSRun.lap1[6].P = 0; 	paramListSRun.lap1[6].Kp = 0.01f;	paramListSRun.lap1[6].Kd = 1.0f;	paramListSRun.lap1[6].Speed = 14;	// Slow  //elso kanyarkombinacio bal
+	paramListSRun.lap1[7].P = 0; 	paramListSRun.lap1[7].Kp = 0.001f;	paramListSRun.lap1[7].Kd = 0.12f;	paramListSRun.lap1[7].Speed = 50;	// Fast  //harmadik egyenes
+	paramListSRun.lap1[8].P = 0; 	paramListSRun.lap1[8].Kp = 0.001f;	paramListSRun.lap1[8].Kd = 0.12f;	paramListSRun.lap1[8].Speed = 50;	// Fast  //harmadik egyenes féktáv
+	paramListSRun.lap1[9].P = 0; 	paramListSRun.lap1[9].Kp = 0.01f;	paramListSRun.lap1[9].Kd = 1.0f;	paramListSRun.lap1[9].Speed = 14;	// Slow  //masodik kanyarkombinacio bal
+	paramListSRun.lap1[10].P = 0; 	paramListSRun.lap1[10].Kp = 0.01f;	paramListSRun.lap1[10].Kd = 1.0f;	paramListSRun.lap1[10].Speed = 14;	// Slow  //masodik kanyarkombinacio jobb
+	paramListSRun.lap1[11].P = 0; 	paramListSRun.lap1[11].Kp = 0.001f;	paramListSRun.lap1[11].Kd = 0.12f;	paramListSRun.lap1[11].Speed = 50;	// Fast  //lefele egyenes
+	paramListSRun.lap1[12].P = 0; 	paramListSRun.lap1[12].Kp = 0.005f;	paramListSRun.lap1[12].Kd = 1.0f;	paramListSRun.lap1[12].Speed = 14;	// Slow  //utolsó balra kanyar
+	paramListSRun.lap1[13].P = 0; 	paramListSRun.lap1[13].Kp = 0.001f;	paramListSRun.lap1[13].Kd = 0.12f;	paramListSRun.lap1[13].Speed = 50;	// Fast  //utolsó kör végi gyorsítás
 
 	paramListSRun.lap1[14].P = 0;	paramListSRun.lap1[14].Kp = 0.025f;	paramListSRun.lap1[14].Kd = 3.5f;	paramListSRun.lap1[14].Speed = 15;	// Corner
 	paramListSRun.lap1[15].P = 0;	paramListSRun.lap1[15].Kp = 0.025f;	paramListSRun.lap1[15].Kd = 3.5f;	paramListSRun.lap1[15].Speed = 15;	// Speed
@@ -292,22 +292,21 @@ static void sRunSetLap1Parameters (void)
 //**********************************************************************************************************************
 static void sRunSetLap2Parameters (void)
 {
-	paramListSRun.lap2[0].P = 0;	paramListSRun.lap2[0].Kp = 0.01f;	paramListSRun.lap2[0].Kd = 3.4f;	paramListSRun.lap2[0].Speed = 18;	// Straight
-	paramListSRun.lap2[1].P = 0; 	paramListSRun.lap2[1].Kp = 0.02f;	paramListSRun.lap2[1].Kd = 3.4f;	paramListSRun.lap2[1].Speed = 16;	// Slow
-	paramListSRun.lap2[2].P = 0; 	paramListSRun.lap2[2].Kp = 0.01f;	paramListSRun.lap2[2].Kd = 3.4f;	paramListSRun.lap2[2].Speed = 18;	// Corner
-	paramListSRun.lap2[3].P = 0; 	paramListSRun.lap2[3].Kp = 0.02f;	paramListSRun.lap2[3].Kd = 3.4f;	paramListSRun.lap2[3].Speed = 16;	// Speed
-	paramListSRun.lap2[4].P = 0; 	paramListSRun.lap2[4].Kp = 0.01f;	paramListSRun.lap2[4].Kd = 3.4f;	paramListSRun.lap2[4].Speed = 18;	// Straight
+	paramListSRun.lap2[0].P = 0;	paramListSRun.lap2[0].Kp = 0.001f;	paramListSRun.lap2[0].Kd = 0.12f;	paramListSRun.lap2[0].Speed = 70;	// Fast  //elso egyenes
+	paramListSRun.lap2[1].P = 0;	paramListSRun.lap2[1].Kp = 0.001f;	paramListSRun.lap2[1].Kd = 0.12f;	paramListSRun.lap2[1].Speed = 70;	// Fast  //elso egyenes féktáv
+	paramListSRun.lap2[2].P = 0; 	paramListSRun.lap2[2].Kp = 0.005f;	paramListSRun.lap2[2].Kd = 1.0;		paramListSRun.lap2[2].Speed = 15;	// Slow  //elso balra kanyar
+	paramListSRun.lap2[3].P = 0; 	paramListSRun.lap2[3].Kp = 0.001f;	paramListSRun.lap2[3].Kd = 0.1f;	paramListSRun.lap2[3].Speed = 70;	// Fast  //masodik egyenes
+	paramListSRun.lap2[4].P = 0; 	paramListSRun.lap2[4].Kp = 0.001f;	paramListSRun.lap2[4].Kd = 0.1f;	paramListSRun.lap2[4].Speed = 70;	// Fast  //masodik egyenes féktáv
+	paramListSRun.lap2[5].P = 0; 	paramListSRun.lap2[5].Kp = 0.01f;	paramListSRun.lap2[5].Kd = 1.0f;	paramListSRun.lap2[5].Speed = 15;	// Slow  //elso kanyarkombinacio jobb
+	paramListSRun.lap2[6].P = 0; 	paramListSRun.lap2[6].Kp = 0.01f;	paramListSRun.lap2[6].Kd = 1.0f;	paramListSRun.lap2[6].Speed = 15;	// Slow  //elso kanyarkombinacio bal
+	paramListSRun.lap2[7].P = 0; 	paramListSRun.lap2[7].Kp = 0.001f;	paramListSRun.lap2[7].Kd = 0.12f;	paramListSRun.lap2[7].Speed = 70;	// Fast  //harmadik egyenes
+	paramListSRun.lap2[8].P = 0; 	paramListSRun.lap2[8].Kp = 0.001f;	paramListSRun.lap2[8].Kd = 0.12f;	paramListSRun.lap2[8].Speed = 70;	// Fast  //harmadik egyenes féktáv
+	paramListSRun.lap2[9].P = 0; 	paramListSRun.lap2[9].Kp = 0.01f;	paramListSRun.lap2[9].Kd = 1.0f;	paramListSRun.lap2[9].Speed = 15;	// Slow  //masodik kanyarkombinacio bal
+	paramListSRun.lap2[10].P = 0; 	paramListSRun.lap2[10].Kp = 0.01f;	paramListSRun.lap2[10].Kd = 1.0f;	paramListSRun.lap2[10].Speed = 15;	// Slow  //masodik kanyarkombinacio jobb
+	paramListSRun.lap2[11].P = 0; 	paramListSRun.lap2[11].Kp = 0.001f;	paramListSRun.lap2[11].Kd = 0.12f;	paramListSRun.lap2[11].Speed = 70;	// Fast  //lefele egyenes
+	paramListSRun.lap2[12].P = 0; 	paramListSRun.lap2[12].Kp = 0.005f;	paramListSRun.lap2[12].Kd = 1.0f;	paramListSRun.lap2[12].Speed = 15;	// Slow  //utolsó balra kanyar
+	paramListSRun.lap2[13].P = 0; 	paramListSRun.lap2[13].Kp = 0.001f;	paramListSRun.lap2[13].Kd = 0.12f;	paramListSRun.lap2[13].Speed = 70;	// Fast  //utolsó kör végi gyorsítás
 
-	paramListSRun.lap2[5].P = 0; 	paramListSRun.lap2[5].Kp = 0.02f;	paramListSRun.lap2[5].Kd = 3.4f;	paramListSRun.lap2[5].Speed = 16;	// Slow
-	paramListSRun.lap2[6].P = 0; 	paramListSRun.lap2[6].Kp = 0.01f;	paramListSRun.lap2[6].Kd = 3.4f;	paramListSRun.lap2[6].Speed = 18;	// Corner
-	paramListSRun.lap2[7].P = 0; 	paramListSRun.lap2[7].Kp = 0.02f;	paramListSRun.lap2[7].Kd = 3.4f;	paramListSRun.lap2[7].Speed = 16;	// Speed
-	paramListSRun.lap2[8].P = 0; 	paramListSRun.lap2[8].Kp = 0.01f;	paramListSRun.lap2[8].Kd = 3.4f;	paramListSRun.lap2[8].Speed = 18;	// Straight
-	paramListSRun.lap2[9].P = 0; 	paramListSRun.lap2[9].Kp = 0.02f;	paramListSRun.lap2[9].Kd = 3.4f;	paramListSRun.lap2[9].Speed = 16;	// Slow
-
-	paramListSRun.lap2[10].P = 0;	paramListSRun.lap2[10].Kp = 0.025f;	paramListSRun.lap2[10].Kd = 3.5f;	paramListSRun.lap2[10].Speed = 15;	// Corner
-	paramListSRun.lap2[11].P = 0;	paramListSRun.lap2[11].Kp = 0.025f;	paramListSRun.lap2[11].Kd = 3.5f;	paramListSRun.lap2[11].Speed = 15;	// Speed
-	paramListSRun.lap2[12].P = 0;	paramListSRun.lap2[12].Kp = 0.025f;	paramListSRun.lap2[12].Kd = 3.5f;	paramListSRun.lap2[12].Speed = 15;	// Straight
-	paramListSRun.lap2[13].P = 0;	paramListSRun.lap2[13].Kp = 0.025f;	paramListSRun.lap2[13].Kd = 3.5f;	paramListSRun.lap2[13].Speed = 15;	// Slow
 	paramListSRun.lap2[14].P = 0;	paramListSRun.lap2[14].Kp = 0.025f;	paramListSRun.lap2[14].Kd = 3.5f;	paramListSRun.lap2[14].Speed = 15;	// Corner
 	paramListSRun.lap2[15].P = 0;	paramListSRun.lap2[15].Kp = 0.025f;	paramListSRun.lap2[15].Kd = 3.5f;	paramListSRun.lap2[15].Speed = 15;	// Speed
 }
@@ -319,22 +318,21 @@ static void sRunSetLap2Parameters (void)
 //**********************************************************************************************************************
 static void sRunSetLap3Parameters (void)
 {
-	paramListSRun.lap3[0].P = 0;	paramListSRun.lap3[0].Kp = 0.025;	paramListSRun.lap3[0].Kd = 3.5;	paramListSRun.lap3[0].Speed = 20;
-	paramListSRun.lap3[1].P = 0; 	paramListSRun.lap3[1].Kp = 0.025;	paramListSRun.lap3[1].Kd = 3.5;	paramListSRun.lap3[1].Speed = 20;
-	paramListSRun.lap3[2].P = 0; 	paramListSRun.lap3[2].Kp = 0.025;	paramListSRun.lap3[2].Kd = 3.5;	paramListSRun.lap3[2].Speed = 20;
-	paramListSRun.lap3[3].P = 0; 	paramListSRun.lap3[3].Kp = 0.025;	paramListSRun.lap3[3].Kd = 3.5;	paramListSRun.lap3[3].Speed = 20;
-	paramListSRun.lap3[4].P = 0; 	paramListSRun.lap3[4].Kp = 0.025;	paramListSRun.lap3[4].Kd = 3.5;	paramListSRun.lap3[4].Speed = 20;
+	paramListSRun.lap3[0].P = 0;	paramListSRun.lap3[0].Kp = 0.001f;	paramListSRun.lap3[0].Kd = 0.12f;	paramListSRun.lap3[0].Speed = 70;	// Fast  //elso egyenes
+	paramListSRun.lap3[1].P = 0;	paramListSRun.lap3[1].Kp = 0.001f;	paramListSRun.lap3[1].Kd = 0.12f;	paramListSRun.lap3[1].Speed = 70;	// Fast  //elso egyenes féktáv
+	paramListSRun.lap3[2].P = 0; 	paramListSRun.lap3[2].Kp = 0.005f;	paramListSRun.lap3[2].Kd = 1.0;		paramListSRun.lap3[2].Speed = 19;	// Slow  //elso balra kanyar
+	paramListSRun.lap3[3].P = 0; 	paramListSRun.lap3[3].Kp = 0.001f;	paramListSRun.lap3[3].Kd = 0.1f;	paramListSRun.lap3[3].Speed = 70;	// Fast  //masodik egyenes
+	paramListSRun.lap3[4].P = 0; 	paramListSRun.lap3[4].Kp = 0.001f;	paramListSRun.lap3[4].Kd = 0.1f;	paramListSRun.lap3[4].Speed = 70;	// Fast  //masodik egyenes féktáv
+	paramListSRun.lap3[5].P = 0; 	paramListSRun.lap3[5].Kp = 0.01f;	paramListSRun.lap3[5].Kd = 1.0f;	paramListSRun.lap3[5].Speed = 16;	// Slow  //elso kanyarkombinacio jobb
+	paramListSRun.lap3[6].P = 0; 	paramListSRun.lap3[6].Kp = 0.01f;	paramListSRun.lap3[6].Kd = 1.0f;	paramListSRun.lap3[6].Speed = 19;	// Slow  //elso kanyarkombinacio bal
+	paramListSRun.lap3[7].P = 0; 	paramListSRun.lap3[7].Kp = 0.001f;	paramListSRun.lap3[7].Kd = 0.12f;	paramListSRun.lap3[7].Speed = 70;	// Fast  //harmadik egyenes
+	paramListSRun.lap3[8].P = 0; 	paramListSRun.lap3[8].Kp = 0.001f;	paramListSRun.lap3[8].Kd = 0.12f;	paramListSRun.lap3[8].Speed = 70;	// Fast  //harmadik egyenes féktáv
+	paramListSRun.lap3[9].P = 0; 	paramListSRun.lap3[9].Kp = 0.01f;	paramListSRun.lap3[9].Kd = 1.0f;	paramListSRun.lap3[9].Speed = 19;	// Slow  //masodik kanyarkombinacio bal
+	paramListSRun.lap3[10].P = 0; 	paramListSRun.lap3[10].Kp = 0.01f;	paramListSRun.lap3[10].Kd = 1.0f;	paramListSRun.lap3[10].Speed = 16;	// Slow  //masodik kanyarkombinacio jobb
+	paramListSRun.lap3[11].P = 0; 	paramListSRun.lap3[11].Kp = 0.001f;	paramListSRun.lap3[11].Kd = 0.12f;	paramListSRun.lap3[11].Speed = 70;	// Fast  //lefele egyenes
+	paramListSRun.lap3[12].P = 0; 	paramListSRun.lap3[12].Kp = 0.005f;	paramListSRun.lap3[12].Kd = 1.0f;	paramListSRun.lap3[12].Speed = 19;	// Slow  //utolsó balra kanyar
+	paramListSRun.lap3[13].P = 0; 	paramListSRun.lap3[13].Kp = 0.001f;	paramListSRun.lap3[13].Kd = 0.12f;	paramListSRun.lap3[13].Speed = 70;	// Fast  //utolsó kör végi gyorsítás
 
-	paramListSRun.lap3[5].P = 0; 	paramListSRun.lap3[5].Kp = 0.025;	paramListSRun.lap3[5].Kd = 3.5;	paramListSRun.lap3[5].Speed = 20;
-	paramListSRun.lap3[6].P = 0; 	paramListSRun.lap3[6].Kp = 0.025;	paramListSRun.lap3[6].Kd = 3.5;	paramListSRun.lap3[6].Speed = 20;
-	paramListSRun.lap3[7].P = 0; 	paramListSRun.lap3[7].Kp = 0.025;	paramListSRun.lap3[7].Kd = 3.5;	paramListSRun.lap3[7].Speed = 20;
-	paramListSRun.lap3[8].P = 0; 	paramListSRun.lap3[8].Kp = 0.025;	paramListSRun.lap3[8].Kd = 3.5;	paramListSRun.lap3[8].Speed = 20;
-	paramListSRun.lap3[9].P = 0; 	paramListSRun.lap3[9].Kp = 0.025;	paramListSRun.lap3[9].Kd = 3.5;	paramListSRun.lap3[9].Speed = 20;
-
-	paramListSRun.lap3[10].P = 0;	paramListSRun.lap3[10].Kp = 0.025;	paramListSRun.lap3[10].Kd = 3.5;	paramListSRun.lap3[10].Speed = 15;
-	paramListSRun.lap3[11].P = 0;	paramListSRun.lap3[11].Kp = 0.025;	paramListSRun.lap3[11].Kd = 3.5;	paramListSRun.lap3[11].Speed = 15;
-	paramListSRun.lap3[12].P = 0;	paramListSRun.lap3[12].Kp = 0.025;	paramListSRun.lap3[12].Kd = 3.5;	paramListSRun.lap3[12].Speed = 15;
-	paramListSRun.lap3[13].P = 0;	paramListSRun.lap3[13].Kp = 0.025;	paramListSRun.lap3[13].Kd = 3.5;	paramListSRun.lap3[13].Speed = 15;
 	paramListSRun.lap3[14].P = 0;	paramListSRun.lap3[14].Kp = 0.025;	paramListSRun.lap3[14].Kd = 3.5;	paramListSRun.lap3[14].Speed = 15;
 	paramListSRun.lap3[15].P = 0;	paramListSRun.lap3[15].Kp = 0.025;	paramListSRun.lap3[15].Kd = 3.5;	paramListSRun.lap3[15].Speed = 15;
 }
@@ -532,10 +530,23 @@ static void sRunCheckRstBtn_Hard (void)
 	{
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
 
+		// Reset the module.
+		speedRunStarted = true;
+
+		sRunSetLap1Parameters();
+		sRunSetLap2Parameters();
+		sRunSetLap3Parameters();
+
+		// Init state machines
+		sRunInitStateMachines();
+
+		cntrLineFollowActive = true;
+
+		// Variable for the speed controller.
+		sRunSpeedFk = 0;
+
 		// Reset the state machine.
 		smMainStateSRun = eSTATE_MAIN_WAIT_BEHIND;
-		actLapSegment = 0;
-		speedRunStarted = true;
 
 		// Signal to the maze task that we are out of the maze.
 		xEventGroupSetBits(event_MazeOut, 0);
@@ -550,9 +561,9 @@ static void sRunCheckRstBtn_Hard (void)
 //!
 //! @return -
 //**********************************************************************************************************************
-static void sRunCheckRstBtn_Soft (void)
+static void sRunCheckRstBtn_Soft (void)		// blue
 {
-	btnSoftRstSpeedRun = HAL_GPIO_ReadPin(btnSoftRst_Port, btnSoftRst_Pin);
+	btnSoftRstSpeedRun = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
 	if (btnSoftRstSpeedRun == GPIO_PIN_RESET || recSoftReset == true)
 	{
 		// Reset signal received. Skip the maze and signal to the speed run state machine.
@@ -561,11 +572,10 @@ static void sRunCheckRstBtn_Soft (void)
 		{
 			smMainStateSRun = recSoftResetTo;
 		}
-		else
-		{
-			// TODO think this through.
-			// actLapSegment =
-		}
+
+		actLapSegment = 7;
+		smMainStateSRun = eSTATE_MAIN_PARADE_LAP;
+
 
 		// Reset event is handled.
 		recSoftReset = false;
@@ -583,6 +593,8 @@ static void sRunCheckRstBtn_Extra (void)
 	if (btnExtraRstSpeedRun == GPIO_PIN_RESET)
 	{
 		//TODO
+
+		recGetState = 3;
 	}
 }
 
