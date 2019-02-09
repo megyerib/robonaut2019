@@ -15,12 +15,13 @@
 #include "navigation.h"
 #include "app_roadsignal.h"
 #include "random.h"
+#include "speed.h"
 
 // Defines -------------------------------------------------------------------------------------------------------------
 
 #define JUNCTION_MAX_NUM (16u)
-#define VERTEX_ORI_MASK (0x00000010); // 16
-#define VERTEX_ORI_MASK_INVERSE (0xFFFFFFEF);
+#define VERTEX_ORI_MASK (0x10) // 16
+#define VERTEX_ORI_MASK_INVERSE (~VERTEX_ORI_MASK)
 #define NO_MATCHING_JUNCTION (-1)
 #define DISTANCE_TH  (1.5f)
 #define ANGLE_TH     (PI/2)
@@ -130,6 +131,8 @@ static int plannedPath[JUNCTION_MAX_NUM * 2];
 static int pathStartIndex;
 static int pathEndIndex;
 
+static float startDistance;
+
 // Local (static) function prototypes ----------------------------------------------------------------------------------
 
 static int newCrossing(cNAVI_STATE nav, ORI orientation);
@@ -152,11 +155,14 @@ static void getTargetVerticeList(int* tlist);
 static void planRouteToNearest(int startV);
 static void planRoute(int startV, int endV);
 static float normAngleRad(float angle);
+static void resetPosition(cNAVI_STATE nav, ORI orientation);
+static int isMazeFinished();
+
+static void startDistanceMeasuring();
+static int getDistanceDm();
+static float roundRightAngle(float angle);
 
 // Global function definitions -----------------------------------------------------------------------------------------
-
-// TODO pozíció korrigálása a keresztezõdésekben
-// TODO keresztezõdés, vertex, orientáció aktualizálása
 
 float MazeStm()
 {
@@ -167,8 +173,6 @@ float MazeStm()
 	while (skip == 0)
 	{
 		crossing = getCrossingType();
-		// Ha nem vagyunk keresztezõdésben, nem is nézzük meg
-		curJunctionOri = isCrossingForward(crossing) ? oriForward : oriBackward;
 
 		switch (mazeState)
 		{
@@ -205,11 +209,14 @@ float MazeStm()
 		case first_crossingFound:
 		{
 			// Felvesszük az elsõ keresztezõdést: Minden kijárat felderítetlen
-			// Korrigáljuk a pozíciót egész 90 fokra. TODO
+			// Korrigáljuk a pozíciót egész 90 fokra.
 			// Továbbugrunk travel_planRoute-ba, ami az aktuális keresztezõdésbõl kitalálja, hogy hol vagyunk.
 
 			cNAVI_STATE curPos = getPosition();
+			curPos.psi = roundRightAngle(curPos.psi);
+			naviResetNaviState(curPos);
 
+			curJunctionOri = isCrossingForward(crossing) ? oriForward : oriBackward;
 			curJunction    = newCrossing(curPos, curJunctionOri);
 			curVertex      = calcVertexNum(curJunction, curJunctionOri);
 
@@ -258,17 +265,21 @@ float MazeStm()
 		{
 			// Keresztezõdésbe értünk.
 			// Megnézzük, hogy voltunk-e már itt.
-			// Ha igen, korrigáljuk a teljes pozíciót. TODO
-			// Ha nem, felvesszük és csak a szöget korrigáljuk 90 fokra. TODO
+			// Ha igen, korrigáljuk a teljes pozíciót.
+			// Ha nem, felvesszük és csak a szöget korrigáljuk 90 fokra.
 			// A végén útvonalat tervezünk.
-			// Ha láttunk kijáratot, elmentjük. TODO
+			// Ha láttunk kijáratot, elmentjük.
 
 			JUNCTION* j;
+
 			cNAVI_STATE curPos = getPosition();
+			curPos.psi = roundRightAngle(curPos.psi);
+			naviResetNaviState(curPos);
 
 			// Melyik keresztezõdésben vagyunk?
 			curJunctionOri = isCrossingForward(crossing) ? oriForward : oriBackward;
-			curJunction = whichJunctionIsThis(curPos, curJunctionOri);
+			curJunction    = whichJunctionIsThis(curPos, curJunctionOri);
+			curVertex      = calcVertexNum(curJunction, curJunctionOri);
 
 			if (curJunction == NO_MATCHING_JUNCTION)
 			{
@@ -281,11 +292,16 @@ float MazeStm()
 			}
 			else
 			{
-				//navireset
-
 				j = &junctions[curJunction];
+				resetPosition(j->nav, curJunctionOri);
 
-				// TODO ha már minden fel van fedezve, elrontottunk valamit, ezért átváltunk random módba
+				if (isJunctionDiscovered(curJunction))
+				{
+					// Ha már minden fel van fedezve, elrontottunk valamit,
+					// ezért átváltunk random módba
+					mazeState = error_random;
+					skip = 1;
+				}
 			}
 
 			// Kiegészítjük az élt, amirõl elindultunk
@@ -302,12 +318,11 @@ float MazeStm()
 
 			// Felfedeztük az él két végét -> visited = 1
 			junctions[vertexToJunctionNum(curEdge.startV)].visited[curEdge.startExit] = 1;
-			junctions[vertexToJunctionNum(curEdge.endV)].visited[curEdge.endExit] = 1;
+			junctions[vertexToJunctionNum(curEdge.endV)].visited[curEdge.endExit]     = 1;
 
 			// Felvesszük a két új élt
+			curEdge.cost = getDistanceDm();
 			addEdgeAndInverse(curEdge);
-
-			// TODO cost
 
 			// Kijárat?
 			if (exitRecentlyFound)
@@ -334,36 +349,43 @@ float MazeStm()
 		case travel_planRoute:
 		{
 			// Ha a keresztezõdésünkben van felfedezetlen kijárat, arra megyünk
-			// Ha nincs, keresünk magunknak (Dijkstra) TODO
+			// Ha nincs, keresünk magunknak (Dijkstra)
 
 			int curVertex = curJunction;
 
 			// Keresztezõdésbõl hívjuk meg mindig ezt az állapotot
 			if (curJunctionOri == oriForward)
 			{
-				// TODO inkább menjünk random, mi van, ha mindig balra próbál elindulni?
-				if (junctions[curJunction].visited[exitLeft] == 0)
-				{
-					curEdge.startV = curVertex;
-					curEdge.startExit   = exitLeft;
+				// Inkább menjünk random, ne mindig egy irányba próbáljunk elindulni
+				EXIT firstExit  = random((float)inertGetAngVel().omega_z) ? exitRight : exitLeft;
+				EXIT secondExit = (firstExit == exitRight) ? exitLeft : exitRight;
 
-					lineToFollow = getLeftLine();
-					mazeState = discovery_followLine;
-					skip = 1;
+				if (junctions[curJunction].visited[firstExit] == 0)
+				{
+					curEdge.startV    = curVertex;
+					curEdge.startExit = firstExit;
+
+					lineToFollow = (firstExit == exitRight) ? getRightLine() : getLeftLine();
 				}
-				else if (junctions[curJunction].visited[exitRight] == 0)
+				else if (junctions[curJunction].visited[secondExit] == 0)
 				{
-					curEdge.startV = curVertex;
-					curEdge.startExit   = exitRight;
+					curEdge.startV    = curVertex;
+					curEdge.startExit = secondExit;
 
-					lineToFollow = getRightLine();
-					skip = 1;
-					mazeState = discovery_followLine;
+					lineToFollow = (secondExit == exitRight) ? getRightLine() : getLeftLine();
 				}
 				else
 				{
 					planRouteToNearest(curVertex);
-					// TODO Dijkstra után elindulunk
+
+					if (edges[plannedPath[0]].startExit == exitRight)
+					{
+						lineToFollow = getRightLine();
+					}
+					else
+					{
+						lineToFollow = getLeftLine();
+					}
 				}
 			}
 			else // Orientation: backward
@@ -376,15 +398,17 @@ float MazeStm()
 					curEdge.startExit   = exitSource;
 
 					lineToFollow = getLeftLine();
-					mazeState = discovery_followLine;
-					skip = 1;
 				}
 				else
 				{
 					planRouteToNearest(curVertex);
-					// TODO Dijkstra után elindulunk
+					// Követjük tovább az egyetlen vonalat
 				}
 			}
+
+			startDistanceMeasuring();
+			mazeState = discovery_followLine;
+			skip = 1;
 
 			break;
 		}
@@ -410,50 +434,63 @@ float MazeStm()
 			// Megyünk tovább, ha van még az útból
 			// Ha nincs, travelPlan, ami kiválasztja a megfelelõ kijáratot
 
-			// Végeztünk?
+			// Pozíció beállítása
+			curVertex      = edges[pathEndIndex].endV;
+			curJunctionOri = (curVertex & VERTEX_ORI_MASK) ? oriForward : oriBackward;
+			curJunction    = (curVertex & VERTEX_ORI_MASK_INVERSE);
+
+			resetPosition(junctions[curJunction].nav, curJunctionOri);
+
+			// Végeztünk az úttal?
 			if (pathStartIndex == pathEndIndex)
 			{
-				mazeState = travel_planRoute; // Kiválasztjuk a kimenõ irányt
+				if (isMazeFinished())
+				{
+					mazeState = exit_planRoute;
+				}
+				else
+				{
+					mazeState = travel_planRoute; // Kiválasztjuk a kimenõ irányt
+				}
 			}
 			else
 			{
 				pathStartIndex++;
 
-				EXIT exitType = plannedPath[pathStartIndex];
+				EXIT exitType = edges[plannedPath[pathStartIndex]].startV;
 
 				// Kijárat kiválasztása
-				if (curJunctionOri == oriForward)
+				if (exitType == exitRight)
 				{
-					if (exitType == exitRight)
-					{
-						lineToFollow = getRightLine();
-						mazeState = discovery_followLine;
-						skip = 1;
-					}
-					else // exitType == exitLeft
-					{
-						lineToFollow = getLeftLine();
-						mazeState = discovery_followLine;
-						skip = 1;
-					}
+					lineToFollow = getRightLine();
 				}
-				else // curJunctionOri == oriBackward
+				else // exitType == exitLeft
 				{
-					//lineToFollow = getPrevLine(); // Már kiválasztottuk
-					mazeState = discovery_followLine;
-					skip = 1;
+					lineToFollow = getLeftLine();
 				}
+
+				startDistanceMeasuring();
+				mazeState = discovery_followLine;
+				skip      = 1;
 			}
 
 			break;
 		}
-		case exit_planRoute: // TODO
+		case exit_planRoute:
 		{
-			// TODO curVertex
-
 			planRoute(curVertex, exitVertex);
 
-			// TODO Dijkstra után elindulunk
+			if (edges[plannedPath[0]].startV == exitRight)
+			{
+				lineToFollow = getRightLine();
+			}
+			else
+			{
+				lineToFollow = getLeftLine();
+			}
+
+			mazeState = exit_followLine;
+			skip = 1;
 
 			break;
 		}
@@ -474,8 +511,9 @@ float MazeStm()
 		}
 		case exit_crossingFound:
 		{
-			// Ha nem végeztünk, haladunk tovább az úton TODO
+			// Ha nem végeztünk, haladunk tovább az úton
 			// Ha végeztünk, kiválasztjuk a megfelelõ kijáratot és arra megyünk tovább.
+			// Már nem frissítünk pozíciót
 
 			// Végeztünk?
 			if (pathStartIndex == pathEndIndex)
@@ -490,35 +528,28 @@ float MazeStm()
 				}
 
 				mazeState = exit_onExitSection;
+				skip = 1;
 			}
 			else
 			{
 				pathStartIndex++;
 
-				EXIT exitType = plannedPath[pathStartIndex];
+				EXIT exitType = edges[plannedPath[pathStartIndex]].startExit;
 
 				// Kijárat kiválasztása
-				if (curJunctionOri == oriForward)
+				if (exitType == exitRight)
 				{
-					if (exitType == exitRight)
-					{
-						lineToFollow = getRightLine();
-						mazeState = discovery_followLine;
-						skip = 1;
-					}
-					else // exitType == exitLeft
-					{
-						lineToFollow = getLeftLine();
-						mazeState = discovery_followLine;
-						skip = 1;
-					}
+					lineToFollow = getRightLine();
+
 				}
-				else // curJunctionOri == oriBackward
+				else
 				{
-					//lineToFollow = getPrevLine(); // Már kiválasztottuk
-					mazeState = discovery_followLine;
-					skip = 1;
+					lineToFollow = getLeftLine();
 				}
+
+				startDistanceMeasuring();
+				mazeState = discovery_followLine;
+				skip = 1;
 			}
 
 			break;
@@ -775,18 +806,62 @@ static float normAngleRad(float angle)
 {
 	if (angle > 0)
 	{
-		while (angle > PI)
+		while (angle > PI+0.0001) // Float arithmetic
 		{
 			angle -= PI;
 		}
 	}
 	else
 	{
-		while (angle < -PI)
+		while (angle < -PI-0.0001) // Float arithmetic
 		{
 			angle += PI;
 		}
 	}
+
+	return angle;
+}
+
+static void resetPosition(cNAVI_STATE nav, ORI orientation)
+{
+	if (orientation == oriBackward)
+	{
+		nav.psi = normAngleRad(nav.psi + 180.0f);
+	}
+
+	naviResetNaviState(nav);
+}
+
+static int isMazeFinished()
+{
+	int ret = 1;
+
+	for (int i = 0; i < junctionNum; i++)
+	{
+		ret &= junctions[i].visited[exitLeft];
+		ret &= junctions[i].visited[exitRight];
+		ret &= junctions[i].visited[exitSource];
+	}
+
+	return ret;
+}
+
+static void startDistanceMeasuring()
+{
+	startDistance = speedGetDistance();
+}
+
+static int getDistanceDm()
+{
+	return (int)((speedGetDistance() - startDistance)/10);
+}
+
+static float roundRightAngle(float angle)
+{
+	angle = normAngleRad(angle);
+	angle /= PI/2;
+	angle = round(angle);
+	angle *= PI/2;
 
 	return angle;
 }
