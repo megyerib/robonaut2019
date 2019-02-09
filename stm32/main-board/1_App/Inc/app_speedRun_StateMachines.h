@@ -23,13 +23,13 @@
 #define SRUN_OVERTAKE_TURN_TIME 		400 				//!< 400 * task period (5ms) = 2s
 #define SRUN_OVERTAKE_PASS_TIME			2000				//!< 2000* 5ms = 10s
 #define SRUN_OVERTAKE_FIND_TIME			800					//!< 800 * 5ms = 4s
-#define SRUN_OVERTAKE_SPEED_SLOW		(18.0f)				//!< m/s
-#define SRUN_OVERTAKE_SPEED_FAST		(30.0f)				//!< m/2
+#define SRUN_OVERTAKE_SPEED_SLOW		(1.8f)				//!< m/s
+#define SRUN_OVERTAKE_SPEED_FAST		(3.0f)				//!< m/2
 #define SRUN_OVERTAKE_SERVO_ANGLE		(30.0f*PI/180.0f)	//!< deg
 #define SRUN_OVERTAKE_SERVO_RET_ANGLE	(-12.0f*PI/180.0f)	//!< deg
 #define SRUN_OVERTAKE_DIST_TURN			(0.6f)				//! m
 #define SRUN_OVERTAKE_DIST_FROM_LINE	(1.2f)				//! m
-#define SRUN_OVERTAKE_DIST_STRAIGHT		(4.0f)				//! m
+#define SRUN_OVERTAKE_DIST_STRAIGHT		(2.5f)				//! m
 
 // Typedefs ------------------------------------------------------------------------------------------------------------
 
