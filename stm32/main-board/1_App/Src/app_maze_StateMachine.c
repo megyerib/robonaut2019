@@ -130,8 +130,11 @@ void MazeStateMachinesInit (void)
 }
 
 //! Function: MazeMainStateMachine
-void MazeMainStateMachine (void)
+float MazeMainStateMachine (void)
 {
+	float lineToFollow;
+	float crossing;
+
 	switch (smMainState)
 	{
 		case eSTATE_MAIN_READY:
@@ -153,22 +156,26 @@ void MazeMainStateMachine (void)
 		}
 		case eSTATE_MAIN_DISCOVER:
 		{
-			// Load in the control parameters.
-			mazeActualParams.Kp = paramList.discover.Kp;
-			mazeActualParams.Kd = paramList.discover.Kd;
-			mazeActualParams.Speed = paramList.discover.Speed;
+			crossing = getCrossingType();
 
-			// Map making, navigation, path tracking.
-			//TODO implement
-			if (mazeAllSegmentsDiscovered() != true)
+			if (crossing == CrossingAtoLB || crossing == CrossingAtoRB)
 			{
-				mazeStateMachineDiscovery();
+				ANGVELd angvel = inertGetAngVel();
+
+				if (random((float)angvel.omega_z))
+				{
+					lineToFollow = getLeftLine();
+				}
+				else
+				{
+					lineToFollow = getRightLine();
+				}
 			}
 			else
 			{
-				// All of the segments are discovered and reached -> INCLINATION state.
-				smMainState = eSTATE_MAIN_INCLINATION;
+				lineToFollow = getPrevLine();
 			}
+
 			break;
 		}
 		case eSTATE_MAIN_INCLINATION:

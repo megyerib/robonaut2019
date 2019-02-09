@@ -80,7 +80,7 @@ typedef enum
 //!
 //! @return -
 //**********************************************************************************************************************
-void MazeMainStateMachine (void);
+float MazeMainStateMachine (void);
 
 void MazeStateMachinesInit (void);
 

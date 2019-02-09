@@ -569,6 +569,32 @@ float MazeStm()
 	return lineToFollow;
 }
 
+float MazeStmRandom()
+{
+	float lineToFollow;
+	float crossing = getCrossingType();
+
+	if (crossing == CrossingAtoLB || crossing == CrossingAtoRB)
+	{
+		ANGVELd angvel = inertGetAngVel();
+
+		if (random((float)angvel.omega_z))
+		{
+			lineToFollow = getLeftLine();
+		}
+		else
+		{
+			lineToFollow = getRightLine();
+		}
+	}
+	else
+	{
+		lineToFollow = getPrevLine();
+	}
+
+	return lineToFollow;
+}
+
 // Local (static) function definitions ---------------------------------------------------------------------------------
 
 static int isCrossing(CROSSING_TYPE c)

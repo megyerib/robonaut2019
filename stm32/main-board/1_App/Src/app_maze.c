@@ -151,18 +151,7 @@ void Task_Maze (void* p)
 			// Run the state machine until the job is done or stop signal received.
 			if (mazeFinished == false && recStopCar == false)
 			{
-				MazeMainStateMachine();
-
-				lineToFollow = 0;	//TODO
-
-				if (false)
-				{
-
-				}
-				else
-				{
-					mazeStateMachineInclination();
-				}
+				lineToFollow = MazeMainStateMachine();
 			}
 
 			// Controllers.
@@ -171,7 +160,14 @@ void Task_Maze (void* p)
 				if (lineFollowActive == true)
 				{
 					// Control the servo.
-					mazeServoAngle = cntrlLineFollow(mazeActLine, mazePrevLine, 0, mazeActualParams.Kp, mazeActualParams.Kd);
+					if (smMainState == eSTATE_MAIN_DISCOVER)
+					{
+						mazeServoAngle = cntrlLineFollow(lineToFollow, mazePrevLine, 0, mazeActualParams.Kp, mazeActualParams.Kd);
+					}
+					else
+					{
+						mazeServoAngle = cntrlLineFollow(mazeActLine, mazePrevLine, 0, mazeActualParams.Kp, mazeActualParams.Kd);
+					}
 				}
 
 				// Control the speed.
