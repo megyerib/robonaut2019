@@ -37,7 +37,8 @@ void remoteInit()
 
 int remoteGetState()
 {
-	return remote_state;
+	//return remote_state;
+	return 1;
 }
 
 // Interrupt callback

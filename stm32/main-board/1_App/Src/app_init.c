@@ -58,16 +58,6 @@ static void appInit()
 	TaskInit_Maze();
 	TaskInit_SpeedRun();
 
-	//_______________________Calibration:
-	//TaskInit_InertialCalibration();
-	//TaskInit_SpeedCalibration();
-
-
-	//_______________________Debug:
-	//TaskInit_steeringDemo();
-	//TaskInit_roadSignal();
-
-	//TaskInit_Servo();
 }
 
 // END /////////////////////////////////////////////////////////////////////////////////////////////////////////////////

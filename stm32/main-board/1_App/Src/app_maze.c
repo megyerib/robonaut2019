@@ -89,6 +89,8 @@ static void 	MazeCheckRemote		   (void);
 static void 	MazeTraceInformations  (void);
 static uint32_t MazeSegmentsConverter  (void);
 
+static void lineFollow(float line_pos, float K_P, float K_D, int motor_d);
+
 // Global function definitions -----------------------------------------------------------------------------------------
 
 void TaskInit_Maze (void)
@@ -99,9 +101,9 @@ void TaskInit_Maze (void)
 	MazeStateMachinesInit();
 
 	// Initial parameters of the Discover state.
-	paramList.discover.Kp	 = 0.025;
-	paramList.discover.Kd	 = 3.68;
-	paramList.discover.Speed = 19;
+	paramList.discover.Kp	 = 0.02;
+	paramList.discover.Kd	 = 3.5f;
+	paramList.discover.Speed = 18;
 
 	// Initial parameters of the Discover state.
 	paramList.inclination.Kp	 = 0.025;
@@ -151,6 +153,7 @@ void Task_Maze (void* p)
 			// Run the state machine until the job is done or stop signal received.
 			if (mazeFinished == false && recStopCar == false)
 			{
+				mazePrevLine = lineToFollow;
 				lineToFollow = MazeMainStateMachine();
 			}
 
@@ -162,7 +165,7 @@ void Task_Maze (void* p)
 					// Control the servo.
 					if (smMainState == eSTATE_MAIN_DISCOVER)
 					{
-						mazeServoAngle = cntrlLineFollow(lineToFollow, mazePrevLine, 0, mazeActualParams.Kp, mazeActualParams.Kd);
+						mazeServoAngle = cntrlLineFollow(lineToFollow, mazePrevLine, 0, mazeActualParams.Kp, mazeActualParams.Kd) * -1.0f;
 					}
 					else
 					{
@@ -197,10 +200,9 @@ void Task_Maze (void* p)
 		// TODO Check for frontal collision.
 
 		// Actuate.
-		if (mazeFinished == false)
+		if (mazeFinished == false && smMainState != eSTATE_MAIN_READY)
 		{
-			servoSetAngle(mazeServoAngle);
-			motorSetDutyCycle(mazeActSpeedDuty);
+			lineFollow(lineToFollow, 0.02, 3.5, 18);
 		}
 
 		// Trace out the necessary infos.
@@ -394,4 +396,31 @@ static uint32_t MazeSegmentsConverter  (void)
 	if (segments[11] == true)	retVal += 1;
 
 	return retVal;
+}
+
+static void lineFollow(float line_pos, float K_P, float K_D, int motor_d)
+{
+	float angle;
+	float line_diff = 0;
+
+	static float prevline  = 0;
+
+	float P;
+	float D;
+
+	// STEERING ________________________________________
+
+	line_pos *= 1000;
+	line_diff = line_pos - prevline;
+
+	P = line_pos  * K_P;
+	D = line_diff * K_D;
+	angle = -0.75f * (P + D);
+
+	prevline = line_pos;
+
+	// ACTUATE _________________________________________
+
+	motorSetDutyCycle((float)(motor_d/100.0f));
+	servoSetAngle(angle);
 }

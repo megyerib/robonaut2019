@@ -15,6 +15,7 @@
 #include "bsp_servo.h"
 #include "app_common.h"
 #include "speed.h"
+#include "random.h"
 #include <string.h>
 
 // Defines -------------------------------------------------------------------------------------------------------------
@@ -142,20 +143,23 @@ float MazeMainStateMachine (void)
 			// Standing in the start position and radio trigger.
 			mazeActualParams.Speed = 0;
 
-			// TODO on race use this! : if (startGetState() == s0)
-			if (true)
+			if (startGetState() == s0)
 			{
 				// Trigger received -> DISCOVER state.
 				smMainState = eSTATE_MAIN_DISCOVER;
 				actualSegment = 1;
 				nextNewSegmentIndex = 2;
 
-				mazePlanExitRoute();
+				//mazePlanExitRoute();
 			}
 			break;
 		}
 		case eSTATE_MAIN_DISCOVER:
 		{
+			mazeActualParams.Kp = paramList.discover.Kp;
+			mazeActualParams.Kd = paramList.discover.Kd;
+			mazeActualParams.Speed = paramList.discover.Speed;
+
 			crossing = getCrossingType();
 
 			if (crossing == CrossingAtoLB || crossing == CrossingAtoRB)
@@ -202,6 +206,8 @@ float MazeMainStateMachine (void)
 			break;
 		}
 	}
+
+	return lineToFollow;
 }
 
 void mazeStateMachineInclination (void)

@@ -35,6 +35,8 @@
 extern EventGroupHandle_t event_MazeOut;	//!< Event flag (first bit) that indicates if we have left the maze.
 static bool	speedRunStarted;				//!< Flag that indicates if we are on the speed run track.
 
+extern bool mazeFinished;
+
 //! This button is used in case the car can not complete the Maze. The car will start waiting behind the safety car
 //! to start the speed run.
 static GPIO_PinState btnHardRstSpeedRun;
@@ -532,6 +534,7 @@ static void sRunCheckRstBtn_Hard (void)
 
 		// Reset the module.
 		speedRunStarted = true;
+		mazeFinished = true;
 
 		sRunSetLap1Parameters();
 		sRunSetLap2Parameters();
