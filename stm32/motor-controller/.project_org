@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>line-sensor</name>
-	<comment></comment>
+	<name>motor-controller</name>
+	<comment />
 	<projects>
-		<project>common</project>
+		<project>_common</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
@@ -16,7 +16,7 @@
 				</dictionary>
 				<dictionary>
 					<key>?name?</key>
-					<value></value>
+					<value />
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.append_environment</key>
@@ -24,7 +24,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildArguments</key>
-					<value></value>
+					<value />
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildCommand</key>
@@ -67,20 +67,15 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>com.st.stm32cube.ide.mcu.MCUProjectNature</nature>
 		<nature>org.eclipse.cdt.core.cnature</nature>
-		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
-		<nature>com.st.stm32cube.ide.mcu.MCUTSConvertedProjectNature</nature>
-		<nature>com.st.stm32cube.ide.mcu.MCUCubeIdeServicesRevAProjectNature</nature>
-		<nature>com.st.stm32cube.ide.mcu.MCUCubeProjectNature</nature>
-		<nature>com.st.stm32cube.ide.mcu.MCUSingleCpuProjectNature</nature>
+		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
 	<linkedResources>
 		<link>
 			<name>Common</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/common/Common</locationURI>
+			<location>WORKSPACE_LOC/common/Common</location>
 		</link>
 	</linkedResources>
 </projectDescription>

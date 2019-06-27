@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>motor-controller</name>
-	<comment />
+	<comment></comment>
 	<projects>
 		<project>_common</project>
 	</projects>
@@ -16,7 +16,7 @@
 				</dictionary>
 				<dictionary>
 					<key>?name?</key>
-					<value />
+					<value></value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.append_environment</key>
@@ -24,7 +24,7 @@
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildArguments</key>
-					<value />
+					<value></value>
 				</dictionary>
 				<dictionary>
 					<key>org.eclipse.cdt.make.core.buildCommand</key>
@@ -67,15 +67,17 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>com.st.stm32cube.ide.mcu.MCUProjectNature</nature>
 		<nature>org.eclipse.cdt.core.cnature</nature>
-		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
+		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
+		<nature>com.st.stm32cube.ide.mcu.MCUTSConvertedProjectNature</nature>
 	</natures>
 	<linkedResources>
 		<link>
 			<name>Common</name>
 			<type>2</type>
-			<location>WORKSPACE_LOC/common/Common</location>
+			<locationURI>WORKSPACE_LOC/common/Common</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
